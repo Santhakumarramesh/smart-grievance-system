@@ -24,6 +24,9 @@ Complete documentation for the Smart Grievance System.
 - **[Profile Edit Fix](PROFILE_EDIT_FIX.md)** - Profile editing security enhancements
 - **[Avatar Fix Guide](AVATAR_FIX.md)** - Profile avatar display improvements
 
+### For Officers
+- **[Email & Translation Status](EMAIL_AND_TRANSLATION_STATUS.md)** - Email notifications and language translation guide
+
 ---
 
 ## 🔧 Technical Documentation
@@ -84,6 +87,7 @@ docs/
 ├── LOGIN_FIX_GUIDE.md               # Troubleshooting
 ├── PROFILE_EDIT_FIX.md              # Profile security
 ├── AVATAR_FIX.md                    # Avatar display
+├── EMAIL_AND_TRANSLATION_STATUS.md  # Email & translation
 └── CLEANUP_SUMMARY.md               # Maintenance
 ```
 
