@@ -18,6 +18,7 @@ The Smart Grievance Redressal System is a comprehensive platform designed for go
 - ✅ **Real-Time Notifications** - Email + In-app notifications
 - ✅ **Complete Transparency** - Full audit trail for citizens
 - ✅ **Mobile-Friendly** - Responsive design for all devices
+- 🔒 **Security Firewall** - Multi-layered protection for user data
 
 ---
 
@@ -136,6 +137,21 @@ python backend/app.py
 - Real-time updates
 - Unread count badges
 - Click to view details
+
+### **6. Security Firewall** 🔒
+
+**Multi-Layered Protection:**
+- **Rate Limiting:** Prevents abuse and DDoS attacks
+- **Input Validation:** Blocks SQL injection, XSS, code injection
+- **Email/Phone Validation:** Ensures data integrity
+- **Password Strength:** Enforces strong password policies
+- **Security Headers:** X-Frame-Options, CSP, XSS Protection
+- **IP Blocking:** Automatic blocking of suspicious IPs
+- **Content Moderation:** Detects threatening/abusive language
+- **Account Suspension:** Protects against fraudulent users
+- **Security Logging:** Tracks all security events
+
+**See [SECURITY.md](SECURITY.md) for complete details.**
 
 ---
 

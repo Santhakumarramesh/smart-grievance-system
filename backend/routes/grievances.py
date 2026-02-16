@@ -6,6 +6,7 @@ from backend.routes.auth import get_current_user_from_token
 from backend.services.classifier import classifier
 from backend.services.email_service import EmailService
 from backend.services.ai_image_detector import AIImageDetector
+from backend.security import require_firewall, SecurityFirewall, SecurityLogger
 
 grievances_bp = Blueprint('grievances', __name__)
 
@@ -59,6 +60,7 @@ def predict_department():
         return jsonify({'error': str(e)}), 500
 
 @grievances_bp.route('/submit', methods=['POST'])
+@require_firewall(max_requests=20, window_minutes=60)  # Max 20 grievances per hour
 def submit_grievance():
     """
     Submit a new grievance

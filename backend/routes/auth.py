@@ -7,6 +7,7 @@ from backend.extensions import db
 from backend.config import Config
 from backend.services.otp_service import OTPService
 from backend.services.email_service import EmailService
+from backend.security import require_firewall, validate_request_data, SecurityFirewall, SecurityLogger
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -29,6 +30,7 @@ def verify_token(token):
         return None
 
 @auth_bp.route('/register', methods=['POST'])
+@require_firewall(max_requests=5, window_minutes=10)  # Max 5 registration attempts per 10 minutes
 def register():
     """
     Register a new user
@@ -43,6 +45,29 @@ def register():
         for field in required_fields:
             if not data.get(field):
                 return jsonify({'error': f'{field} is required'}), 400
+        
+        # Validate email
+        is_valid_email, normalized_email, email_error = SecurityFirewall.validate_email_address(data['email'])
+        if not is_valid_email:
+            return jsonify({'error': f'Invalid email: {email_error}'}), 400
+        data['email'] = normalized_email
+        
+        # Validate phone number
+        is_valid_phone, phone_error = SecurityFirewall.validate_phone(data['phone'])
+        if not is_valid_phone:
+            return jsonify({'error': phone_error}), 400
+        
+        # Validate password strength
+        is_strong, password_error = SecurityFirewall.check_password_strength(data['password'])
+        if not is_strong:
+            return jsonify({'error': password_error}), 400
+        
+        # Sanitize name input
+        is_valid_name, sanitized_name, name_error = SecurityFirewall.validate_input(data['name'], 'name')
+        if not is_valid_name:
+            SecurityLogger.log_suspicious_activity(request.remote_addr, f"Invalid name input: {name_error}")
+            return jsonify({'error': name_error}), 400
+        data['name'] = sanitized_name
         
         # Validate phone number format
         phone = data['phone']
@@ -104,6 +129,7 @@ def register():
         return jsonify({'error': str(e)}), 500
 
 @auth_bp.route('/send-otp', methods=['POST'])
+@require_firewall(max_requests=10, window_minutes=10)  # Max 10 OTP requests per 10 minutes
 def send_otp():
     """
     Send OTP to email or phone
@@ -116,6 +142,12 @@ def send_otp():
         
         if not identifier:
             return jsonify({'error': 'identifier is required'}), 400
+        
+        # Validate identifier
+        is_valid, sanitized, error = SecurityFirewall.validate_input(identifier, 'identifier')
+        if not is_valid:
+            SecurityLogger.log_suspicious_activity(request.remote_addr, f"Invalid OTP identifier: {error}")
+            return jsonify({'error': error}), 400
         
         if channel not in ['email', 'phone']:
             return jsonify({'error': 'channel must be email or phone'}), 400
@@ -176,6 +208,7 @@ def verify_otp():
         return jsonify({'error': str(e)}), 500
 
 @auth_bp.route('/login', methods=['POST'])
+@require_firewall(max_requests=10, window_minutes=5)  # Max 10 login attempts per 5 minutes
 def login():
     """
     Login user
@@ -189,11 +222,26 @@ def login():
         if not email or not password:
             return jsonify({'error': 'Email and password are required'}), 400
         
+        # Validate email
+        is_valid_email, normalized_email, email_error = SecurityFirewall.validate_email_address(email)
+        if not is_valid_email:
+            SecurityLogger.log_authentication_failure(request.remote_addr, email)
+            return jsonify({'error': 'Invalid email format'}), 400
+        
         # Find user
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=normalized_email).first()
         
         if not user or not user.check_password(password):
+            SecurityLogger.log_authentication_failure(request.remote_addr, normalized_email)
             return jsonify({'error': 'Invalid email or password'}), 401
+        
+        # Check if account is suspended
+        if user.account_suspended:
+            SecurityLogger.log_blocked_attempt(request.remote_addr, f"Suspended account login attempt: {normalized_email}")
+            return jsonify({
+                'error': 'Account Suspended',
+                'message': f'Your account has been suspended. Reason: {user.suspension_reason}'
+            }), 403
         
         # Create token
         token = create_token(user.id)

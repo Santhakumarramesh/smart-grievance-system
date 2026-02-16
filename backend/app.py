@@ -12,13 +12,17 @@ from backend.routes.auth import auth_bp
 from backend.routes.grievances import grievances_bp
 from backend.routes.admin import admin_bp
 from backend.services.classifier import classifier
+from backend.security import SecurityHeaders, configure_cors_security
 
 def create_app():
     app = Flask(__name__, static_folder='../frontend')
     app.config.from_object(Config)
     
-    # Enable CORS
-    CORS(app)
+    # Initialize security headers
+    SecurityHeaders(app)
+    
+    # Enable CORS with security
+    configure_cors_security(app)
     
     # Initialize extensions
     db.init_app(app)
@@ -42,7 +46,7 @@ def create_app():
     # Health check endpoint
     @app.route('/health')
     def health():
-        return {'status': 'healthy', 'demo_mode': Config.DEMO_EMAIL_MODE}, 200
+        return {'status': 'healthy', 'demo_mode': Config.DEMO_EMAIL_MODE, 'security': 'enabled'}, 200
     
     # Create tables and load ML model
     with app.app_context():
@@ -51,6 +55,13 @@ def create_app():
         
         # Load ML classifier
         classifier.load_model()
+        
+        print("🔒 Security Firewall: ENABLED")
+        print("   - Rate Limiting: Active")
+        print("   - Input Validation: Active")
+        print("   - XSS Protection: Active")
+        print("   - SQL Injection Prevention: Active")
+        print("   - IP Blocking: Active")
     
     return app
 
