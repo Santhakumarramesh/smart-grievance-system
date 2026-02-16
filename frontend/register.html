@@ -407,14 +407,14 @@
                     
                     // Redirect to verification page
                     setTimeout(() => {
-                        window.location.href = `/verify-email.html?email=${encodeURIComponent(email)}`;
+                        window.location.href = `verify-email.html?email=${encodeURIComponent(email)}`;
                     }, 1500);
 
                 } catch (otpError) {
                     console.error('OTP send error:', otpError);
                     showAlert('⚠️ Account created but OTP failed. Redirecting to login...', 'error');
                     setTimeout(() => {
-                        window.location.href = '/login.html';
+                        window.location.href = 'login.html';
                     }, 2000);
                 }
 

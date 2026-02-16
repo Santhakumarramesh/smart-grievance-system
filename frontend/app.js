@@ -68,14 +68,14 @@ function showAlert(message, type = 'info') {
 function logout() {
     removeToken();
     removeUser();
-    window.location.href = '/login.html';
+    window.location.href = 'login.html';
 }
 
 // Check authentication
 function checkAuth() {
     const token = getToken();
     if (!token) {
-        window.location.href = '/login.html';
+        window.location.href = 'login.html';
         return false;
     }
     return true;
