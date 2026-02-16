@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Grievance - Smart Grievance System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>Smart Grievance System</h1>
+            <div class="header-actions">
+                <div class="user-info"></div>
+                <button onclick="window.location.href='/index.html'" class="btn btn-secondary">Back to Home</button>
+                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div id="grievanceDetails">
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Tracking Timeline</h2>
+            <div id="timeline">
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Comments & Feedback</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                Have questions or additional information? Use the comment section below to communicate with the department officers.
+            </p>
+            
+            <!-- Comment Form -->
+            <div class="form-group">
+                <label class="form-label" for="commentText">Add Comment</label>
+                <textarea id="commentText" class="form-textarea" rows="3" 
+                    placeholder="Type your comment or feedback here..."></textarea>
+            </div>
+            <button id="addCommentBtn" class="btn btn-primary">Post Comment</button>
+
+            <!-- Comments List -->
+            <div id="commentsList" style="margin-top: 2rem;">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        if (!checkAuth()) {
+            throw new Error('Not authenticated');
+        }
+
+        // Get grievance ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const grievanceId = urlParams.get('id');
+
+        if (!grievanceId) {
+            showAlert('No grievance ID provided', 'error');
+            setTimeout(() => window.location.href = '/index.html', 2000);
+        }
+
+        // Load grievance details
+        async function loadGrievance() {
+            try {
+                const data = await apiCall(`/grievances/${grievanceId}`);
+                const grievance = data.grievance;
+
+                // Display grievance details
+                document.getElementById('grievanceDetails').innerHTML = `
+                    <h2 class="card-title">Grievance #${grievance.id}</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                        <div>
+                            <div class="stat-label">Department</div>
+                            <div style="font-weight: 600; color: var(--primary-color);">${grievance.assigned_department}</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">Current Status</div>
+                            <div><span class="badge ${getStatusBadgeClass(grievance.status)}">${grievance.status}</span></div>
+                        </div>
+                        <div>
+                            <div class="stat-label">Submitted On</div>
+                            <div style="font-weight: 500;">${formatDate(grievance.created_at)}</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">Last Updated</div>
+                            <div style="font-weight: 500;">${formatDate(grievance.updated_at)}</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="stat-label">Complaint Details</div>
+                        <p style="margin-top: 0.5rem; line-height: 1.6;">${grievance.complaint_text}</p>
+                    </div>
+                    ${grievance.location ? `
+                        <div style="margin-top: 1rem;">
+                            <div class="stat-label">Location</div>
+                            <p style="margin-top: 0.5rem;">${grievance.location}</p>
+                        </div>
+                    ` : ''}
+                `;
+
+                // Display timeline
+                if (grievance.updates && grievance.updates.length > 0) {
+                    const timelineHtml = grievance.updates.map((update, index) => {
+                        const isCompleted = ['Resolved', 'Closed'].includes(update.status);
+                        return `
+                            <div class="timeline-item ${isCompleted ? 'completed' : ''}">
+                                <div class="timeline-content">
+                                    <div class="timeline-status">${update.status}</div>
+                                    <div class="timeline-message">${update.message}</div>
+                                    <div class="timeline-meta">
+                                        <span>Updated by: ${update.updated_by_name} (${update.updated_by_role})</span>
+                                        <span>${formatDate(update.timestamp)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    document.getElementById('timeline').innerHTML = `
+                        <div class="timeline">
+                            ${timelineHtml}
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('timeline').innerHTML = 
+                        '<p style="color: var(--text-secondary);">No updates yet.</p>';
+                }
+
+            } catch (error) {
+                showAlert(error.message, 'error');
+                setTimeout(() => window.location.href = '/index.html', 2000);
+            }
+        }
+
+        // Load comments
+        async function loadComments() {
+            try {
+                const data = await apiCall(`/grievances/${grievanceId}/comments`);
+                const commentsList = document.getElementById('commentsList');
+
+                if (data.comments.length === 0) {
+                    commentsList.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No comments yet. Be the first to comment!</p>';
+                    return;
+                }
+
+                const commentsHtml = data.comments.map(comment => {
+                    const isOfficer = comment.user_role === 'OFFICER' || comment.user_role === 'ADMIN';
+                    const bgColor = isOfficer ? '#e0e7ff' : '#f3f4f6';
+                    const borderColor = isOfficer ? '#4338ca' : '#9ca3af';
+                    const roleColor = isOfficer ? '#4338ca' : '#6b7280';
+                    
+                    return `
+                        <div style="background: ${bgColor}; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid ${borderColor}; margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                <div>
+                                    <strong style="color: var(--text-primary);">${comment.user_name}</strong>
+                                    <span class="badge" style="margin-left: 0.5rem; background: ${roleColor}; color: white; font-size: 0.75rem;">${comment.user_role}</span>
+                                </div>
+                                <span style="font-size: 0.875rem; color: var(--text-secondary);">${formatDate(comment.created_at)}</span>
+                            </div>
+                            <p style="margin: 0; color: var(--text-primary); line-height: 1.6;">${comment.comment_text}</p>
+                        </div>
+                    `;
+                }).join('');
+
+                commentsList.innerHTML = commentsHtml;
+            } catch (error) {
+                document.getElementById('commentsList').innerHTML = 
+                    `<p class="alert alert-error">${error.message}</p>`;
+            }
+        }
+
+        // Add comment
+        document.getElementById('addCommentBtn').addEventListener('click', async () => {
+            const commentText = document.getElementById('commentText').value.trim();
+
+            if (!commentText || commentText.length < 5) {
+                showAlert('Comment must be at least 5 characters long', 'error');
+                return;
+            }
+
+            try {
+                await apiCall(`/grievances/${grievanceId}/comments`, {
+                    method: 'POST',
+                    body: JSON.stringify({ comment_text: commentText })
+                });
+
+                showAlert('Comment posted successfully!', 'success');
+                document.getElementById('commentText').value = '';
+                loadComments();
+
+            } catch (error) {
+                showAlert(error.message, 'error');
+            }
+        });
+
+        // Load grievance and comments on page load
+        loadGrievance();
+        loadComments();
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            loadGrievance();
+            loadComments();
+        }, 30000);
+    </script>
+</body>
+</html>

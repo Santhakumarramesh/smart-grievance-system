@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Grievance - Smart Grievance System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>Smart Grievance System</h1>
+            <div class="header-actions">
+                <div class="user-info"></div>
+                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2 class="card-title">Submit New Grievance</h2>
+            
+            <form id="grievanceForm">
+                <div class="form-group">
+                    <label class="form-label" for="complaint">Complaint Details</label>
+                    <textarea id="complaint" class="form-textarea" rows="6" 
+                        placeholder="Describe your complaint in detail (minimum 20 characters)" 
+                        required minlength="20"></textarea>
+                    <small style="color: var(--text-secondary);">
+                        Our AI will automatically assign your complaint to the appropriate department.
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="location">Location (Optional)</label>
+                    <input type="text" id="location" class="form-input" 
+                        placeholder="e.g., Street name, Area, City">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Submit Grievance</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">My Grievances</h2>
+            <div id="grievancesList">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        if (!checkAuth()) {
+            throw new Error('Not authenticated');
+        }
+
+        // Load user's grievances
+        async function loadGrievances() {
+            try {
+                const data = await apiCall('/grievances/my-grievances');
+                const grievancesList = document.getElementById('grievancesList');
+
+                if (data.grievances.length === 0) {
+                    grievancesList.innerHTML = '<p style="color: var(--text-secondary);">No grievances submitted yet.</p>';
+                    return;
+                }
+
+                grievancesList.innerHTML = `
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
+                                    <th>Submitted</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.grievances.map(g => `
+                                    <tr>
+                                        <td>#${g.id}</td>
+                                        <td>${g.assigned_department}</td>
+                                        <td><span class="badge ${getStatusBadgeClass(g.status)}">${g.status}</span></td>
+                                        <td>${formatDate(g.created_at)}</td>
+                                        <td>
+                                            <a href="track.html?id=${g.id}" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">Track</a>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('grievancesList').innerHTML = 
+                    `<p class="alert alert-error">${error.message}</p>`;
+            }
+        }
+
+        // Submit grievance
+        document.getElementById('grievanceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const complaint = document.getElementById('complaint').value;
+            const location = document.getElementById('location').value;
+
+            if (complaint.length < 20) {
+                showAlert('Complaint must be at least 20 characters long', 'error');
+                return;
+            }
+
+            try {
+                const data = await apiCall('/grievances/submit', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        complaint_text: complaint,
+                        location
+                    })
+                });
+
+                showAlert(`Grievance submitted successfully! Assigned to ${data.department} department.`, 'success');
+                
+                // Reset form
+                document.getElementById('grievanceForm').reset();
+                
+                // Reload grievances
+                loadGrievances();
+
+            } catch (error) {
+                showAlert(error.message, 'error');
+            }
+        });
+
+        // Load grievances on page load
+        loadGrievances();
+    </script>
+</body>
+</html>

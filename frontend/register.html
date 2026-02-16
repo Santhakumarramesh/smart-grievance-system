@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Smart Grievance System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1 class="auth-title">Register</h1>
+            
+            <form id="registerForm">
+                <div class="form-group">
+                    <label class="form-label" for="name">Full Name</label>
+                    <input type="text" id="name" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Email</label>
+                    <input type="email" id="email" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone Number</label>
+                    <input type="tel" id="phone" class="form-input" pattern="[0-9]{10}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" class="form-input" minlength="6" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="form-input" minlength="6" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="aadhaar">Aadhaar Last 4 Digits (Optional)</label>
+                    <input type="text" id="aadhaar" class="form-input" pattern="[0-9]{4}" maxlength="4">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" class="form-checkbox" id="consent" required>
+                        I consent to the processing of my data
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Register</button>
+            </form>
+
+            <div id="otpSection" class="hidden" style="margin-top: 2rem;">
+                <h3 style="margin-bottom: 1rem;">Verify Email</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    An OTP has been sent to your email. Check console in demo mode.
+                </p>
+                <div class="form-group">
+                    <label class="form-label" for="otp">Enter OTP</label>
+                    <input type="text" id="otp" class="form-input" pattern="[0-9]{6}" maxlength="6" required>
+                </div>
+                <button id="verifyOtpBtn" class="btn btn-success" style="width: 100%;">Verify OTP</button>
+            </div>
+
+            <div class="auth-link">
+                Already have an account? <a href="login.html">Login here</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        let registeredEmail = '';
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const aadhaar = document.getElementById('aadhaar').value;
+            const consent = document.getElementById('consent').checked;
+
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match', 'error');
+                return;
+            }
+
+            if (!consent) {
+                showAlert('Please accept the consent', 'error');
+                return;
+            }
+
+            try {
+                const data = await apiCall('/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        phone,
+                        password,
+                        aadhaar_last4: aadhaar || null
+                    })
+                });
+
+                showAlert(data.message, 'success');
+                registeredEmail = email;
+
+                // Send OTP
+                await apiCall('/auth/send-otp', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        identifier: email,
+                        channel: 'email'
+                    })
+                });
+
+                // Show OTP section
+                document.getElementById('registerForm').style.display = 'none';
+                document.getElementById('otpSection').classList.remove('hidden');
+
+            } catch (error) {
+                showAlert(error.message, 'error');
+            }
+        });
+
+        document.getElementById('verifyOtpBtn').addEventListener('click', async () => {
+            const otp = document.getElementById('otp').value;
+
+            if (!otp || otp.length !== 6) {
+                showAlert('Please enter a valid 6-digit OTP', 'error');
+                return;
+            }
+
+            try {
+                const data = await apiCall('/auth/verify-otp', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        identifier: registeredEmail,
+                        otp
+                    })
+                });
+
+                showAlert(data.message + ' Redirecting to login...', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 2000);
+
+            } catch (error) {
+                showAlert(error.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

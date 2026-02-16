@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Smart Grievance System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1 class="auth-title">Login</h1>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="email">Email</label>
+                    <input type="email" id="email" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" class="form-input" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+            </form>
+
+            <div class="auth-link">
+                Don't have an account? <a href="register.html">Register here</a>
+            </div>
+
+            <div class="alert alert-info mt-3">
+                <strong>Demo Credentials:</strong><br>
+                <small>
+                    <strong>Admin:</strong> admin@grievance.gov / admin123<br>
+                    <strong>Officer:</strong> electricity@grievance.gov / officer123<br>
+                    <strong>Citizen:</strong> citizen@example.com / citizen123
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const data = await apiCall('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password })
+                });
+
+                // Store token and user
+                setToken(data.token);
+                setUser(data.user);
+
+                showAlert('Login successful! Redirecting...', 'success');
+
+                // Redirect based on role
+                setTimeout(() => {
+                    if (data.user.role === 'ADMIN') {
+                        window.location.href = '/admin.html';
+                    } else if (data.user.role === 'OFFICER') {
+                        window.location.href = '/officer.html';
+                    } else {
+                        window.location.href = '/index.html';
+                    }
+                }, 1000);
+
+            } catch (error) {
+                showAlert(error.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

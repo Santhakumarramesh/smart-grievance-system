@@ -1,0 +1,65 @@
+from flask import Flask, send_from_directory
+from flask_cors import CORS
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+from backend.config import Config
+from backend.extensions import db
+from backend.routes.auth import auth_bp
+from backend.routes.grievances import grievances_bp
+from backend.routes.admin import admin_bp
+from backend.services.classifier import classifier
+
+def create_app():
+    app = Flask(__name__, static_folder='../frontend')
+    app.config.from_object(Config)
+    
+    # Enable CORS
+    CORS(app)
+    
+    # Initialize extensions
+    db.init_app(app)
+    
+    # Register blueprints
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(grievances_bp, url_prefix='/api/grievances')
+    app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    
+    # Serve frontend files
+    @app.route('/')
+    def index():
+        return send_from_directory(app.static_folder, 'index.html')
+    
+    @app.route('/<path:path>')
+    def serve_static(path):
+        if os.path.exists(os.path.join(app.static_folder, path)):
+            return send_from_directory(app.static_folder, path)
+        return send_from_directory(app.static_folder, 'index.html')
+    
+    # Health check endpoint
+    @app.route('/health')
+    def health():
+        return {'status': 'healthy', 'demo_mode': Config.DEMO_EMAIL_MODE}, 200
+    
+    # Create tables and load ML model
+    with app.app_context():
+        db.create_all()
+        print("✓ Database tables created")
+        
+        # Load ML classifier
+        classifier.load_model()
+    
+    return app
+
+if __name__ == '__main__':
+    app = create_app()
+    port = Config.PORT
+    print(f"\n{'='*60}")
+    print(f"🚀 Smart Grievance System Starting...")
+    print(f"📍 Running on http://localhost:{port}")
+    print(f"📧 Demo Mode: {Config.DEMO_EMAIL_MODE}")
+    print(f"{'='*60}\n")
+    app.run(host='0.0.0.0', port=port, debug=True)

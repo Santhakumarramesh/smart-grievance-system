@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Smart Grievance System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>Admin Dashboard</h1>
+            <div class="header-actions">
+                <div class="user-info"></div>
+                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Analytics -->
+        <div class="card">
+            <h2 class="card-title">System Analytics</h2>
+            <div id="analytics">
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        <!-- Create Officer -->
+        <div class="card">
+            <h2 class="card-title">Create New Officer</h2>
+            
+            <form id="createOfficerForm">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="name">Full Name</label>
+                        <input type="text" id="name" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email</label>
+                        <input type="email" id="email" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="phone">Phone</label>
+                        <input type="tel" id="phone" class="form-input" pattern="[0-9]{10}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="department">Department</label>
+                        <select id="department" class="form-select" required>
+                            <option value="">Select Department</option>
+                            <optgroup label="Municipal & Utilities">
+                                <option value="Water Supply">Water Supply</option>
+                                <option value="Electricity">Electricity</option>
+                                <option value="Sanitation & Solid Waste">Sanitation & Solid Waste</option>
+                                <option value="Sewerage & Drainage">Sewerage & Drainage</option>
+                                <option value="Roads & Potholes">Roads & Potholes</option>
+                                <option value="Streetlights">Streetlights</option>
+                            </optgroup>
+                            <optgroup label="Police & Public Safety">
+                                <option value="Police">Police</option>
+                                <option value="Traffic">Traffic</option>
+                                <option value="Cyber Crime">Cyber Crime</option>
+                            </optgroup>
+                            <optgroup label="Health & Social Welfare">
+                                <option value="Public Health">Public Health</option>
+                                <option value="Food Safety">Food Safety</option>
+                            </optgroup>
+                            <optgroup label="Education">
+                                <option value="Education">Education</option>
+                            </optgroup>
+                            <optgroup label="Revenue & Documents">
+                                <option value="Land & Revenue">Land & Revenue</option>
+                                <option value="Ration Card / PDS">Ration Card / PDS</option>
+                            </optgroup>
+                            <optgroup label="Transport">
+                                <option value="RTO / Transport">RTO / Transport</option>
+                            </optgroup>
+                            <optgroup label="Consumer Services">
+                                <option value="Telecom / Network">Telecom / Network</option>
+                            </optgroup>
+                            <optgroup label="Environment">
+                                <option value="Environment">Environment</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password</label>
+                        <input type="password" id="password" class="form-input" minlength="6" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success">Create Officer</button>
+            </form>
+        </div>
+
+        <!-- Officers List -->
+        <div class="card">
+            <h2 class="card-title">All Officers</h2>
+            <div id="officersList">
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        <!-- All Grievances -->
+        <div class="card">
+            <h2 class="card-title">All Grievances</h2>
+            
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <select id="filterStatus" class="form-select" style="max-width: 200px;">
+                    <option value="">All Statuses</option>
+                    <option value="Received">Received</option>
+                    <option value="Assigned to Department">Assigned to Department</option>
+                    <option value="Under Progress">Under Progress</option>
+                    <option value="Investigation">Investigation</option>
+                    <option value="Reviewed">Reviewed</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Closed">Closed</option>
+                </select>
+
+                <select id="filterDepartment" class="form-select" style="max-width: 200px;">
+                    <option value="">All Departments</option>
+                </select>
+
+                <button id="applyFiltersBtn" class="btn btn-primary">Apply Filters</button>
+            </div>
+
+            <div id="grievancesList">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        if (!checkAuth()) {
+            throw new Error('Not authenticated');
+        }
+
+        const user = getUser();
+        if (user.role !== 'ADMIN') {
+            showAlert('Access denied. Admins only.', 'error');
+            setTimeout(() => window.location.href = '/index.html', 2000);
+        }
+
+        // Load analytics
+        async function loadAnalytics() {
+            try {
+                const data = await apiCall('/admin/analytics');
+                
+                const analyticsHtml = `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Grievances</div>
+                            <div class="stat-value">${data.total_grievances}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Citizens</div>
+                            <div class="stat-value">${data.total_users}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Officers</div>
+                            <div class="stat-value">${data.total_officers}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Avg Resolution Time</div>
+                            <div class="stat-value">${data.avg_resolution_time_days} days</div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                        <div>
+                            <h3 style="margin-bottom: 1rem;">By Status</h3>
+                            ${Object.entries(data.counts_by_status).map(([status, count]) => `
+                                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                                    <span>${status}</span>
+                                    <span class="badge ${getStatusBadgeClass(status)}">${count}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div>
+                            <h3 style="margin-bottom: 1rem;">By Department</h3>
+                            ${Object.entries(data.counts_by_department).map(([dept, count]) => `
+                                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                                    <span>${dept}</span>
+                                    <span class="badge badge-progress">${count}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('analytics').innerHTML = analyticsHtml;
+            } catch (error) {
+                document.getElementById('analytics').innerHTML = 
+                    `<p class="alert alert-error">${error.message}</p>`;
+            }
+        }
+
+        // Load officers
+        async function loadOfficers() {
+            try {
+                const data = await apiCall('/admin/officers');
+                const officersList = document.getElementById('officersList');
+
+                if (data.officers.length === 0) {
+                    officersList.innerHTML = '<p style="color: var(--text-secondary);">No officers created yet.</p>';
+                    return;
+                }
+
+                officersList.innerHTML = `
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Department</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.officers.map(o => `
+                                    <tr>
+                                        <td>${o.name}</td>
+                                        <td>${o.email}</td>
+                                        <td>${o.phone}</td>
+                                        <td><span class="badge badge-progress">${o.department}</span></td>
+                                        <td>${formatDate(o.created_at)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('officersList').innerHTML = 
+                    `<p class="alert alert-error">${error.message}</p>`;
+            }
+        }
+
+        // Load departments for filter
+        async function loadDepartments() {
+            try {
+                const data = await apiCall('/admin/departments');
+                const select = document.getElementById('filterDepartment');
+                
+                data.departments.forEach(dept => {
+                    const option = document.createElement('option');
+                    option.value = dept;
+                    option.textContent = dept;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading departments:', error);
+            }
+        }
+
+        // Load all grievances
+        async function loadGrievances() {
+            try {
+                const status = document.getElementById('filterStatus').value;
+                const department = document.getElementById('filterDepartment').value;
+                
+                let url = '/admin/all-grievances?';
+                if (status) url += `status=${encodeURIComponent(status)}&`;
+                if (department) url += `department=${encodeURIComponent(department)}`;
+
+                const data = await apiCall(url);
+                const grievancesList = document.getElementById('grievancesList');
+
+                if (data.grievances.length === 0) {
+                    grievancesList.innerHTML = '<p style="color: var(--text-secondary);">No grievances found.</p>';
+                    return;
+                }
+
+                grievancesList.innerHTML = `
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Complaint</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
+                                    <th>Submitted</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.grievances.map(g => `
+                                    <tr>
+                                        <td>#${g.id}</td>
+                                        <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                            ${g.complaint_text}
+                                        </td>
+                                        <td><span class="badge badge-progress">${g.assigned_department}</span></td>
+                                        <td><span class="badge ${getStatusBadgeClass(g.status)}">${g.status}</span></td>
+                                        <td>${formatDate(g.created_at)}</td>
+                                        <td>
+                                            <a href="track.html?id=${g.id}" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">View</a>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('grievancesList').innerHTML = 
+                    `<p class="alert alert-error">${error.message}</p>`;
+            }
+        }
+
+        // Create officer
+        document.getElementById('createOfficerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                department: document.getElementById('department').value,
+                password: document.getElementById('password').value
+            };
+
+            try {
+                const data = await apiCall('/admin/create-officer', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+
+                showAlert(data.message, 'success');
+                document.getElementById('createOfficerForm').reset();
+                loadOfficers();
+
+            } catch (error) {
+                showAlert(error.message, 'error');
+            }
+        });
+
+        // Apply filters
+        document.getElementById('applyFiltersBtn').addEventListener('click', loadGrievances);
+
+        // Load data on page load
+        loadAnalytics();
+        loadOfficers();
+        loadDepartments();
+        loadGrievances();
+
+        // Auto-refresh analytics every 60 seconds
+        setInterval(loadAnalytics, 60000);
+    </script>
+</body>
+</html>
