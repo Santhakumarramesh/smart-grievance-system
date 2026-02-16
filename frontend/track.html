@@ -29,13 +29,39 @@
         </div>
 
         <div class="card">
-            <h2 class="card-title">Tracking Timeline</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 class="card-title" style="margin: 0;">Tracking Timeline</h2>
+                <button onclick="scrollToComments()" style="
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    padding: 0.5rem 1rem;
+                    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    font-size: 0.875rem;
+                    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+                    transition: all 0.3s ease;
+                " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(59, 130, 246, 0.3)'">
+                    <span style="font-size: 1.2rem;">💬</span>
+                    <span>View Comments</span>
+                    <span id="commentCount" style="
+                        background: rgba(255, 255, 255, 0.3);
+                        padding: 0.125rem 0.5rem;
+                        border-radius: 12px;
+                        font-size: 0.75rem;
+                    ">0</span>
+                </button>
+            </div>
             <div id="timeline">
                 <div class="spinner"></div>
             </div>
         </div>
 
-        <div class="card">
+        <div class="card" id="commentsSection">
             <h2 class="card-title">Comments & Feedback</h2>
             
             <!-- Language Selector Notice -->
@@ -103,6 +129,20 @@
     <script>
         if (!checkAuth()) {
             throw new Error('Not authenticated');
+        }
+
+        // Smooth scroll to comments section
+        function scrollToComments() {
+            const commentsSection = document.getElementById('commentsSection');
+            if (commentsSection) {
+                commentsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Add a subtle highlight effect
+                commentsSection.style.transition = 'box-shadow 0.3s ease';
+                commentsSection.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.5)';
+                setTimeout(() => {
+                    commentsSection.style.boxShadow = '';
+                }, 1500);
+            }
         }
 
         // Get grievance ID from URL
@@ -429,6 +469,12 @@
 
                 commentsList.innerHTML = commentsHtml;
                 
+                // Update comment count badge
+                const commentCountBadge = document.getElementById('commentCount');
+                if (commentCountBadge) {
+                    commentCountBadge.textContent = data.comments.length;
+                }
+                
                 // Auto-translate officer comments
                 if (selectedLang !== 'en') {
                     data.comments.forEach((comment, index) => {
@@ -438,8 +484,6 @@
                         }
                     });
                 }
-
-                commentsList.innerHTML = commentsHtml;
             } catch (error) {
                 document.getElementById('commentsList').innerHTML = 
                     `<p class="alert alert-error">${error.message}</p>`;

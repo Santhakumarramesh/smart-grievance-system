@@ -196,6 +196,9 @@ class Grievance(db.Model):
             result['complainant_phone'] = complainant.phone
             result['complainant_email'] = complainant.email
         
+        # Always include comment count
+        result['comment_count'] = len(self.comments) if self.comments else 0
+        
         if include_officer and self.assigned_officer:
             result['assigned_officer'] = {
                 'id': self.assigned_officer.id,

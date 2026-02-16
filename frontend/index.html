@@ -761,7 +761,15 @@
                             ${g.complaint_text.substring(0, 150)}${g.complaint_text.length > 150 ? '...' : ''}
                         </div>
                         <div class="grievance-footer">
-                            <span>Submitted: ${new Date(g.created_at).toLocaleDateString('en-IN')}</span>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span>Submitted: ${new Date(g.created_at).toLocaleDateString('en-IN')}</span>
+                                ${g.comment_count > 0 ? `
+                                    <span style="display: flex; align-items: center; gap: 0.25rem; color: #3B82F6; font-weight: 600; font-size: 0.875rem;">
+                                        <span style="font-size: 1rem;">💬</span>
+                                        <span>${g.comment_count} ${g.comment_count === 1 ? 'Comment' : 'Comments'}</span>
+                                    </span>
+                                ` : ''}
+                            </div>
                             <a href="track.html?id=${g.id}" class="btn btn-primary" style="padding: 6px 12px; font-size: 13px;">Track Status</a>
                         </div>
                     </div>
