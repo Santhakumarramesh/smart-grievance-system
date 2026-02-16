@@ -522,21 +522,6 @@
                                     <div style="font-size: 0.75rem; color: #92400E; font-weight: 600; margin-bottom: 0.25rem;">Phone</div>
                                     <div style="color: #78350F;">📞 ${grievance.complainant.phone}</div>
                                 </div>
-                                <div>
-                                    <div style="font-size: 0.75rem; color: #92400E; font-weight: 600; margin-bottom: 0.25rem;">Date of Birth</div>
-                                    <div style="color: #78350F;">${grievance.complainant.date_of_birth || 'Not provided'}</div>
-                                </div>
-                                <div>
-                                    <div style="font-size: 0.75rem; color: #92400E; font-weight: 600; margin-bottom: 0.25rem;">Gender</div>
-                                    <div style="color: #78350F;">${grievance.complainant.gender || 'Not provided'}</div>
-                                </div>
-                                <div>
-                                    <div style="font-size: 0.75rem; color: #92400E; font-weight: 600; margin-bottom: 0.25rem;">Verification Status</div>
-                                    <div style="color: #78350F;">
-                                        ${grievance.complainant.email_verified ? '✅ Email' : '❌ Email'}
-                                        ${grievance.complainant.phone_verified ? '✅ Phone' : '❌ Phone'}
-                                    </div>
-                                </div>
                             </div>
                             <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #FDE68A;">
                                 <div style="font-size: 0.75rem; color: #92400E; font-weight: 600; margin-bottom: 0.5rem;">🏠 Residential Address (As per Aadhaar)</div>

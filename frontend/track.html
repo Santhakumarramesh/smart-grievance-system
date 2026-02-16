@@ -103,20 +103,26 @@
                     </div>
                     
                     <!-- Complainant Information -->
-                    ${grievance.complainant_dob || grievance.complainant_gender ? `
+                    ${grievance.complainant_name || grievance.complainant_phone || grievance.complainant_email ? `
                         <div style="margin-top: 1rem; padding: 1rem; background: linear-gradient(135deg, #f3f4f622 0%, #e5e7eb22 100%); border-radius: 8px;">
                             <div class="stat-label" style="margin-bottom: 0.75rem;">👤 Complainant Information</div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                ${grievance.complainant_dob ? `
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                ${grievance.complainant_name ? `
                                     <div>
-                                        <small style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Date of Birth</small>
-                                        <strong>${new Date(grievance.complainant_dob).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</strong>
+                                        <small style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Name</small>
+                                        <strong>${grievance.complainant_name}</strong>
                                     </div>
                                 ` : ''}
-                                ${grievance.complainant_gender ? `
+                                ${grievance.complainant_phone ? `
                                     <div>
-                                        <small style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Gender</small>
-                                        <strong>${grievance.complainant_gender}</strong>
+                                        <small style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Phone</small>
+                                        <strong>📞 ${grievance.complainant_phone}</strong>
+                                    </div>
+                                ` : ''}
+                                ${grievance.complainant_email ? `
+                                    <div>
+                                        <small style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Email</small>
+                                        <strong>📧 ${grievance.complainant_email}</strong>
                                     </div>
                                 ` : ''}
                             </div>
