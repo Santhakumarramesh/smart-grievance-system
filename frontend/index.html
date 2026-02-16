@@ -94,13 +94,13 @@
 
                 <div class="form-group">
                     <label class="form-label" for="complaintImages">
-                        Upload Evidence Images <span style="color: #ef4444;">* MANDATORY</span>
+                        Upload Evidence Images <span id="imageRequirementLabel" style="color: #ef4444;">* MANDATORY</span>
                     </label>
                     
-                    <!-- Fraud Prevention Notice -->
-                    <div style="background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%); border-left: 4px solid #EF4444; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: start; gap: 10px;">
+                    <!-- Dynamic Image Requirement Notice -->
+                    <div id="imageRequirementNotice" style="background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%); border-left: 4px solid #EF4444; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: start; gap: 10px;">
                         <div style="font-size: 20px; flex-shrink: 0;">🚨</div>
-                        <div>
+                        <div id="imageRequirementText">
                             <div style="font-weight: 700; color: #991B1B; margin-bottom: 3px; font-size: 13px;">
                                 Anti-Fraud Measure: Images Required
                             </div>
@@ -146,6 +146,7 @@
     <script src="app.js"></script>
     <script src="government-portal-init.js"></script>
     <script src="simple-translator.js"></script>
+    <script src="department-image-requirements.js"></script>
     <script>
         if (!checkAuth()) {
             throw new Error('Not authenticated');
@@ -215,8 +216,88 @@
         let uploadedImages = [];
         const maxImages = 5;
         const maxFileSize = 5 * 1024 * 1024; // 5MB
+        let currentDepartment = null;
+        let imagesRequired = true; // Default to required
 
         document.getElementById('complaintImages').addEventListener('change', handleImageUpload);
+        
+        // Listen to complaint text changes to predict department and update image requirement
+        let predictionTimeout;
+        document.getElementById('complaint').addEventListener('input', function() {
+            clearTimeout(predictionTimeout);
+            const complaintText = this.value.trim();
+            
+            if (complaintText.length >= 20) {
+                // Debounce prediction
+                predictionTimeout = setTimeout(() => {
+                    predictDepartmentAndUpdateImageRequirement(complaintText);
+                }, 1000);
+            }
+        });
+        
+        // Predict department and update image requirement dynamically
+        async function predictDepartmentAndUpdateImageRequirement(complaintText) {
+            try {
+                // Call backend to predict department
+                const response = await fetch('/grievances/predict-department', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: JSON.stringify({ complaint_text: complaintText })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    currentDepartment = data.department;
+                    updateImageRequirement(currentDepartment);
+                }
+            } catch (error) {
+                console.error('Failed to predict department:', error);
+                // Default to images required on error
+                imagesRequired = true;
+            }
+        }
+        
+        // Update image requirement UI based on department
+        function updateImageRequirement(department) {
+            const requirementConfig = getDepartmentImageRequirement(department);
+            imagesRequired = requirementConfig.requiresImages;
+            
+            const label = document.getElementById('imageRequirementLabel');
+            const notice = document.getElementById('imageRequirementNotice');
+            const noticeText = document.getElementById('imageRequirementText');
+            
+            if (imagesRequired) {
+                // Images REQUIRED
+                label.innerHTML = '<span style="color: #ef4444;">* MANDATORY</span>';
+                notice.style.background = 'linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%)';
+                notice.style.borderLeftColor = '#EF4444';
+                noticeText.innerHTML = `
+                    <div style="font-weight: 700; color: #991B1B; margin-bottom: 3px; font-size: 13px;">
+                        🚨 Images Required for ${department}
+                    </div>
+                    <div style="color: #7F1D1D; font-size: 12px; line-height: 1.4;">
+                        <strong>You MUST upload at least 1 image</strong> for ${department} complaints. ${requirementConfig.reason}
+                    </div>
+                `;
+            } else {
+                // Images OPTIONAL
+                label.innerHTML = '<span style="color: #3B82F6;">(Optional but Recommended)</span>';
+                notice.style.background = 'linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%)';
+                notice.style.borderLeftColor = '#3B82F6';
+                noticeText.innerHTML = `
+                    <div style="font-weight: 700; color: #1E40AF; margin-bottom: 3px; font-size: 13px;">
+                        ℹ️ Images Optional for ${department}
+                    </div>
+                    <div style="color: #1E3A8A; font-size: 12px; line-height: 1.4;">
+                        Images are <strong>optional</strong> for ${department} complaints. ${requirementConfig.reason}
+                        ${requirementConfig.note ? `<br><em>${requirementConfig.note}</em>` : ''}
+                    </div>
+                `;
+            }
+        }
 
         // Drag and drop
         const dropZone = document.getElementById('imageDropZone');
@@ -364,10 +445,18 @@
                 return;
             }
 
-            // MANDATORY: Check if at least 1 image is uploaded (Anti-Fraud Measure)
-            if (uploadedImages.length === 0) {
-                showAlert('🚨 MANDATORY: You must upload at least 1 image as proof of the complaint. This is required to prevent fraudulent complaints and ensure authenticity.', 'error');
+            // Check if images are required based on department
+            if (imagesRequired && uploadedImages.length === 0) {
+                showAlert(`🚨 MANDATORY: You must upload at least 1 image as proof for ${currentDepartment || 'this type of'} complaints. This is required to prevent fraudulent complaints and ensure authenticity.', 'error');
                 return;
+            }
+            
+            // Optional: Warn if no images for optional departments
+            if (!imagesRequired && uploadedImages.length === 0) {
+                const proceed = confirm(`ℹ️ No images uploaded.\n\nImages are optional for ${currentDepartment || 'this type of'} complaints, but uploading evidence can help speed up resolution.\n\nDo you want to proceed without images?`);
+                if (!proceed) {
+                    return;
+                }
             }
 
             try {

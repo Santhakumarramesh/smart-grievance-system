@@ -8,6 +8,55 @@ from backend.services.email_service import EmailService
 
 grievances_bp = Blueprint('grievances', __name__)
 
+# Departments that REQUIRE images (physical/infrastructure issues)
+DEPARTMENTS_REQUIRING_IMAGES = {
+    'Water Supply', 'Electricity', 'Sanitation & Solid Waste',
+    'Sewerage & Drainage', 'Roads & Potholes', 'Streetlights',
+    'Traffic', 'Public Health', 'Food Safety', 'Environment',
+    'Telecom / Network'
+}
+
+# Departments where images are OPTIONAL (administrative/document issues)
+DEPARTMENTS_OPTIONAL_IMAGES = {
+    'Police', 'Cyber Crime', 'Education', 'Land & Revenue',
+    'Ration Card / PDS', 'RTO / Transport'
+}
+
+def does_department_require_images(department):
+    """Check if a department requires mandatory images"""
+    return department in DEPARTMENTS_REQUIRING_IMAGES
+
+@grievances_bp.route('/predict-department', methods=['POST'])
+def predict_department():
+    """
+    Predict department for a complaint text (for dynamic UI updates)
+    Required: complaint_text
+    """
+    try:
+        user = get_current_user_from_token()
+        if not user:
+            return jsonify({'error': 'Unauthorized'}), 401
+        
+        data = request.get_json()
+        complaint_text = data.get('complaint_text')
+        
+        if not complaint_text:
+            return jsonify({'error': 'Complaint text is required'}), 400
+        
+        # Predict department
+        predicted_department = classifier.predict(complaint_text)
+        
+        # Check if images are required
+        images_required = does_department_require_images(predicted_department)
+        
+        return jsonify({
+            'department': predicted_department,
+            'images_required': images_required
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @grievances_bp.route('/submit', methods=['POST'])
 def submit_grievance():
     """
@@ -31,15 +80,19 @@ def submit_grievance():
         if not location or len(location.strip()) < 10:
             return jsonify({'error': 'Please provide a detailed location'}), 400
         
-        # MANDATORY: Validate images (Anti-Fraud Measure)
-        if not images or len(images) == 0:
-            return jsonify({'error': 'At least 1 image is mandatory to submit a complaint. This is required to prevent fraudulent complaints and ensure authenticity.'}), 400
-        
-        if len(images) > 5:
-            return jsonify({'error': 'Maximum 5 images allowed'}), 400
-        
-        # Predict department using ML
+        # Predict department using ML first
         predicted_department = classifier.predict(complaint_text)
+        
+        # CONDITIONAL: Validate images based on department type
+        images_required = does_department_require_images(predicted_department)
+        
+        if images_required and (not images or len(images) == 0):
+            return jsonify({
+                'error': f'At least 1 image is mandatory for {predicted_department} complaints. Visual evidence is required to verify and process this type of complaint.'
+            }), 400
+        
+        if images and len(images) > 5:
+            return jsonify({'error': 'Maximum 5 images allowed'}), 400
         
         # Get complainant info from user profile
         complainant_dob = user.date_of_birth
