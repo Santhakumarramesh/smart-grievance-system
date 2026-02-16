@@ -231,69 +231,89 @@
                     return;
                 }
 
+                const selectedLang = document.getElementById('commentLanguageSelect').value;
+                const languageNames = {
+                    'en': 'English',
+                    'hi': 'हिंदी',
+                    'ta': 'தமிழ்',
+                    'te': 'తెలుగు',
+                    'bn': 'বাংলা',
+                    'mr': 'मराठी',
+                    'gu': 'ગુજરાતી',
+                    'kn': 'ಕನ್ನಡ',
+                    'ml': 'മലയാളം',
+                    'pa': 'ਪੰਜਾਬੀ',
+                    'or': 'ଓଡ଼ିଆ',
+                    'as': 'অসমীয়া'
+                };
+                
                 const commentsHtml = data.comments.map((comment, index) => {
                     const isOfficer = comment.user_role === 'OFFICER' || comment.user_role === 'ADMIN';
                     const bgColor = isOfficer ? '#e0e7ff' : '#f3f4f6';
                     const borderColor = isOfficer ? '#4338ca' : '#9ca3af';
                     const roleColor = isOfficer ? '#4338ca' : '#6b7280';
-                    const escapedText = comment.comment_text.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n');
+                    
+                    // Auto-translate officer comments if language is not English
+                    const showTranslation = isOfficer && selectedLang !== 'en';
                     
                     return `
-                        <div class="comment-item" data-comment-id="${comment.id}" data-comment-index="${index}" style="background: ${bgColor}; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid ${borderColor}; margin-bottom: 1rem;">
+                        <div class="comment-item" data-comment-id="${comment.id}" data-comment-index="${index}" data-original-text="${comment.comment_text.replace(/"/g, '&quot;')}" style="background: ${bgColor}; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid ${borderColor}; margin-bottom: 1rem;">
                             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
                                 <div>
                                     <strong style="color: var(--text-primary);">${comment.user_name}</strong>
                                     <span class="badge" style="margin-left: 0.5rem; background: ${roleColor}; color: white; font-size: 0.75rem;">${comment.user_role}</span>
-                                    ${isOfficer ? `
-                                        <button onclick="translateComment(${index}, '${escapedText}')" style="
-                                            margin-left: 0.5rem;
-                                            padding: 4px 10px;
-                                            background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
-                                            color: white;
-                                            border: none;
-                                            border-radius: 6px;
-                                            font-size: 0.75rem;
-                                            font-weight: 600;
-                                            cursor: pointer;
-                                            display: inline-flex;
-                                            align-items: center;
-                                            gap: 4px;
-                                            transition: all 0.2s;
-                                        " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                                            🌐 Translate
-                                        </button>
-                                    ` : ''}
                                 </div>
                                 <span style="font-size: 0.875rem; color: var(--text-secondary);">${formatDate(comment.created_at)}</span>
                             </div>
-                            <div class="comment-text-original-${index}" style="margin: 0; color: var(--text-primary); line-height: 1.6;">
-                                ${comment.comment_text}
-                            </div>
-                            <div class="comment-text-translated-${index}" style="display: none; margin-top: 0.75rem; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 6px; border: 2px solid #10B981;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                    <span style="font-size: 0.75rem; font-weight: 700; color: #059669; display: flex; align-items: center; gap: 4px;">
-                                        <span class="translation-lang-badge"></span> Translation
-                                    </span>
-                                    <button onclick="hideTranslation(${index})" style="
-                                        padding: 2px 8px;
-                                        background: transparent;
-                                        color: #6B7280;
-                                        border: 1px solid #D1D5DB;
-                                        border-radius: 4px;
-                                        font-size: 0.75rem;
-                                        cursor: pointer;
-                                    ">
-                                        Show Original
-                                    </button>
+                            
+                            ${showTranslation ? `
+                                <!-- Translated Version (Primary Display) -->
+                                <div class="comment-translated-primary" style="margin-bottom: 0.75rem;">
+                                    <div style="display: inline-block; background: #10B981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; margin-bottom: 0.5rem;">
+                                        📝 ${languageNames[selectedLang]}
+                                    </div>
+                                    <div class="translated-text-${index}" style="color: var(--text-primary); line-height: 1.8; font-weight: 600; font-size: 1.05em;">
+                                        <div style="text-align: center; padding: 1rem; color: #6B7280;">
+                                            <div class="spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto;"></div>
+                                            <small style="display: block; margin-top: 0.5rem;">Translating...</small>
+                                        </div>
+                                    </div>
                                 </div>
-                                <p class="translated-text" style="margin: 0; color: var(--text-primary); line-height: 1.6; font-weight: 500;"></p>
+                                
+                                <!-- Original Text (Collapsible) -->
+                                <details style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(0, 0, 0, 0.03); border-radius: 6px; border: 1px solid #D1D5DB;">
+                                    <summary style="cursor: pointer; font-size: 0.875rem; color: #6B7280; font-weight: 600;">
+                                        📄 View Original Text
+                                    </summary>
+                                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #E5E7EB; color: var(--text-primary); line-height: 1.6;">
+                                        ${comment.comment_text}
+                                    </div>
+                                </details>
+                                
                                 <small style="color: #6B7280; font-style: italic; display: block; margin-top: 0.5rem;">
-                                    ⚠️ Approximate translation for understanding. Refer to original for official purposes.
+                                    ⚠️ Automatic translation for your convenience. Original text available above.
                                 </small>
-                            </div>
+                            ` : `
+                                <!-- Original Text (No Translation Needed) -->
+                                <div style="color: var(--text-primary); line-height: 1.6;">
+                                    ${comment.comment_text}
+                                </div>
+                            `}
                         </div>
                     `;
                 }).join('');
+
+                commentsList.innerHTML = commentsHtml;
+                
+                // Auto-translate officer comments
+                if (selectedLang !== 'en') {
+                    data.comments.forEach((comment, index) => {
+                        const isOfficer = comment.user_role === 'OFFICER' || comment.user_role === 'ADMIN';
+                        if (isOfficer) {
+                            autoTranslateComment(index, comment.comment_text, selectedLang);
+                        }
+                    });
+                }
 
                 commentsList.innerHTML = commentsHtml;
             } catch (error) {
@@ -388,68 +408,36 @@
         loadGrievance();
         loadComments();
 
-        // Translation functions
-        function translateComment(commentIndex, originalText) {
-            const targetLang = document.getElementById('commentLanguageSelect').value;
-            const languageNames = {
-                'en': 'English',
-                'hi': 'हिंदी',
-                'ta': 'தமிழ்',
-                'te': 'తెలుగు',
-                'bn': 'বাংলা',
-                'mr': 'मराठी',
-                'gu': 'ગુજરાતી',
-                'kn': 'ಕನ್ನಡ',
-                'ml': 'മലയാളം',
-                'pa': 'ਪੰਜਾਬੀ',
-                'or': 'ଓଡ଼ିଆ',
-                'as': 'অসমীয়া'
-            };
+        // Auto-translation function
+        async function autoTranslateComment(commentIndex, originalText, targetLang) {
+            const translatedTextDiv = document.querySelector(`.translated-text-${commentIndex}`);
             
-            // Show translated section
-            const translatedDiv = document.querySelector(`.comment-text-translated-${commentIndex}`);
-            const originalDiv = document.querySelector(`.comment-text-original-${commentIndex}`);
-            const translatedTextP = translatedDiv.querySelector('.translated-text');
-            const langBadge = translatedDiv.querySelector('.translation-lang-badge');
+            if (!translatedTextDiv) return;
             
-            // Show loading
-            translatedTextP.innerHTML = '<div style="text-align: center; padding: 1rem;"><div class="spinner" style="width: 30px; height: 30px; border-width: 3px;"></div><p style="margin-top: 0.5rem; color: #6B7280;">Translating...</p></div>';
-            translatedDiv.style.display = 'block';
-            
-            // Simulate translation (in production, use Google Translate API or similar)
+            // Simulate translation (in production, use Google Translate API)
             setTimeout(() => {
-                // For demo, show the same text with language indicator
-                // In production, integrate with translation API
-                const translatedText = originalText; // Replace with actual translation API call
+                // For demo, show the same text
+                // In production, integrate with Google Translate API or similar
+                const translatedText = originalText; // Replace with actual API call
                 
-                translatedTextP.textContent = translatedText;
-                langBadge.textContent = `📝 ${languageNames[targetLang]}`;
-                langBadge.style.cssText = `
-                    display: inline-block;
-                    background: #10B981;
-                    color: white;
-                    padding: 2px 8px;
-                    border-radius: 4px;
-                    font-size: 0.7rem;
-                    font-weight: 700;
-                    margin-right: 4px;
-                `;
-            }, 1000);
+                translatedTextDiv.innerHTML = translatedText;
+            }, 800);
         }
         
-        function hideTranslation(commentIndex) {
-            const translatedDiv = document.querySelector(`.comment-text-translated-${commentIndex}`);
-            translatedDiv.style.display = 'none';
-        }
-        
-        // Auto-translate all officer comments when language changes
+        // Reload comments when language changes
         document.getElementById('commentLanguageSelect').addEventListener('change', function() {
             const selectedLang = this.value;
+            const langName = this.options[this.selectedIndex].text;
             
             // Show alert about auto-translation
             if (selectedLang !== 'en') {
-                showAlert(`🌐 Language changed to ${this.options[this.selectedIndex].text}. Click "Translate" on officer comments to view in your language.`, 'info');
+                showAlert(`🌐 Language changed to ${langName}. Officer comments will be automatically translated.`, 'success');
+            } else {
+                showAlert(`🌐 Language changed to English. Showing original comments.`, 'info');
             }
+            
+            // Reload comments with new language
+            loadComments();
         });
 
         // Auto-refresh every 30 seconds
