@@ -28,6 +28,33 @@
         <div class="card">
             <h2 class="card-title">Submit New Grievance</h2>
             
+            <!-- Anti-Fraud & Data Collection Notice -->
+            <div style="background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%); border: 2px solid #3B82F6; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: start; gap: 12px;">
+                    <div style="font-size: 28px; flex-shrink: 0;">🛡️</div>
+                    <div>
+                        <div style="font-weight: 700; color: #1E40AF; margin-bottom: 6px; font-size: 16px;">
+                            Government Portal - Strict Verification Required
+                        </div>
+                        <div style="color: #1E3A8A; font-size: 14px; line-height: 1.6;">
+                            To prevent <strong>fraudulent and scam complaints</strong>, we collect and verify all information before processing:
+                        </div>
+                        <ul style="margin: 10px 0 0 20px; padding: 0; color: #1E3A8A; font-size: 13px; line-height: 1.8;">
+                            <li><strong>✅ Residential Address Verification</strong> - Your Aadhaar-linked address must be complete</li>
+                            <li><strong>✅ Image Evidence Mandatory</strong> - At least 1 photo proving the issue is required</li>
+                            <li><strong>✅ Location Verification</strong> - Exact complaint location with landmarks</li>
+                            <li><strong>✅ Identity Verification</strong> - Email and phone verification completed</li>
+                        </ul>
+                        <div style="margin-top: 10px; padding: 10px; background: rgba(59, 130, 246, 0.15); border-radius: 6px; border-left: 3px solid #3B82F6;">
+                            <strong style="color: #1E40AF;">⚠️ Important:</strong>
+                            <span style="color: #1E3A8A; font-size: 13px;">
+                                Submitting false or fraudulent complaints is a punishable offense. All complaints are verified and tracked. This helps us process genuine complaints faster and serve citizens better.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Residential Address Reminder Banner -->
             <div id="addressReminderBanner" style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border-left: 4px solid #F59E0B; border-radius: 8px; padding: 14px; margin-bottom: 20px; display: none; align-items: center; gap: 12px;">
                 <div style="font-size: 24px; flex-shrink: 0;">🏠</div>
@@ -66,17 +93,36 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="complaintImages">Upload Images (Optional)</label>
-                    <div style="border: 2px dashed #D1D5DB; border-radius: 8px; padding: 1.5rem; text-align: center; background: #F9FAFB; cursor: pointer; transition: all 0.2s;" 
+                    <label class="form-label" for="complaintImages">
+                        Upload Evidence Images <span style="color: #ef4444;">* MANDATORY</span>
+                    </label>
+                    
+                    <!-- Fraud Prevention Notice -->
+                    <div style="background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%); border-left: 4px solid #EF4444; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: start; gap: 10px;">
+                        <div style="font-size: 20px; flex-shrink: 0;">🚨</div>
+                        <div>
+                            <div style="font-weight: 700; color: #991B1B; margin-bottom: 3px; font-size: 13px;">
+                                Anti-Fraud Measure: Images Required
+                            </div>
+                            <div style="color: #7F1D1D; font-size: 12px; line-height: 1.4;">
+                                To prevent fraudulent complaints and ensure authenticity, <strong>you MUST upload at least 1 image</strong> showing proof of the issue. This helps us verify genuine complaints and speeds up resolution.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="border: 2px dashed #EF4444; border-radius: 8px; padding: 1.5rem; text-align: center; background: #FEF2F2; cursor: pointer; transition: all 0.2s;" 
                          id="imageDropZone"
                          onclick="document.getElementById('complaintImages').click()">
                         <div style="font-size: 3rem; margin-bottom: 0.5rem;">📸</div>
-                        <p style="margin: 0 0 0.5rem 0; color: #374151; font-weight: 500;">
-                            Click to upload or drag and drop
+                        <p style="margin: 0 0 0.5rem 0; color: #991B1B; font-weight: 600;">
+                            Click to upload or drag and drop (REQUIRED)
                         </p>
-                        <small style="color: #6B7280;">
-                            PNG, JPG, JPEG up to 5MB each (Max 5 images)
+                        <small style="color: #7F1D1D;">
+                            PNG, JPG, JPEG up to 5MB each • Min 1 image, Max 5 images
                         </small>
+                        <div style="margin-top: 8px; padding: 6px; background: rgba(239, 68, 68, 0.1); border-radius: 4px; font-size: 12px; color: #991B1B;">
+                            <strong>⚠️ At least 1 image is mandatory to submit complaint</strong>
+                        </div>
                     </div>
                     <input type="file" id="complaintImages" accept="image/*" multiple style="display: none;">
                     
@@ -288,13 +334,13 @@
             const complaint = document.getElementById('complaint').value.trim();
             const location = document.getElementById('location').value.trim();
 
-            // Check if user has completed their residential address
+            // STRICT VALIDATION: Check if user has completed their residential address (Anti-Fraud Measure)
             const currentUser = getUser();
             if (!currentUser.residential_address || !currentUser.residential_city || !currentUser.residential_state || !currentUser.residential_pincode) {
-                showAlert('⚠️ Please complete your RESIDENTIAL ADDRESS in your profile before submitting complaints. This is required for identity verification.', 'error');
+                showAlert('🛡️ VERIFICATION REQUIRED: You must complete your RESIDENTIAL ADDRESS (as per Aadhaar) before submitting complaints. This is a mandatory anti-fraud measure to prevent scam complaints and verify your identity.', 'error');
                 
                 // Show a more detailed prompt
-                if (confirm('Your residential address (as per Aadhaar) is incomplete. Would you like to go to your profile page to complete it now?')) {
+                if (confirm('⚠️ Your residential address verification is incomplete.\n\nTo prevent fraudulent complaints, we require:\n✅ Complete residential address\n✅ City, State, PIN Code\n✅ As per Aadhaar/official documents\n\nWould you like to complete your profile now?')) {
                     window.location.href = 'profile.html';
                 }
                 return;
@@ -315,6 +361,12 @@
             const locationParts = location.split(',').map(s => s.trim()).filter(s => s.length > 0);
             if (locationParts.length < 2) {
                 showAlert('❌ Please provide a complete address with street, area, and city', 'error');
+                return;
+            }
+
+            // MANDATORY: Check if at least 1 image is uploaded (Anti-Fraud Measure)
+            if (uploadedImages.length === 0) {
+                showAlert('🚨 MANDATORY: You must upload at least 1 image as proof of the complaint. This is required to prevent fraudulent complaints and ensure authenticity.', 'error');
                 return;
             }
 

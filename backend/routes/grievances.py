@@ -31,8 +31,11 @@ def submit_grievance():
         if not location or len(location.strip()) < 10:
             return jsonify({'error': 'Please provide a detailed location'}), 400
         
-        # Validate images
-        if images and len(images) > 5:
+        # MANDATORY: Validate images (Anti-Fraud Measure)
+        if not images or len(images) == 0:
+            return jsonify({'error': 'At least 1 image is mandatory to submit a complaint. This is required to prevent fraudulent complaints and ensure authenticity.'}), 400
+        
+        if len(images) > 5:
             return jsonify({'error': 'Maximum 5 images allowed'}), 400
         
         # Predict department using ML
