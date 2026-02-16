@@ -533,19 +533,52 @@
         loadComments();
 
         // Auto-translation function for comments
+        // Translation dictionary for common phrases
+        const translations = {
+            'hi': { 'Received': 'प्राप्त', 'Assigned': 'सौंपा गया', 'In Progress': 'प्रगति में', 'Resolved': 'हल हो गया', 'Closed': 'बंद', 'Rejected': 'अस्वीकृत', 'Your complaint': 'आपकी शिकायत', 'has been': 'है', 'processed': 'संसाधित', 'received': 'प्राप्त', 'assigned': 'सौंपा गया', 'Updated by': 'द्वारा अपडेट', 'SYSTEM': 'सिस्टम', 'department': 'विभाग', 'to': 'को', 'for': 'के लिए', 'investigation': 'जांच', 'Supply': 'आपूर्ति', 'Water': 'जल', 'Electricity': 'बिजली', 'Road': 'सड़क', 'Health': 'स्वास्थ्य', 'Education': 'शिक्षा', 'Transport': 'परिवहन', 'issue': 'समस्या', 'problem': 'समस्या', 'complaint': 'शिकायत', 'officer': 'अधिकारी', 'verified': 'सत्यापित', 'under review': 'समीक्षाधीन', 'action taken': 'कार्रवाई की गई' },
+            'ta': { 'Received': 'பெறப்பட்டது', 'Assigned': 'ஒதுக்கப்பட்டது', 'In Progress': 'முன்னேற்றத்தில்', 'Resolved': 'தீர்க்கப்பட்டது', 'Closed': 'மூடப்பட்டது', 'Rejected': 'நிராகரிக்கப்பட்டது', 'Your complaint': 'உங்கள் புகார்', 'has been': 'உள்ளது', 'processed': 'செயல்படுத்தப்பட்டது', 'received': 'பெறப்பட்டது', 'assigned': 'ஒதுக்கப்பட்டது', 'Updated by': 'புதுப்பிக்கப்பட்டது', 'SYSTEM': 'அமைப்பு', 'department': 'துறை', 'to': 'க்கு', 'for': 'க்காக', 'investigation': 'விசாரணை', 'Supply': 'வழங்கல்', 'Water': 'நீர்', 'Electricity': 'மின்சாரம்', 'Road': 'சாலை', 'Health': 'சுகாதாரம்', 'Education': 'கல்வி', 'Transport': 'போக்குவரத்து', 'issue': 'பிரச்சினை', 'problem': 'சிக்கல்', 'complaint': 'புகார்', 'officer': 'அதிகாரி', 'verified': 'சரிபார்க்கப்பட்டது', 'under review': 'ஆய்வில்', 'action taken': 'நடவடிக்கை எடுக்கப்பட்டது' },
+            'te': { 'Received': 'స్వీకరించబడింది', 'Assigned': 'కేటాయించబడింది', 'In Progress': 'పురోగతిలో', 'Resolved': 'పరిష్కరించబడింది', 'Closed': 'మూసివేయబడింది', 'Rejected': 'తిరస్కరించబడింది', 'Your complaint': 'మీ ఫిర్యాదు', 'has been': 'ఉంది', 'processed': 'ప్రాసెస్ చేయబడింది', 'received': 'స్వీకరించబడింది', 'assigned': 'కేటాయించబడింది', 'Updated by': 'నవీకరించబడింది', 'SYSTEM': 'వ్యవస్థ', 'department': 'విభాగం', 'to': 'కు', 'for': 'కోసం', 'investigation': 'దర్యాప్తు', 'Supply': 'సరఫరా', 'Water': 'నీరు', 'Electricity': 'విద్యుత్', 'Road': 'రోడ్డు', 'Health': 'ఆరోగ్యం', 'Education': 'విద్య', 'Transport': 'రవాణా', 'issue': 'సమస్య', 'problem': 'సమస్య', 'complaint': 'ఫిర్యాదు', 'officer': 'అధికారి', 'verified': 'ధృవీకరించబడింది', 'under review': 'సమీక్షలో', 'action taken': 'చర్య తీసుకోబడింది' },
+            'bn': { 'Received': 'প্রাপ্ত', 'Assigned': 'নিয়োগকৃত', 'In Progress': 'চলমান', 'Resolved': 'সমাধান হয়েছে', 'Closed': 'বন্ধ', 'Rejected': 'প্রত্যাখ্যাত', 'Your complaint': 'আপনার অভিযোগ', 'has been': 'হয়েছে', 'processed': 'প্রক্রিয়া করা', 'received': 'প্রাপ্ত', 'assigned': 'নিয়োগ করা', 'Updated by': 'দ্বারা আপডেট', 'SYSTEM': 'সিস্টেম', 'department': 'বিভাগ', 'to': 'কে', 'for': 'জন্য', 'investigation': 'তদন্ত', 'Supply': 'সরবরাহ', 'Water': 'জল', 'Electricity': 'বিদ্যুৎ', 'Road': 'রাস্তা', 'Health': 'স্বাস্থ্য', 'Education': 'শিক্ষা', 'Transport': 'পরিবহন', 'issue': 'সমস্যা', 'problem': 'সমস্যা', 'complaint': 'অভিযোগ', 'officer': 'কর্মকর্তা', 'verified': 'যাচাইকৃত', 'under review': 'পর্যালোচনাধীন', 'action taken': 'পদক্ষেপ নেওয়া হয়েছে' },
+            'mr': { 'Received': 'प्राप्त', 'Assigned': 'नियुक्त', 'In Progress': 'प्रगतीपथावर', 'Resolved': 'निराकरण झाले', 'Closed': 'बंद', 'Rejected': 'नाकारले', 'Your complaint': 'तुमची तक्रार', 'has been': 'आहे', 'processed': 'प्रक्रिया केली', 'received': 'प्राप्त झाली', 'assigned': 'नियुक्त केली', 'Updated by': 'द्वारे अद्यतनित', 'SYSTEM': 'प्रणाली', 'department': 'विभाग', 'to': 'ला', 'for': 'साठी', 'investigation': 'तपास', 'Supply': 'पुरवठा', 'Water': 'पाणी', 'Electricity': 'वीज', 'Road': 'रस्ता', 'Health': 'आरोग्य', 'Education': 'शिक्षण', 'Transport': 'वाहतूक', 'issue': 'समस्या', 'problem': 'समस्या', 'complaint': 'तक्रार', 'officer': 'अधिकारी', 'verified': 'सत्यापित', 'under review': 'पुनरावलोकनाधीन', 'action taken': 'कारवाई केली' },
+            'gu': { 'Received': 'પ્રાપ્ત', 'Assigned': 'સોંપાયેલ', 'In Progress': 'પ્રગતિમાં', 'Resolved': 'ઉકેલાઈ', 'Closed': 'બંધ', 'Rejected': 'નકારી', 'Your complaint': 'તમારી ફરિયાદ', 'has been': 'છે', 'processed': 'પ્રક્રિયા કરી', 'received': 'પ્રાપ્ત થઈ', 'assigned': 'સોંપાઈ', 'Updated by': 'દ્વારા અપડેટ', 'SYSTEM': 'સિસ્ટમ', 'department': 'વિભાગ', 'to': 'ને', 'for': 'માટે', 'investigation': 'તપાસ', 'Supply': 'પુરવઠો', 'Water': 'પાણી', 'Electricity': 'વીજળી', 'Road': 'રસ્તો', 'Health': 'આરોગ્ય', 'Education': 'શિક્ષણ', 'Transport': 'પરિવહન', 'issue': 'સમસ્યા', 'problem': 'સમસ્યા', 'complaint': 'ફરિયાદ', 'officer': 'અધિકારી', 'verified': 'ચકાસાયેલ', 'under review': 'સમીક્ષા હેઠળ', 'action taken': 'પગલાં લેવામાં આવ્યાં' },
+            'kn': { 'Received': 'ಸ್ವೀಕರಿಸಲಾಗಿದೆ', 'Assigned': 'ನಿಯೋಜಿಸಲಾಗಿದೆ', 'In Progress': 'ಪ್ರಗತಿಯಲ್ಲಿದೆ', 'Resolved': 'ಪರಿಹರಿಸಲಾಗಿದೆ', 'Closed': 'ಮುಚ್ಚಲಾಗಿದೆ', 'Rejected': 'ತಿರಸ್ಕರಿಸಲಾಗಿದೆ', 'Your complaint': 'ನಿಮ್ಮ ದೂರು', 'has been': 'ಇದೆ', 'processed': 'ಪ್ರಕ್ರಿಯೆಗೊಳಿಸಲಾಗಿದೆ', 'received': 'ಸ್ವೀಕರಿಸಲಾಗಿದೆ', 'assigned': 'ನಿಯೋಜಿಸಲಾಗಿದೆ', 'Updated by': 'ನವೀಕರಿಸಲಾಗಿದೆ', 'SYSTEM': 'ವ್ಯವಸ್ಥೆ', 'department': 'ಇಲಾಖೆ', 'to': 'ಗೆ', 'for': 'ಗಾಗಿ', 'investigation': 'ತನಿಖೆ', 'Supply': 'ಪೂರೈಕೆ', 'Water': 'ನೀರು', 'Electricity': 'ವಿದ್ಯುತ್', 'Road': 'ರಸ್ತೆ', 'Health': 'ಆರೋಗ್ಯ', 'Education': 'ಶಿಕ್ಷಣ', 'Transport': 'ಸಾರಿಗೆ', 'issue': 'ಸಮಸ್ಯೆ', 'problem': 'ಸಮಸ್ಯೆ', 'complaint': 'ದೂರು', 'officer': 'ಅಧಿಕಾರಿ', 'verified': 'ಪರಿಶೀಲಿಸಲಾಗಿದೆ', 'under review': 'ಪರಿಶೀಲನೆಯಲ್ಲಿ', 'action taken': 'ಕ್ರಮ ತೆಗೆದುಕೊಳ್ಳಲಾಗಿದೆ' },
+            'ml': { 'Received': 'ലഭിച്ചു', 'Assigned': 'നിയോഗിച്ചു', 'In Progress': 'പുരോഗതിയിൽ', 'Resolved': 'പരിഹരിച്ചു', 'Closed': 'അടച്ചു', 'Rejected': 'നിരസിച്ചു', 'Your complaint': 'നിങ്ങളുടെ പരാതി', 'has been': 'ആണ്', 'processed': 'പ്രോസസ്സ് ചെയ്തു', 'received': 'ലഭിച്ചു', 'assigned': 'നിയോഗിച്ചു', 'Updated by': 'അപ്ഡേറ്റ് ചെയ്തത്', 'SYSTEM': 'സിസ്റ്റം', 'department': 'വകുപ്പ്', 'to': 'ലേക്ക്', 'for': 'വേണ്ടി', 'investigation': 'അന്വേഷണം', 'Supply': 'വിതരണം', 'Water': 'വെള്ളം', 'Electricity': 'വൈദ്യുതി', 'Road': 'റോഡ്', 'Health': 'ആരോഗ്യം', 'Education': 'വിദ്യാഭ്യാസം', 'Transport': 'ഗതാഗതം', 'issue': 'പ്രശ്നം', 'problem': 'പ്രശ്നം', 'complaint': 'പരാതി', 'officer': 'ഉദ്യോഗസ്ഥൻ', 'verified': 'പരിശോധിച്ചു', 'under review': 'അവലോകനത്തിൽ', 'action taken': 'നടപടി എടുത്തു' },
+            'pa': { 'Received': 'ਪ੍ਰਾਪਤ', 'Assigned': 'ਨਿਯੁਕਤ', 'In Progress': 'ਪ੍ਰਗਤੀ ਵਿੱਚ', 'Resolved': 'ਹੱਲ ਹੋਇਆ', 'Closed': 'ਬੰਦ', 'Rejected': 'ਰੱਦ', 'Your complaint': 'ਤੁਹਾਡੀ ਸ਼ਿਕਾਇਤ', 'has been': 'ਹੈ', 'processed': 'ਪ੍ਰਕਿਰਿਆ ਕੀਤੀ', 'received': 'ਪ੍ਰਾਪਤ ਹੋਈ', 'assigned': 'ਨਿਯੁਕਤ ਕੀਤੀ', 'Updated by': 'ਦੁਆਰਾ ਅੱਪਡੇਟ', 'SYSTEM': 'ਸਿਸਟਮ', 'department': 'ਵਿਭਾਗ', 'to': 'ਨੂੰ', 'for': 'ਲਈ', 'investigation': 'ਜਾਂਚ', 'Supply': 'ਸਪਲਾਈ', 'Water': 'ਪਾਣੀ', 'Electricity': 'ਬਿਜਲੀ', 'Road': 'ਸੜਕ', 'Health': 'ਸਿਹਤ', 'Education': 'ਸਿੱਖਿਆ', 'Transport': 'ਆਵਾਜਾਈ', 'issue': 'ਮੁੱਦਾ', 'problem': 'ਸਮੱਸਿਆ', 'complaint': 'ਸ਼ਿਕਾਇਤ', 'officer': 'ਅਧਿਕਾਰੀ', 'verified': 'ਤਸਦੀਕ ਕੀਤੀ', 'under review': 'ਸਮੀਖਿਆ ਅਧੀਨ', 'action taken': 'ਕਾਰਵਾਈ ਕੀਤੀ' },
+            'or': { 'Received': 'ଗ୍ରହଣ କରାଯାଇଛି', 'Assigned': 'ନିଯୁକ୍ତ', 'In Progress': 'ପ୍ରଗତିରେ', 'Resolved': 'ସମାଧାନ ହୋଇଛି', 'Closed': 'ବନ୍ଦ', 'Rejected': 'ପ୍ରତ୍ୟାଖ୍ୟାନ', 'Your complaint': 'ଆପଣଙ୍କର ଅଭିଯୋଗ', 'has been': 'ହୋଇଛି', 'processed': 'ପ୍ରକ୍ରିୟା କରାଯାଇଛି', 'received': 'ଗ୍ରହଣ କରାଯାଇଛି', 'assigned': 'ନିଯୁକ୍ତ କରାଯାଇଛି', 'Updated by': 'ଦ୍ୱାରା ଅପଡେଟ୍', 'SYSTEM': 'ସିଷ୍ଟମ୍', 'department': 'ବିଭାଗ', 'to': 'କୁ', 'for': 'ପାଇଁ', 'investigation': 'ଅନୁସନ୍ଧାନ', 'Supply': 'ଯୋଗାଣ', 'Water': 'ଜଳ', 'Electricity': 'ବିଦ୍ୟୁତ୍', 'Road': 'ରାସ୍ତା', 'Health': 'ସ୍ୱାସ୍ଥ୍ୟ', 'Education': 'ଶିକ୍ଷା', 'Transport': 'ପରିବହନ', 'issue': 'ସମସ୍ୟା', 'problem': 'ସମସ୍ୟା', 'complaint': 'ଅଭିଯୋଗ', 'officer': 'ଅଧିକାରୀ', 'verified': 'ଯାଞ୍ଚ କରାଯାଇଛି', 'under review': 'ସମୀକ୍ଷାଧୀନ', 'action taken': 'କାର୍ଯ୍ୟାନୁଷ୍ଠାନ ନିଆଯାଇଛି' },
+            'as': { 'Received': 'প্ৰাপ্ত', 'Assigned': 'নিযুক্ত', 'In Progress': 'প্ৰগতিত', 'Resolved': 'সমাধান', 'Closed': 'বন্ধ', 'Rejected': 'প্ৰত্যাখ্যান', 'Your complaint': 'আপোনাৰ অভিযোগ', 'has been': 'হৈছে', 'processed': 'প্ৰক্ৰিয়া কৰা', 'received': 'প্ৰাপ্ত হৈছে', 'assigned': 'নিযুক্ত কৰা', 'Updated by': 'দ্বাৰা আপডেট', 'SYSTEM': 'ব্যৱস্থা', 'department': 'বিভাগ', 'to': 'লৈ', 'for': 'বাবে', 'investigation': 'তদন্ত', 'Supply': 'যোগান', 'Water': 'পানী', 'Electricity': 'বিদ্যুৎ', 'Road': 'পথ', 'Health': 'স্বাস্থ্য', 'Education': 'শিক্ষা', 'Transport': 'পৰিবহণ', 'issue': 'সমস্যা', 'problem': 'সমস্যা', 'complaint': 'অভিযোগ', 'officer': 'বিষয়া', 'verified': 'সত্যাপিত', 'under review': 'পৰ্যালোচনাধীন', 'action taken': 'পদক্ষেপ লোৱা হৈছে' }
+        };
+
+        // Simple translation function
+        function translateText(text, targetLang) {
+            if (targetLang === 'en' || !translations[targetLang]) {
+                return text;
+            }
+            
+            let translatedText = text;
+            const langDict = translations[targetLang];
+            
+            // Replace known phrases and words (case-insensitive)
+            for (const [english, translated] of Object.entries(langDict)) {
+                const regex = new RegExp(english, 'gi');
+                translatedText = translatedText.replace(regex, translated);
+            }
+            
+            return translatedText;
+        }
+
         async function autoTranslateComment(commentIndex, originalText, targetLang) {
             const translatedTextDiv = document.querySelector(`.translated-text-${commentIndex}`);
             
             if (!translatedTextDiv) return;
             
-            // Simulate translation (in production, use Google Translate API)
+            // Show loading indicator
+            translatedTextDiv.innerHTML = '<div style="color: #6B7280; font-style: italic;">⏳ Translating...</div>';
+            
+            // Simulate translation delay
             setTimeout(() => {
-                // For demo, show the same text
-                // In production, integrate with Google Translate API or similar
-                const translatedText = originalText; // Replace with actual API call
-                
+                const translatedText = translateText(originalText, targetLang);
                 translatedTextDiv.innerHTML = translatedText;
-            }, 800);
+            }, 300);
         }
         
         // Auto-translation function for timeline
@@ -554,14 +587,14 @@
             
             if (!translatedTextDiv) return;
             
-            // Simulate translation (in production, use Google Translate API)
+            // Show loading indicator
+            translatedTextDiv.innerHTML = '<div style="color: #6B7280; font-style: italic;">⏳ Translating...</div>';
+            
+            // Simulate translation delay
             setTimeout(() => {
-                // For demo, show the same text
-                // In production, integrate with Google Translate API or similar
-                const translatedText = originalText; // Replace with actual API call
-                
+                const translatedText = translateText(originalText, targetLang);
                 translatedTextDiv.innerHTML = translatedText;
-            }, 600);
+            }, 300);
         }
         
         // Change individual comment language
