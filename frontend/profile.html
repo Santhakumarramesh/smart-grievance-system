@@ -327,14 +327,16 @@
                     <div class="info-label">Email Address</div>
                     <div class="info-value display" id="emailDisplay"></div>
                     <div class="info-value edit">
-                        <input type="email" id="emailInput" disabled>
+                        <input type="email" id="emailInput" disabled style="background: #f3f4f6; cursor: not-allowed;" title="Email cannot be changed. Contact admin if needed.">
+                        <small style="color: #6b7280; display: block; margin-top: 5px;">Email cannot be changed</small>
                     </div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">Phone Number</div>
                     <div class="info-value display" id="phoneDisplay"></div>
                     <div class="info-value edit">
-                        <input type="tel" id="phoneInput">
+                        <input type="tel" id="phoneInput" disabled style="background: #f3f4f6; cursor: not-allowed;" title="Phone cannot be changed. Contact admin if needed.">
+                        <small style="color: #6b7280; display: block; margin-top: 5px;">Phone cannot be changed. Contact admin if needed.</small>
                     </div>
                 </div>
                 <div class="info-item">
@@ -864,12 +866,18 @@
 
         function toggleEditMode() {
             isEditMode = true;
-            document.getElementById('personalSection').classList.remove('view-mode');
-            document.getElementById('personalSection').classList.add('edit-mode');
-            document.getElementById('addressSection').classList.remove('view-mode');
-            document.getElementById('addressSection').classList.add('edit-mode');
-            document.getElementById('residentialAddressSection').classList.remove('view-mode');
-            document.getElementById('residentialAddressSection').classList.add('edit-mode');
+            const personalSection = document.getElementById('personalSection');
+            const residentialSection = document.getElementById('residentialAddressSection');
+            
+            if (personalSection) {
+                personalSection.classList.remove('view-mode');
+                personalSection.classList.add('edit-mode');
+            }
+            
+            if (residentialSection) {
+                residentialSection.classList.remove('view-mode');
+                residentialSection.classList.add('edit-mode');
+            }
             
             document.getElementById('editBtn').style.display = 'none';
             document.getElementById('saveBtn').style.display = 'inline-block';
@@ -878,12 +886,18 @@
 
         function cancelEdit() {
             isEditMode = false;
-            document.getElementById('personalSection').classList.remove('edit-mode');
-            document.getElementById('personalSection').classList.add('view-mode');
-            document.getElementById('addressSection').classList.remove('edit-mode');
-            document.getElementById('addressSection').classList.add('view-mode');
-            document.getElementById('residentialAddressSection').classList.remove('edit-mode');
-            document.getElementById('residentialAddressSection').classList.add('view-mode');
+            const personalSection = document.getElementById('personalSection');
+            const residentialSection = document.getElementById('residentialAddressSection');
+            
+            if (personalSection) {
+                personalSection.classList.remove('edit-mode');
+                personalSection.classList.add('view-mode');
+            }
+            
+            if (residentialSection) {
+                residentialSection.classList.remove('edit-mode');
+                residentialSection.classList.add('view-mode');
+            }
             
             document.getElementById('editBtn').style.display = 'inline-block';
             document.getElementById('saveBtn').style.display = 'none';
@@ -913,7 +927,7 @@
                 
                 const updatedData = {
                     name: fullName,
-                    phone: document.getElementById('phoneInput').value,
+                    // Note: phone and email are not editable (require admin)
                     date_of_birth: document.getElementById('dobInput').value,
                     gender: document.getElementById('genderInput').value,
                     // Residential address (permanent)
@@ -922,12 +936,6 @@
                     residential_state: document.getElementById('residentialStateInput').value,
                     residential_pincode: document.getElementById('residentialPincodeInput').value
                 };
-
-                // Validate required fields
-                if (!updatedData.phone) {
-                    showAlert('Phone number is required', 'error');
-                    return;
-                }
 
                 // Validate residential pincode (required)
                 if (updatedData.residential_pincode && !/^\d{6}$/.test(updatedData.residential_pincode)) {
@@ -955,11 +963,11 @@
 
         function goBack() {
             if (currentUser.role === 'ADMIN') {
-                window.location.href = '/admin.html';
+                window.location.href = 'admin.html';
             } else if (currentUser.role === 'OFFICER') {
-                window.location.href = '/officer.html';
+                window.location.href = 'officer.html';
             } else {
-                window.location.href = '/index.html';
+                window.location.href = 'index.html';
             }
         }
 
