@@ -202,15 +202,60 @@
                     ` : ''}
                 `;
 
-                // Display timeline
+                // Display timeline with translation
+                const selectedLang = document.getElementById('commentLanguageSelect').value;
+                const languageNames = {
+                    'en': 'English',
+                    'hi': 'हिंदी',
+                    'ta': 'தமிழ்',
+                    'te': 'తెలుగు',
+                    'bn': 'বাংলা',
+                    'mr': 'मराठी',
+                    'gu': 'ગુજરાતી',
+                    'kn': 'ಕನ್ನಡ',
+                    'ml': 'മലയാളം',
+                    'pa': 'ਪੰਜਾਬੀ',
+                    'or': 'ଓଡ଼ିଆ',
+                    'as': 'অসমীয়া'
+                };
+                
                 if (grievance.updates && grievance.updates.length > 0) {
                     const timelineHtml = grievance.updates.map((update, index) => {
                         const isCompleted = ['Resolved', 'Closed'].includes(update.status);
+                        const isOfficerUpdate = update.updated_by_role === 'OFFICER' || update.updated_by_role === 'ADMIN';
+                        const showTranslation = isOfficerUpdate && selectedLang !== 'en';
+                        
                         return `
-                            <div class="timeline-item ${isCompleted ? 'completed' : ''}">
+                            <div class="timeline-item ${isCompleted ? 'completed' : ''}" data-timeline-index="${index}">
                                 <div class="timeline-content">
                                     <div class="timeline-status">${update.status}</div>
-                                    <div class="timeline-message">${update.message}</div>
+                                    
+                                    ${showTranslation ? `
+                                        <!-- Translated Message -->
+                                        <div style="margin-bottom: 0.5rem;">
+                                            <div style="display: inline-block; background: #10B981; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.65rem; font-weight: 700; margin-bottom: 0.25rem;">
+                                                📝 ${languageNames[selectedLang]}
+                                            </div>
+                                        </div>
+                                        <div class="timeline-message timeline-translated-${index}" style="font-weight: 600; font-size: 1.05em; line-height: 1.8;">
+                                            <div style="color: #6B7280; font-size: 0.875rem;">
+                                                <div class="spinner" style="width: 16px; height: 16px; border-width: 2px; display: inline-block; vertical-align: middle;"></div>
+                                                Translating...
+                                            </div>
+                                        </div>
+                                        <details style="margin-top: 0.5rem;">
+                                            <summary style="cursor: pointer; font-size: 0.75rem; color: #6B7280; font-weight: 600;">
+                                                📄 Original Message
+                                            </summary>
+                                            <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #E5E7EB; font-size: 0.9em; color: #4B5563;">
+                                                ${update.message}
+                                            </div>
+                                        </details>
+                                    ` : `
+                                        <!-- Original Message -->
+                                        <div class="timeline-message">${update.message}</div>
+                                    `}
+                                    
                                     <div class="timeline-meta">
                                         <span>Updated by: ${update.updated_by_name} (${update.updated_by_role})</span>
                                         <span>${formatDate(update.timestamp)}</span>
@@ -225,6 +270,16 @@
                             ${timelineHtml}
                         </div>
                     `;
+                    
+                    // Auto-translate timeline messages
+                    if (selectedLang !== 'en') {
+                        grievance.updates.forEach((update, index) => {
+                            const isOfficerUpdate = update.updated_by_role === 'OFFICER' || update.updated_by_role === 'ADMIN';
+                            if (isOfficerUpdate) {
+                                autoTranslateTimeline(index, update.message, selectedLang);
+                            }
+                        });
+                    }
                 } else {
                     document.getElementById('timeline').innerHTML = 
                         '<p style="color: var(--text-secondary);">No updates yet.</p>';
@@ -477,7 +532,7 @@
         loadGrievance();
         loadComments();
 
-        // Auto-translation function
+        // Auto-translation function for comments
         async function autoTranslateComment(commentIndex, originalText, targetLang) {
             const translatedTextDiv = document.querySelector(`.translated-text-${commentIndex}`);
             
@@ -491,6 +546,22 @@
                 
                 translatedTextDiv.innerHTML = translatedText;
             }, 800);
+        }
+        
+        // Auto-translation function for timeline
+        async function autoTranslateTimeline(timelineIndex, originalText, targetLang) {
+            const translatedTextDiv = document.querySelector(`.timeline-translated-${timelineIndex}`);
+            
+            if (!translatedTextDiv) return;
+            
+            // Simulate translation (in production, use Google Translate API)
+            setTimeout(() => {
+                // For demo, show the same text
+                // In production, integrate with Google Translate API or similar
+                const translatedText = originalText; // Replace with actual API call
+                
+                translatedTextDiv.innerHTML = translatedText;
+            }, 600);
         }
         
         // Change individual comment language
