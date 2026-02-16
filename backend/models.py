@@ -188,6 +188,14 @@ class Grievance(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
+        
+        # Add complainant information from User table
+        complainant = User.query.get(self.user_id)
+        if complainant:
+            result['complainant_name'] = complainant.name
+            result['complainant_phone'] = complainant.phone
+            result['complainant_email'] = complainant.email
+        
         if include_officer and self.assigned_officer:
             result['assigned_officer'] = {
                 'id': self.assigned_officer.id,
