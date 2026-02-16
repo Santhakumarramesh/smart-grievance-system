@@ -74,6 +74,34 @@ def get_officers():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@admin_bp.route('/users', methods=['GET'])
+def get_users():
+    """
+    Get all users/citizens (Admin only)
+    """
+    try:
+        user = get_current_user_from_token()
+        if not user or user.role != 'ADMIN':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        # Get all citizens
+        citizens = User.query.filter_by(role='CITIZEN').all()
+        
+        # Get grievance count for each citizen
+        users_data = []
+        for citizen in citizens:
+            user_dict = citizen.to_dict()
+            grievance_count = Grievance.query.filter_by(user_id=citizen.id).count()
+            user_dict['grievance_count'] = grievance_count
+            users_data.append(user_dict)
+        
+        return jsonify({
+            'users': users_data
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @admin_bp.route('/analytics', methods=['GET'])
 def get_analytics():
     """
@@ -167,7 +195,7 @@ def get_all_grievances():
         grievances = query.order_by(Grievance.created_at.desc()).all()
         
         return jsonify({
-            'grievances': [g.to_dict() for g in grievances]
+            'grievances': [g.to_dict(include_officer=True) for g in grievances]
         }), 200
         
     except Exception as e:

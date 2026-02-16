@@ -22,12 +22,29 @@ def submit_grievance():
         
         data = request.get_json()
         complaint_text = data.get('complaint_text')
+        location = data.get('location', '')
+        images = data.get('images', [])
         
         if not complaint_text or len(complaint_text.strip()) < 20:
             return jsonify({'error': 'Complaint text must be at least 20 characters'}), 400
         
+        if not location or len(location.strip()) < 10:
+            return jsonify({'error': 'Please provide a detailed location'}), 400
+        
+        # Validate images
+        if images and len(images) > 5:
+            return jsonify({'error': 'Maximum 5 images allowed'}), 400
+        
         # Predict department using ML
         predicted_department = classifier.predict(complaint_text)
+        
+        # Get complainant info from user profile
+        complainant_dob = user.date_of_birth
+        complainant_gender = user.gender
+        
+        # Store images as JSON
+        import json
+        images_json = json.dumps(images) if images else None
         
         # Create grievance
         grievance = Grievance(
@@ -36,7 +53,10 @@ def submit_grievance():
             predicted_department=predicted_department,
             assigned_department=predicted_department,
             status='Received',
-            location=data.get('location', '')
+            location=location,
+            images=images_json,
+            complainant_dob=complainant_dob,
+            complainant_gender=complainant_gender
         )
         
         db.session.add(grievance)

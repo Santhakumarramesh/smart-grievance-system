@@ -202,50 +202,6 @@ Smart Grievance System | Digital India Initiative
         return EmailService.send_email(user_email, subject, body)
     
     @staticmethod
-    def send_otp_email(user_email, otp, user_name=None):
-        """
-        Send OTP verification email
-        """
-        subject = "Your OTP for Smart Grievance System Verification"
-        
-        greeting = f"Dear {user_name}," if user_name else "Dear User,"
-        
-        body = f"""
-{greeting}
-
-Thank you for registering with the Smart Grievance System!
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔐 YOUR VERIFICATION CODE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Your One-Time Password (OTP) is:
-
-        {otp}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⏰ IMPORTANT INFORMATION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-• This OTP is valid for 5 minutes only
-• Do not share this OTP with anyone
-• If you didn't request this, please ignore this email
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔒 SECURITY TIP
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Government officials will NEVER ask for your OTP.
-Keep your OTP confidential to protect your account.
-
----
-This is an automated message. Please do not reply.
-Smart Grievance System | Digital India Initiative 🇮🇳
-        """
-        
-        return EmailService.send_email(user_email, subject, body)
-    
-    @staticmethod
     def send_welcome_email(user_email, user_name):
         """
         Send welcome email after registration
@@ -289,46 +245,6 @@ Digital India Initiative 🇮🇳
         return EmailService.send_email(user_email, subject, body)
     
     @staticmethod
-    def send_password_reset_confirmation(user_email, user_name):
-        """
-        Send confirmation email after password reset
-        """
-        subject = "Password Reset Successful - Smart Grievance System"
-        
-        body = f"""
-Dear {user_name},
-
-Your password has been successfully reset.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ PASSWORD CHANGED
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Your account password was changed on {datetime.utcnow().strftime('%B %d, %Y at %I:%M %p UTC')}.
-
-You can now login with your new password.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔒 SECURITY NOTICE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-If you did NOT request this password change, please contact us immediately.
-Your account security is important to us.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔗 LOGIN NOW
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Login at: http://localhost:8000/login.html
-
----
-This is an automated message. Please do not reply.
-Smart Grievance System | Digital India Initiative 🇮🇳
-        """
-        
-        return EmailService.send_email(user_email, subject, body)
-    
-    @staticmethod
     def send_comment_notification(user_email, grievance_id, commenter_name, comment_text):
         """
         Send notification when someone comments on a grievance
@@ -361,6 +277,62 @@ Comment:
 ---
 This is an automated message. Please do not reply.
 Smart Grievance System | Digital India Initiative
+        """
+        
+        return EmailService.send_email(user_email, subject, body)
+    
+    @staticmethod
+    def send_otp_email(user_email, otp_code, user_name=None):
+        """
+        Send OTP verification email
+        """
+        subject = "🔐 Verify Your Email - Smart Grievance System"
+        
+        greeting = f"Dear {user_name}," if user_name else "Dear User,"
+        
+        body = f"""
+{greeting}
+
+Thank you for registering with Smart Grievance System! 🇮🇳
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔐 EMAIL VERIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Your verification code is:
+
+    ┌─────────────────┐
+    │   {otp_code}    │
+    └─────────────────┘
+
+⏰ This code will expire in 5 minutes.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ IMPORTANT SECURITY NOTICE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ Never share this code with anyone
+✓ Our team will never ask for your OTP
+✓ If you didn't register, please ignore this email
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔗 NEXT STEPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Enter the 6-digit code on the verification page
+2. Your account will be activated
+3. You can start submitting grievances
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Need help? Visit: http://localhost:8000/
+
+Best regards,
+Smart Grievance System Team
+Digital India Initiative 🇮🇳
+
+---
+This is an automated message. Please do not reply.
         """
         
         return EmailService.send_email(user_email, subject, body)

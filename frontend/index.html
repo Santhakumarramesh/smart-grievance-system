@@ -5,14 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submit Grievance - Smart Grievance System</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="department-backgrounds.css">
 </head>
 <body>
     <header class="header">
-        <div class="header-content">
-            <h1>Smart Grievance System</h1>
-            <div class="header-actions">
-                <div class="user-info"></div>
-                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+        <div class="header-main">
+            <div class="container">
+                <div class="header-content">
+                    <h1>🇮🇳 Smart Grievance System</h1>
+                    <div class="header-actions">
+                        <a href="profile.html" class="btn btn-secondary" style="text-decoration: none;">👤 Profile</a>
+                        <div class="user-info"></div>
+                        <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
@@ -23,7 +29,7 @@
             
             <form id="grievanceForm">
                 <div class="form-group">
-                    <label class="form-label" for="complaint">Complaint Details</label>
+                    <label class="form-label" for="complaint">Complaint Details <span style="color: #ef4444;">*</span></label>
                     <textarea id="complaint" class="form-textarea" rows="6" 
                         placeholder="Describe your complaint in detail (minimum 20 characters)" 
                         required minlength="20"></textarea>
@@ -33,9 +39,33 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="location">Location (Optional)</label>
+                    <label class="form-label" for="location">Exact Location <span style="color: #ef4444;">*</span></label>
                     <input type="text" id="location" class="form-input" 
-                        placeholder="e.g., Street name, Area, City">
+                        placeholder="Enter complete address: Building/House No, Street, Area, Landmark, City, State, PIN" 
+                        required>
+                    <small style="color: var(--text-secondary);">
+                        📍 Please provide exact location for faster resolution. Include landmarks if possible.
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="complaintImages">Upload Images (Optional)</label>
+                    <div style="border: 2px dashed #D1D5DB; border-radius: 8px; padding: 1.5rem; text-align: center; background: #F9FAFB; cursor: pointer; transition: all 0.2s;" 
+                         id="imageDropZone"
+                         onclick="document.getElementById('complaintImages').click()">
+                        <div style="font-size: 3rem; margin-bottom: 0.5rem;">📸</div>
+                        <p style="margin: 0 0 0.5rem 0; color: #374151; font-weight: 500;">
+                            Click to upload or drag and drop
+                        </p>
+                        <small style="color: #6B7280;">
+                            PNG, JPG, JPEG up to 5MB each (Max 5 images)
+                        </small>
+                    </div>
+                    <input type="file" id="complaintImages" accept="image/*" multiple style="display: none;">
+                    
+                    <!-- Image Preview Container -->
+                    <div id="imagePreviewContainer" style="display: none; margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 1rem;">
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary">Submit Grievance</button>
@@ -51,6 +81,7 @@
     </div>
 
     <script src="app.js"></script>
+    <script src="department-showcase.js"></script>
     <script>
         if (!checkAuth()) {
             throw new Error('Not authenticated');
@@ -101,42 +132,177 @@
             }
         }
 
+        // Image upload handling
+        let uploadedImages = [];
+        const maxImages = 5;
+        const maxFileSize = 5 * 1024 * 1024; // 5MB
+
+        document.getElementById('complaintImages').addEventListener('change', handleImageUpload);
+
+        // Drag and drop
+        const dropZone = document.getElementById('imageDropZone');
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#003DA5';
+            dropZone.style.background = '#EFF6FF';
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#D1D5DB';
+            dropZone.style.background = '#F9FAFB';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#D1D5DB';
+            dropZone.style.background = '#F9FAFB';
+            
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            if (files.length > 0) {
+                handleImageFiles(files);
+            }
+        });
+
+        function handleImageUpload(e) {
+            const files = Array.from(e.target.files);
+            handleImageFiles(files);
+        }
+
+        function handleImageFiles(files) {
+            if (uploadedImages.length + files.length > maxImages) {
+                showAlert(`You can only upload up to ${maxImages} images`, 'error');
+                return;
+            }
+
+            files.forEach(file => {
+                if (file.size > maxFileSize) {
+                    showAlert(`${file.name} is too large. Maximum size is 5MB`, 'error');
+                    return;
+                }
+
+                if (!file.type.startsWith('image/')) {
+                    showAlert(`${file.name} is not an image file`, 'error');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedImages.push({
+                        name: file.name,
+                        data: e.target.result,
+                        size: file.size
+                    });
+                    displayImagePreviews();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function displayImagePreviews() {
+            const container = document.getElementById('imagePreviewContainer');
+            
+            if (uploadedImages.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'grid';
+            container.innerHTML = uploadedImages.map((img, index) => `
+                <div style="position: relative; border: 2px solid #E5E7EB; border-radius: 8px; overflow: hidden; aspect-ratio: 1;">
+                    <img src="${img.data}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <button type="button" onclick="removeImage(${index})" style="
+                        position: absolute;
+                        top: 4px;
+                        right: 4px;
+                        background: #EF4444;
+                        color: white;
+                        border: none;
+                        border-radius: 50%;
+                        width: 24px;
+                        height: 24px;
+                        cursor: pointer;
+                        font-size: 14px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                    ">×</button>
+                    <div style="
+                        position: absolute;
+                        bottom: 0;
+                        left: 0;
+                        right: 0;
+                        background: rgba(0,0,0,0.7);
+                        color: white;
+                        padding: 4px;
+                        font-size: 10px;
+                        text-align: center;
+                    ">${(img.size / 1024).toFixed(0)} KB</div>
+                </div>
+            `).join('');
+        }
+
+        function removeImage(index) {
+            uploadedImages.splice(index, 1);
+            displayImagePreviews();
+        }
+
         // Submit grievance
         document.getElementById('grievanceForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const complaint = document.getElementById('complaint').value;
-            const location = document.getElementById('location').value;
+            const complaint = document.getElementById('complaint').value.trim();
+            const location = document.getElementById('location').value.trim();
 
+            // Validation
             if (complaint.length < 20) {
-                showAlert('Complaint must be at least 20 characters long', 'error');
+                showAlert('❌ Complaint must be at least 20 characters long', 'error');
+                return;
+            }
+
+            if (!location || location.length < 10) {
+                showAlert('❌ Please provide a detailed location (at least 10 characters)', 'error');
+                return;
+            }
+
+            // Check if location has basic components
+            const locationParts = location.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            if (locationParts.length < 2) {
+                showAlert('❌ Please provide a complete address with street, area, and city', 'error');
                 return;
             }
 
             try {
+                const submitData = {
+                    complaint_text: complaint,
+                    location: location,
+                    images: uploadedImages.map(img => img.data) // Send base64 images
+                };
+
                 const data = await apiCall('/grievances/submit', {
                     method: 'POST',
-                    body: JSON.stringify({
-                        complaint_text: complaint,
-                        location
-                    })
+                    body: JSON.stringify(submitData)
                 });
 
-                showAlert(`Grievance submitted successfully! Assigned to ${data.department} department.`, 'success');
+                showAlert(`✅ Grievance submitted successfully! Assigned to ${data.department} department.`, 'success');
                 
-                // Reset form
+                // Reset form and images
                 document.getElementById('grievanceForm').reset();
+                uploadedImages = [];
+                displayImagePreviews();
                 
                 // Reload grievances
                 loadGrievances();
 
             } catch (error) {
-                showAlert(error.message, 'error');
+                showAlert('❌ ' + error.message, 'error');
             }
         });
 
         // Load grievances on page load
         loadGrievances();
     </script>
+    <script src="language-selector-widget.js"></script>
 </body>
 </html>

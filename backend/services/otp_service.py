@@ -1,8 +1,9 @@
 import random
 from datetime import datetime, timedelta
-from backend.models import OTPRequest
+from backend.models import OTPRequest, User
 from backend.extensions import db
 from backend.config import Config
+from backend.services.email_service import EmailService
 
 class OTPService:
     @staticmethod
@@ -48,6 +49,19 @@ class OTPService:
             print(f"OTP: {otp}")
             print(f"Expires at: {otp_request.expires_at}")
             print(f"{'='*60}\n")
+        
+        # Send OTP via email if channel is email
+        if channel == 'email':
+            try:
+                # Try to get user name
+                user = User.query.filter_by(email=identifier).first()
+                user_name = user.name if user else None
+                
+                # Send OTP email
+                EmailService.send_otp_email(identifier, str(otp), user_name)
+            except Exception as e:
+                print(f"⚠️ Failed to send OTP email: {e}")
+                # Don't fail the OTP creation if email fails
         
         return otp, None
     

@@ -82,9 +82,9 @@ body::after {
 
 /* Container */
 .container {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 0 20px;
     position: relative;
     z-index: 1;
 }
@@ -107,7 +107,7 @@ body::after {
 
 .header-main {
     background: linear-gradient(135deg, var(--ashoka-blue) 0%, #003366 100%);
-    padding: 1rem 0;
+    padding: 1.2rem 0;
 }
 
 .header-content {
@@ -117,7 +117,7 @@ body::after {
 }
 
 .header h1 {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     font-weight: 700;
     color: white;
     display: flex;
@@ -228,8 +228,8 @@ body::after {
 .card {
     background: white;
     border-radius: 16px;
-    padding: 1.5rem;
-    margin: 1.5rem 0;
+    padding: 2rem;
+    margin: 2rem 0;
     box-shadow: var(--shadow-md);
     border-left: 6px solid var(--saffron);
     position: relative;
@@ -292,10 +292,10 @@ body::after {
 }
 
 .card-title {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-dark);
-    margin-bottom: 1.2rem;
+    margin-bottom: 1.5rem;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -303,7 +303,7 @@ body::after {
 
 /* Form Elements with Indian Theme */
 .form-group {
-    margin-bottom: 1.2rem;
+    margin-bottom: 1.5rem;
 }
 
 .form-label {
@@ -318,10 +318,10 @@ body::after {
 .form-textarea,
 .form-select {
     width: 100%;
-    padding: 0.7rem 1rem;
+    padding: 0.9rem 1.2rem;
     border: 2px solid var(--border-light);
-    border-radius: 8px;
-    font-size: 0.95rem;
+    border-radius: 10px;
+    font-size: 1rem;
     font-family: inherit;
     transition: all 0.3s ease;
     background: white;
@@ -338,7 +338,7 @@ body::after {
 
 .form-textarea {
     resize: vertical;
-    min-height: 100px;
+    min-height: 120px;
 }
 
 /* Status Badges with Indian Colors */

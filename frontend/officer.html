@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Officer Dashboard - Smart Grievance System</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="department-backgrounds.css">
 </head>
 <body>
     <header class="header">
@@ -12,6 +13,7 @@
             <h1>Officer Dashboard</h1>
             <div class="header-actions">
                 <div class="user-info"></div>
+                <a href="officer-profile.html" class="btn btn-primary" style="margin-right: 10px;">👤 Profile</a>
                 <button id="logoutBtn" class="btn btn-secondary">Logout</button>
             </div>
         </div>
@@ -121,8 +123,16 @@
                                 ${data.grievances.map(g => `
                                     <tr>
                                         <td>#${g.id}</td>
-                                        <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                            ${g.complaint_text}
+                                        <td style="max-width: 300px;">
+                                            <div style="margin-bottom: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                ${g.complaint_text}
+                                            </div>
+                                            <button onclick="showTranslationModal('${g.complaint_text.replace(/'/g, "\\'")}', getCurrentLanguage())" 
+                                                    class="translate-btn" 
+                                                    style="padding: 4px 10px; font-size: 12px;">
+                                                <span class="translate-icon">🌐</span>
+                                                <span class="translate-text">Translate</span>
+                                            </button>
                                         </td>
                                         <td>${g.location || '-'}</td>
                                         <td><span class="badge ${getStatusBadgeClass(g.status)}">${g.status}</span></td>
@@ -261,5 +271,8 @@
         // Auto-refresh every 60 seconds
         setInterval(loadGrievances, 60000);
     </script>
+    <script src="department-showcase.js"></script>
+    <script src="language-selector-widget.js"></script>
+    <script src="complaint-translator.js"></script>
 </body>
 </html>

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Smart Grievance System</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="department-backgrounds.css">
 </head>
 <body>
     <header class="header">
@@ -97,9 +98,17 @@
             </form>
         </div>
 
+        <!-- User Information -->
+        <div class="card">
+            <h2 class="card-title">👥 All Users (Citizens)</h2>
+            <div id="usersList">
+                <div class="spinner"></div>
+            </div>
+        </div>
+
         <!-- Officers List -->
         <div class="card">
-            <h2 class="card-title">All Officers</h2>
+            <h2 class="card-title">👮 All Officers</h2>
             <div id="officersList">
                 <div class="spinner"></div>
             </div>
@@ -201,6 +210,57 @@
             }
         }
 
+        // Load users (citizens)
+        async function loadUsers() {
+            try {
+                const data = await apiCall('/admin/users');
+                const usersList = document.getElementById('usersList');
+
+                if (data.users.length === 0) {
+                    usersList.innerHTML = '<p style="color: var(--text-secondary);">No users registered yet.</p>';
+                    return;
+                }
+
+                usersList.innerHTML = `
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>City/State</th>
+                                    <th>Grievances</th>
+                                    <th>Email Status</th>
+                                    <th>Registered</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.users.map(u => `
+                                    <tr>
+                                        <td>${u.name}</td>
+                                        <td>${u.email}</td>
+                                        <td>${u.phone}</td>
+                                        <td>${u.city || '-'}, ${u.state || '-'}</td>
+                                        <td><span class="badge badge-progress">${u.grievance_count}</span></td>
+                                        <td>
+                                            ${u.email_verified 
+                                                ? '<span class="badge badge-success">✓ Verified</span>' 
+                                                : '<span class="badge badge-pending">⏳ Pending</span>'}
+                                        </td>
+                                        <td>${formatDate(u.created_at)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('usersList').innerHTML = 
+                    `<p class="alert alert-error">${error.message}</p>`;
+            }
+        }
+
         // Load officers
         async function loadOfficers() {
             try {
@@ -212,7 +272,41 @@
                     return;
                 }
 
+                // Higher Authority Contact Numbers by State
+                const higherAuthority = {
+                    'Tamil Nadu': { name: 'Chief Secretary, TN', phone: '044-2567-0001', email: 'cs@tn.gov.in' },
+                    'Karnataka': { name: 'Chief Secretary, KA', phone: '080-2225-2001', email: 'cs@karnataka.gov.in' },
+                    'Maharashtra': { name: 'Chief Secretary, MH', phone: '022-2202-0001', email: 'cs@maharashtra.gov.in' },
+                    'Delhi': { name: 'Chief Secretary, Delhi', phone: '011-2339-0001', email: 'cs@delhi.gov.in' },
+                    'Kerala': { name: 'Chief Secretary, Kerala', phone: '0471-2518-001', email: 'cs@kerala.gov.in' },
+                    'Gujarat': { name: 'Chief Secretary, Gujarat', phone: '079-2323-0001', email: 'cs@gujarat.gov.in' },
+                    'Rajasthan': { name: 'Chief Secretary, Rajasthan', phone: '0141-2227-001', email: 'cs@rajasthan.gov.in' },
+                    'West Bengal': { name: 'Chief Secretary, WB', phone: '033-2214-0001', email: 'cs@wb.gov.in' },
+                    'Uttar Pradesh': { name: 'Chief Secretary, UP', phone: '0522-2239-001', email: 'cs@up.gov.in' },
+                    'Default': { name: 'National Helpline', phone: '1800-111-555', email: 'grievance@india.gov.in' }
+                };
+
+                const state = 'Tamil Nadu'; // Can be made dynamic based on user location
+                const authority = higherAuthority[state] || higherAuthority['Default'];
+
                 officersList.innerHTML = `
+                    <div style="background: linear-gradient(135deg, #FF9933 0%, #FFFFFF 50%, #138808 100%); padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #FF9933;">
+                        <h3 style="margin: 0 0 10px 0; color: #1F2937;">📞 Higher Authority Contact (${state})</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div>
+                                <strong style="color: #6B7280;">Name:</strong><br>
+                                <span style="color: #1F2937;">${authority.name}</span>
+                            </div>
+                            <div>
+                                <strong style="color: #6B7280;">Phone:</strong><br>
+                                <a href="tel:${authority.phone}" style="color: #FF9933; text-decoration: none; font-weight: 600;">${authority.phone}</a>
+                            </div>
+                            <div>
+                                <strong style="color: #6B7280;">Email:</strong><br>
+                                <a href="mailto:${authority.email}" style="color: #138808; text-decoration: none; font-weight: 600;">${authority.email}</a>
+                            </div>
+                        </div>
+                    </div>
                     <div class="table-container">
                         <table>
                             <thead>
@@ -287,6 +381,8 @@
                                     <th>ID</th>
                                     <th>Complaint</th>
                                     <th>Department</th>
+                                    <th>Assigned Officer</th>
+                                    <th>Officer Contact</th>
                                     <th>Status</th>
                                     <th>Submitted</th>
                                     <th>Action</th>
@@ -300,6 +396,20 @@
                                             ${g.complaint_text}
                                         </td>
                                         <td><span class="badge badge-progress">${g.assigned_department}</span></td>
+                                        <td>
+                                            ${g.assigned_officer ? `
+                                                <strong>${g.assigned_officer.name}</strong><br>
+                                                <small>${g.assigned_officer.designation || 'Officer'}</small><br>
+                                                <small style="color: #6B7280;">📍 ${g.assigned_officer.office_building || 'Office'}</small>
+                                            ` : '<span style="color: #9CA3AF;">Not Assigned</span>'}
+                                        </td>
+                                        <td>
+                                            ${g.assigned_officer ? `
+                                                <small>📞 ${g.assigned_officer.office_number || g.assigned_officer.phone}</small><br>
+                                                <small>📧 ${g.assigned_officer.office_email || g.assigned_officer.email}</small><br>
+                                                <small style="color: #6B7280;">📍 ${g.assigned_officer.office_location || 'N/A'}</small>
+                                            ` : '<span style="color: #9CA3AF;">-</span>'}
+                                        </td>
                                         <td><span class="badge ${getStatusBadgeClass(g.status)}">${g.status}</span></td>
                                         <td>${formatDate(g.created_at)}</td>
                                         <td>
@@ -349,6 +459,7 @@
 
         // Load data on page load
         loadAnalytics();
+        loadUsers();
         loadOfficers();
         loadDepartments();
         loadGrievances();
@@ -356,5 +467,7 @@
         // Auto-refresh analytics every 60 seconds
         setInterval(loadAnalytics, 60000);
     </script>
+    <script src="department-showcase.js"></script>
+    <script src="language-selector-widget.js"></script>
 </body>
 </html>

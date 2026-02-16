@@ -16,6 +16,23 @@ class User(db.Model):
     phone_verified = db.Column(db.Boolean, default=False)
     aadhaar_last4 = db.Column(db.String(4), nullable=True)
     aadhaar_hash = db.Column(db.String(255), nullable=True)
+    
+    # Officer-specific fields
+    office_number = db.Column(db.String(50), nullable=True)  # Office contact number
+    office_email = db.Column(db.String(120), nullable=True)  # Official office email
+    office_location = db.Column(db.String(500), nullable=True)  # Office address
+    office_building = db.Column(db.String(200), nullable=True)  # Building/Block name
+    designation = db.Column(db.String(100), nullable=True)  # Officer designation
+    
+    # Profile fields
+    profile_photo = db.Column(db.Text, nullable=True)  # Base64 encoded image
+    address = db.Column(db.String(500), nullable=True)
+    city = db.Column(db.String(100), nullable=True)
+    state = db.Column(db.String(100), nullable=True)
+    pincode = db.Column(db.String(10), nullable=True)
+    date_of_birth = db.Column(db.String(20), nullable=True)
+    gender = db.Column(db.String(20), nullable=True)
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -37,6 +54,19 @@ class User(db.Model):
             'department': self.department,
             'email_verified': self.email_verified,
             'phone_verified': self.phone_verified,
+            'office_number': self.office_number,
+            'office_email': self.office_email,
+            'office_location': self.office_location,
+            'office_building': self.office_building,
+            'designation': self.designation,
+            'profile_photo': self.profile_photo,
+            'address': self.address,
+            'city': self.city,
+            'state': self.state,
+            'pincode': self.pincode,
+            'date_of_birth': self.date_of_birth,
+            'gender': self.gender,
+            'aadhaar_last4': self.aadhaar_last4,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
@@ -67,27 +97,62 @@ class Grievance(db.Model):
     complaint_text = db.Column(db.Text, nullable=False)
     predicted_department = db.Column(db.String(100), nullable=False)
     assigned_department = db.Column(db.String(100), nullable=False)
+    assigned_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Officer handling the case
     status = db.Column(db.String(50), nullable=False, default='Received')
-    location = db.Column(db.String(200), nullable=True)
+    location = db.Column(db.Text, nullable=True)  # Changed to Text for longer addresses
+    images = db.Column(db.Text, nullable=True)  # JSON array of base64 images
+    
+    # Complainant information (captured at time of complaint)
+    complainant_dob = db.Column(db.String(20), nullable=True)  # Date of birth
+    complainant_gender = db.Column(db.String(50), nullable=True)  # Gender
+    
+    # Content moderation fields
+    is_flagged = db.Column(db.Boolean, default=False)
+    moderation_score = db.Column(db.Integer, default=0)
+    moderation_severity = db.Column(db.String(20), nullable=True)
+    moderation_flags = db.Column(db.Text, nullable=True)  # JSON string
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     updates = db.relationship('GrievanceUpdate', backref='grievance', lazy=True, order_by='GrievanceUpdate.timestamp')
     comments = db.relationship('GrievanceComment', backref='grievance', lazy=True, order_by='GrievanceComment.created_at')
+    assigned_officer = db.relationship('User', foreign_keys=[assigned_officer_id], backref='assigned_grievances')
     
-    def to_dict(self, include_updates=False, include_comments=False):
+    def to_dict(self, include_updates=False, include_comments=False, include_officer=False):
+        import json
         result = {
             'id': self.id,
             'user_id': self.user_id,
             'complaint_text': self.complaint_text,
             'predicted_department': self.predicted_department,
             'assigned_department': self.assigned_department,
+            'assigned_officer_id': self.assigned_officer_id,
             'status': self.status,
             'location': self.location,
+            'images': json.loads(self.images) if self.images else [],
+            'complainant_dob': self.complainant_dob,
+            'complainant_gender': self.complainant_gender,
+            'is_flagged': self.is_flagged,
+            'moderation_score': self.moderation_score,
+            'moderation_severity': self.moderation_severity,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
+        if include_officer and self.assigned_officer:
+            result['assigned_officer'] = {
+                'id': self.assigned_officer.id,
+                'name': self.assigned_officer.name,
+                'email': self.assigned_officer.email,
+                'phone': self.assigned_officer.phone,
+                'office_number': self.assigned_officer.office_number,
+                'office_email': self.assigned_officer.office_email,
+                'office_location': self.assigned_officer.office_location,
+                'office_building': self.assigned_officer.office_building,
+                'designation': self.assigned_officer.designation,
+                'department': self.assigned_officer.department
+            }
         if include_updates:
             result['updates'] = [update.to_dict() for update in self.updates]
         if include_comments:
