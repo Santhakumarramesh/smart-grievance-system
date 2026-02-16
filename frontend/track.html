@@ -36,34 +36,50 @@
         </div>
 
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2 class="card-title" style="margin: 0;">Comments & Feedback</h2>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <label style="font-size: 0.875rem; color: var(--text-secondary);">Translate to:</label>
-                    <select id="commentLanguageSelect" style="
-                        padding: 0.5rem;
-                        border: 2px solid #E5E7EB;
-                        border-radius: 6px;
-                        font-size: 0.875rem;
-                        font-weight: 600;
-                        background: white;
-                        cursor: pointer;
-                    ">
-                        <option value="en">English</option>
-                        <option value="hi">हिंदी (Hindi)</option>
-                        <option value="ta">தமிழ் (Tamil)</option>
-                        <option value="te">తెలుగు (Telugu)</option>
-                        <option value="bn">বাংলা (Bengali)</option>
-                        <option value="mr">मराठी (Marathi)</option>
-                        <option value="gu">ગુજરાતી (Gujarati)</option>
-                        <option value="kn">ಕನ್ನಡ (Kannada)</option>
-                        <option value="ml">മലയാളം (Malayalam)</option>
-                        <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
-                        <option value="or">ଓଡ଼ିଆ (Odia)</option>
-                        <option value="as">অসমীয়া (Assamese)</option>
-                    </select>
+            <h2 class="card-title">Comments & Feedback</h2>
+            
+            <!-- Language Selector Notice -->
+            <div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border: 2px solid #3B82F6; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                <div style="display: flex; align-items: start; gap: 0.75rem;">
+                    <span style="font-size: 1.5rem;">🌐</span>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; color: #1E40AF; margin-bottom: 0.5rem;">
+                            Automatic Translation Available
+                        </div>
+                        <p style="margin: 0 0 0.75rem 0; color: #1E40AF; font-size: 0.875rem; line-height: 1.6;">
+                            Officer comments are automatically translated to your preferred language. 
+                            Select a language below to view translations instantly.
+                        </p>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            <label style="font-size: 0.875rem; color: #1E40AF; font-weight: 600;">Your Language:</label>
+                            <select id="commentLanguageSelect" style="
+                                padding: 0.5rem 0.75rem;
+                                border: 2px solid #3B82F6;
+                                border-radius: 6px;
+                                font-size: 0.875rem;
+                                font-weight: 600;
+                                background: white;
+                                cursor: pointer;
+                                color: #1E40AF;
+                            ">
+                                <option value="en">English</option>
+                                <option value="hi">हिंदी (Hindi)</option>
+                                <option value="ta">தமிழ் (Tamil)</option>
+                                <option value="te">తెలుగు (Telugu)</option>
+                                <option value="bn">বাংলা (Bengali)</option>
+                                <option value="mr">मराठी (Marathi)</option>
+                                <option value="gu">ગુજરાતી (Gujarati)</option>
+                                <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                                <option value="ml">മലയാളം (Malayalam)</option>
+                                <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+                                <option value="or">ଓଡ଼ିଆ (Odia)</option>
+                                <option value="as">অসমীয়া (Assamese)</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
+            
             <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
                 Have questions or additional information? Use the comment section below to communicate with the department officers.
             </p>
@@ -269,8 +285,34 @@
                             ${showTranslation ? `
                                 <!-- Translated Version (Primary Display) -->
                                 <div class="comment-translated-primary" style="margin-bottom: 0.75rem;">
-                                    <div style="display: inline-block; background: #10B981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; margin-bottom: 0.5rem;">
-                                        📝 ${languageNames[selectedLang]}
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                        <div style="display: inline-block; background: #10B981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">
+                                            📝 ${languageNames[selectedLang]}
+                                        </div>
+                                        <select class="comment-lang-select-${index}" onchange="changeCommentLanguage(${index}, this.value, '${comment.comment_text.replace(/'/g, "\\'")}')}" style="
+                                            padding: 4px 8px;
+                                            border: 1px solid #D1D5DB;
+                                            border-radius: 4px;
+                                            font-size: 0.75rem;
+                                            font-weight: 600;
+                                            background: white;
+                                            cursor: pointer;
+                                            color: #4B5563;
+                                        ">
+                                            <option value="">Change Language...</option>
+                                            <option value="en">English</option>
+                                            <option value="hi">हिंदी</option>
+                                            <option value="ta">தமிழ்</option>
+                                            <option value="te">తెలుగు</option>
+                                            <option value="bn">বাংলা</option>
+                                            <option value="mr">मराठी</option>
+                                            <option value="gu">ગુજરાતી</option>
+                                            <option value="kn">ಕನ್ನಡ</option>
+                                            <option value="ml">മലയാളം</option>
+                                            <option value="pa">ਪੰਜਾਬੀ</option>
+                                            <option value="or">ଓଡ଼ିଆ</option>
+                                            <option value="as">অসমীয়া</option>
+                                        </select>
                                     </div>
                                     <div class="translated-text-${index}" style="color: var(--text-primary); line-height: 1.8; font-weight: 600; font-size: 1.05em;">
                                         <div style="text-align: center; padding: 1rem; color: #6B7280;">
@@ -298,6 +340,33 @@
                                 <div style="color: var(--text-primary); line-height: 1.6;">
                                     ${comment.comment_text}
                                 </div>
+                                ${isOfficer ? `
+                                    <div style="margin-top: 0.75rem;">
+                                        <select class="comment-lang-select-${index}" onchange="changeCommentLanguage(${index}, this.value, '${comment.comment_text.replace(/'/g, "\\'")}')}" style="
+                                            padding: 6px 12px;
+                                            border: 2px solid #3B82F6;
+                                            border-radius: 6px;
+                                            font-size: 0.875rem;
+                                            font-weight: 600;
+                                            background: white;
+                                            cursor: pointer;
+                                            color: #1E40AF;
+                                        ">
+                                            <option value="">🌐 Translate this comment...</option>
+                                            <option value="hi">हिंदी (Hindi)</option>
+                                            <option value="ta">தமிழ் (Tamil)</option>
+                                            <option value="te">తెలుగు (Telugu)</option>
+                                            <option value="bn">বাংলা (Bengali)</option>
+                                            <option value="mr">मराठी (Marathi)</option>
+                                            <option value="gu">ગુજરાતી (Gujarati)</option>
+                                            <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                                            <option value="ml">മലയാളം (Malayalam)</option>
+                                            <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+                                            <option value="or">ଓଡ଼ିଆ (Odia)</option>
+                                            <option value="as">অসমীয়া (Assamese)</option>
+                                        </select>
+                                    </div>
+                                ` : ''}
                             `}
                         </div>
                     `;
@@ -424,7 +493,36 @@
             }, 800);
         }
         
-        // Reload comments when language changes
+        // Change individual comment language
+        function changeCommentLanguage(commentIndex, targetLang, originalText) {
+            if (!targetLang) return;
+            
+            const languageNames = {
+                'en': 'English',
+                'hi': 'हिंदी',
+                'ta': 'தமிழ்',
+                'te': 'తెలుగు',
+                'bn': 'বাংলা',
+                'mr': 'मराठी',
+                'gu': 'ગુજરાતી',
+                'kn': 'ಕನ್ನಡ',
+                'ml': 'മലയാളം',
+                'pa': 'ਪੰਜਾਬੀ',
+                'or': 'ଓଡ଼ିଆ',
+                'as': 'অসমীয়া'
+            };
+            
+            // Show alert
+            showAlert(`🌐 Translating to ${languageNames[targetLang]}...`, 'info');
+            
+            // Update global language selector to match
+            document.getElementById('commentLanguageSelect').value = targetLang;
+            
+            // Reload all comments with new language
+            loadComments();
+        }
+        
+        // Reload comments when global language changes
         document.getElementById('commentLanguageSelect').addEventListener('change', function() {
             const selectedLang = this.value;
             const langName = this.options[this.selectedIndex].text;
