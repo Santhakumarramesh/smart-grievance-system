@@ -173,7 +173,7 @@ def get_analytics():
 @admin_bp.route('/all-grievances', methods=['GET'])
 def get_all_grievances():
     """
-    Get all grievances (Admin only)
+    Get all grievances with complete user and officer information (Admin only)
     """
     try:
         user = get_current_user_from_token()
@@ -194,8 +194,34 @@ def get_all_grievances():
         
         grievances = query.order_by(Grievance.created_at.desc()).all()
         
+        # Build detailed grievance data with complete user and officer information
+        grievances_data = []
+        for g in grievances:
+            grievance_dict = g.to_dict(include_officer=True)
+            
+            # Add complete complainant (user) information
+            complainant = User.query.get(g.user_id)
+            if complainant:
+                grievance_dict['complainant'] = {
+                    'id': complainant.id,
+                    'name': complainant.name,
+                    'email': complainant.email,
+                    'phone': complainant.phone,
+                    'residential_address': complainant.residential_address,
+                    'residential_city': complainant.residential_city,
+                    'residential_state': complainant.residential_state,
+                    'residential_pincode': complainant.residential_pincode,
+                    'date_of_birth': complainant.date_of_birth,
+                    'gender': complainant.gender,
+                    'email_verified': complainant.email_verified,
+                    'phone_verified': complainant.phone_verified,
+                    'created_at': complainant.created_at.isoformat() if complainant.created_at else None
+                }
+            
+            grievances_data.append(grievance_dict)
+        
         return jsonify({
-            'grievances': [g.to_dict(include_officer=True) for g in grievances]
+            'grievances': grievances_data
         }), 200
         
     except Exception as e:
