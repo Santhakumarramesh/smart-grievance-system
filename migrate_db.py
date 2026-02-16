@@ -47,6 +47,10 @@ with app.app_context():
         'city': 'VARCHAR(100)',
         'state': 'VARCHAR(100)',
         'pincode': 'VARCHAR(10)',
+        'residential_address': 'TEXT',
+        'residential_city': 'VARCHAR(100)',
+        'residential_state': 'VARCHAR(100)',
+        'residential_pincode': 'VARCHAR(10)',
         'date_of_birth': 'VARCHAR(20)',
         'gender': 'VARCHAR(20)'
     }

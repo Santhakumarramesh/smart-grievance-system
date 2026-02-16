@@ -375,6 +375,7 @@ def update_profile():
             user.phone = data['phone']
         if 'profile_photo' in data:
             user.profile_photo = data['profile_photo']
+        # Default complaint location (optional)
         if 'address' in data:
             user.address = data['address']
         if 'city' in data:
@@ -383,6 +384,15 @@ def update_profile():
             user.state = data['state']
         if 'pincode' in data:
             user.pincode = data['pincode']
+        # Residential address (permanent)
+        if 'residential_address' in data:
+            user.residential_address = data['residential_address']
+        if 'residential_city' in data:
+            user.residential_city = data['residential_city']
+        if 'residential_state' in data:
+            user.residential_state = data['residential_state']
+        if 'residential_pincode' in data:
+            user.residential_pincode = data['residential_pincode']
         if 'date_of_birth' in data:
             user.date_of_birth = data['date_of_birth']
         if 'gender' in data:

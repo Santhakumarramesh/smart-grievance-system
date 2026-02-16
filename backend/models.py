@@ -26,10 +26,19 @@ class User(db.Model):
     
     # Profile fields
     profile_photo = db.Column(db.Text, nullable=True)  # Base64 encoded image
+    
+    # Residential Address (User's permanent address as per Aadhaar)
+    residential_address = db.Column(db.Text, nullable=True)  # Full residential address
+    residential_city = db.Column(db.String(100), nullable=True)
+    residential_state = db.Column(db.String(100), nullable=True)
+    residential_pincode = db.Column(db.String(10), nullable=True)
+    
+    # Legacy fields (kept for backward compatibility, map to residential)
     address = db.Column(db.String(500), nullable=True)
     city = db.Column(db.String(100), nullable=True)
     state = db.Column(db.String(100), nullable=True)
     pincode = db.Column(db.String(10), nullable=True)
+    
     date_of_birth = db.Column(db.String(20), nullable=True)
     gender = db.Column(db.String(20), nullable=True)
     
@@ -60,6 +69,12 @@ class User(db.Model):
             'office_building': self.office_building,
             'designation': self.designation,
             'profile_photo': self.profile_photo,
+            # Residential Address (Permanent)
+            'residential_address': self.residential_address,
+            'residential_city': self.residential_city,
+            'residential_state': self.residential_state,
+            'residential_pincode': self.residential_pincode,
+            # Legacy fields (backward compatibility)
             'address': self.address,
             'city': self.city,
             'state': self.state,

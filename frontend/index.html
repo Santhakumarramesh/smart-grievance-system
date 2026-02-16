@@ -28,19 +28,19 @@
         <div class="card">
             <h2 class="card-title">Submit New Grievance</h2>
             
-            <!-- Profile Address Reminder Banner -->
-            <div id="addressReminderBanner" style="background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%); border-left: 4px solid #3B82F6; border-radius: 8px; padding: 14px; margin-bottom: 20px; display: none; align-items: center; gap: 12px;">
-                <div style="font-size: 24px; flex-shrink: 0;">ℹ️</div>
+            <!-- Residential Address Reminder Banner -->
+            <div id="addressReminderBanner" style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border-left: 4px solid #F59E0B; border-radius: 8px; padding: 14px; margin-bottom: 20px; display: none; align-items: center; gap: 12px;">
+                <div style="font-size: 24px; flex-shrink: 0;">🏠</div>
                 <div style="flex: 1;">
-                    <div style="font-weight: 600; color: #1E40AF; margin-bottom: 4px;">
-                        Profile Address Required
+                    <div style="font-weight: 600; color: #92400E; margin-bottom: 4px;">
+                        Residential Address Required
                     </div>
-                    <div style="color: #1E3A8A; font-size: 14px;">
-                        Please ensure your <strong>profile address is complete</strong> before submitting complaints. This helps us route your complaint to the correct local department.
+                    <div style="color: #78350F; font-size: 14px;">
+                        Please complete your <strong>residential address (as per Aadhaar)</strong> in your profile before submitting complaints. This is required for identity verification.
                     </div>
                 </div>
-                <a href="profile.html" style="background: #3B82F6; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; white-space: nowrap;">
-                    Update Profile →
+                <a href="profile.html" style="background: #F59E0B; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; white-space: nowrap;">
+                    Complete Profile →
                 </a>
             </div>
             
@@ -56,12 +56,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="location">Exact Location <span style="color: #ef4444;">*</span></label>
+                    <label class="form-label" for="location">Complaint Location <span style="color: #ef4444;">*</span></label>
                     <input type="text" id="location" class="form-input" 
-                        placeholder="Enter complete address: Building/House No, Street, Area, Landmark, City, State, PIN" 
+                        placeholder="Where is the issue? Enter exact location: Building/House No, Street, Area, Landmark, City, State, PIN" 
                         required>
                     <small style="color: var(--text-secondary);">
-                        📍 Please provide exact location for faster resolution. Include landmarks if possible.
+                        📍 <strong>Enter the location WHERE THE COMPLAINT IS</strong> (not your residential address). Include landmarks for faster resolution.
                     </small>
                 </div>
 
@@ -105,12 +105,12 @@
             throw new Error('Not authenticated');
         }
 
-        // Check if user has complete address and show banner if not
+        // Check if user has complete residential address and show banner if not
         function checkAddressCompletion() {
             const currentUser = getUser();
             const banner = document.getElementById('addressReminderBanner');
             
-            if (!currentUser.address || !currentUser.city || !currentUser.state || !currentUser.pincode) {
+            if (!currentUser.residential_address || !currentUser.residential_city || !currentUser.residential_state || !currentUser.residential_pincode) {
                 banner.style.display = 'flex';
             } else {
                 banner.style.display = 'none';
@@ -288,13 +288,13 @@
             const complaint = document.getElementById('complaint').value.trim();
             const location = document.getElementById('location').value.trim();
 
-            // Check if user has completed their profile address
+            // Check if user has completed their residential address
             const currentUser = getUser();
-            if (!currentUser.address || !currentUser.city || !currentUser.state || !currentUser.pincode) {
-                showAlert('⚠️ Please complete your address information in your profile before submitting a complaint. This helps us serve you better!', 'error');
+            if (!currentUser.residential_address || !currentUser.residential_city || !currentUser.residential_state || !currentUser.residential_pincode) {
+                showAlert('⚠️ Please complete your RESIDENTIAL ADDRESS in your profile before submitting complaints. This is required for identity verification.', 'error');
                 
                 // Show a more detailed prompt
-                if (confirm('Your profile address is incomplete. Would you like to go to your profile page to complete it now?')) {
+                if (confirm('Your residential address (as per Aadhaar) is incomplete. Would you like to go to your profile page to complete it now?')) {
                     window.location.href = 'profile.html';
                 }
                 return;
