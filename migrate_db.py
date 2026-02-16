@@ -98,6 +98,28 @@ with app.app_context():
     
     print("\n✅ Database schema updated successfully!")
     
+    # --- Add Fraud Tracking Fields to User Table ---
+    print("\n📋 Adding fraud tracking fields to User table:")
+    existing_columns = [col['name'] for col in inspector.get_columns('users')]
+    
+    fraud_tracking_columns = {
+        'fraud_warnings': 'INTEGER DEFAULT 0',
+        'account_suspended': 'BOOLEAN DEFAULT 0',
+        'suspension_reason': 'TEXT'
+    }
+    
+    for col_name, col_type in fraud_tracking_columns.items():
+        if col_name not in existing_columns:
+            try:
+                with db.engine.connect() as connection:
+                    connection.execute(db.text(f'ALTER TABLE users ADD COLUMN {col_name} {col_type}'))
+                    connection.commit()
+                print(f"  ✓ Added {col_name}")
+            except Exception as e:
+                print(f"  ⚠ {col_name} - {str(e)}")
+        else:
+            print(f"  ✓ {col_name} (already exists)")
+    
     # --- Create Notifications Table ---
     # Re-fetch existing tables after updates
     existing_tables = inspector.get_table_names()
@@ -126,5 +148,39 @@ with app.app_context():
             print(f"  ⚠ Error creating notifications table: {str(e)}")
     else:
         print("\n✓ Notifications table already exists")
+    
+    # --- Create Fraud Reports Table ---
+    existing_tables = inspector.get_table_names()
+    
+    if 'fraud_reports' not in existing_tables:
+        print("\n📋 Creating Fraud Reports table:")
+        try:
+            with db.engine.connect() as connection:
+                connection.execute(db.text('''
+                    CREATE TABLE fraud_reports (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        grievance_id INTEGER NOT NULL,
+                        reported_by_officer_id INTEGER NOT NULL,
+                        complainant_user_id INTEGER NOT NULL,
+                        fraud_type VARCHAR(50) NOT NULL,
+                        description TEXT NOT NULL,
+                        evidence TEXT,
+                        site_visit_notes TEXT,
+                        status VARCHAR(20) DEFAULT 'Pending',
+                        action_taken VARCHAR(100),
+                        admin_notes TEXT,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        reviewed_at DATETIME,
+                        FOREIGN KEY (grievance_id) REFERENCES grievances(id),
+                        FOREIGN KEY (reported_by_officer_id) REFERENCES users(id),
+                        FOREIGN KEY (complainant_user_id) REFERENCES users(id)
+                    )
+                '''))
+                connection.commit()
+            print("  ✓ Fraud Reports table created")
+        except Exception as e:
+            print(f"  ⚠ Error creating fraud_reports table: {str(e)}")
+    else:
+        print("\n✓ Fraud Reports table already exists")
     
     print("\n✅ Migration complete!")

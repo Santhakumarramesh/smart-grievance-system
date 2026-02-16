@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
-from backend.models import Grievance, GrievanceUpdate, GrievanceComment, User
+from backend.models import Grievance, GrievanceUpdate, GrievanceComment, User, FraudReport, Notification
 from backend.extensions import db
 from backend.routes.auth import get_current_user_from_token
 from backend.services.classifier import classifier
@@ -110,24 +110,30 @@ def submit_grievance():
                 # Get highest confidence detection
                 highest_confidence = max(ai_images, key=lambda x: x['confidence'])
                 
-                if highest_confidence['confidence'] >= 90:
-                    # High confidence AI detection - REJECT
+                if highest_confidence['confidence'] >= 85:
+                    # Very high confidence AI detection - REJECT with helpful message
                     return jsonify({
-                        'error': 'AI-generated image detected',
-                        'message': f'Image #{highest_confidence["image_index"]} appears to be AI-generated (confidence: {highest_confidence["confidence"]}%). Please upload real photos of the actual issue.',
-                        'reason': highest_confidence['reasons'][0] if highest_confidence['reasons'] else 'AI generation indicators detected',
-                        'ai_detection': True
+                        'error': 'AI-Generated Image Detected',
+                        'message': f'Image #{highest_confidence["image_index"]} appears to be created by AI software (Confidence: {highest_confidence["confidence"]}%).\n\n'
+                                   f'Reason: {highest_confidence["reasons"][0] if highest_confidence["reasons"] else "AI generation signatures found in image metadata"}\n\n'
+                                   f'Please upload REAL PHOTOS taken with your phone or camera showing the actual issue. '
+                                   f'Officers will visit the site to verify, so authentic photos are required.',
+                        'image_index': highest_confidence['image_index'],
+                        'confidence': highest_confidence['confidence'],
+                        'ai_detection': True,
+                        'action_required': 'Please remove the AI-generated image and upload a real photo of the complaint location.'
                     }), 400
-                elif highest_confidence['confidence'] >= 70:
-                    # Medium confidence - FLAG for admin review
-                    print(f"⚠️  WARNING: Possible AI-generated image in complaint (confidence: {highest_confidence['confidence']}%)")
+                elif highest_confidence['confidence'] >= 60:
+                    # Medium confidence - FLAG for officer verification
+                    print(f"⚠️  FLAGGED: Possible AI-generated image in complaint (confidence: {highest_confidence['confidence']}%)")
                     ai_image_detected = True
                     ai_detection_confidence = highest_confidence['confidence']
                     ai_detection_details = json.dumps({
                         'image_index': highest_confidence['image_index'],
                         'confidence': highest_confidence['confidence'],
                         'reasons': highest_confidence['reasons'],
-                        'warnings': highest_confidence['warnings']
+                        'warnings': highest_confidence['warnings'],
+                        'note': 'Flagged for officer verification during site visit'
                     })
         
         # Get complainant info from user profile
@@ -492,6 +498,258 @@ Smart Grievance System
             'message': 'Comment added successfully',
             'comment': comment.to_dict()
         }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@grievances_bp.route('/<int:grievance_id>/report-fraud', methods=['POST'])
+def report_fraud(grievance_id):
+    """
+    Report a grievance as fraudulent (Officer only)
+    Officers can report complaints after site visit verification
+    """
+    try:
+        user = get_current_user_from_token()
+        if not user:
+            return jsonify({'error': 'Unauthorized'}), 401
+        
+        if user.role != 'OFFICER':
+            return jsonify({'error': 'Only officers can report fraudulent complaints'}), 403
+        
+        data = request.get_json()
+        fraud_type = data.get('fraud_type')
+        description = data.get('description')
+        site_visit_notes = data.get('site_visit_notes', '')
+        evidence = data.get('evidence', '')
+        
+        if not fraud_type or not description:
+            return jsonify({'error': 'fraud_type and description are required'}), 400
+        
+        # Valid fraud types
+        valid_fraud_types = [
+            'false_complaint',
+            'fake_images',
+            'wrong_location',
+            'exaggerated',
+            'duplicate',
+            'malicious'
+        ]
+        
+        if fraud_type not in valid_fraud_types:
+            return jsonify({'error': f'Invalid fraud_type. Must be one of: {", ".join(valid_fraud_types)}'}), 400
+        
+        grievance = Grievance.query.get(grievance_id)
+        if not grievance:
+            return jsonify({'error': 'Grievance not found'}), 404
+        
+        # Check if officer is assigned to this grievance's department
+        if grievance.assigned_department != user.department:
+            return jsonify({'error': 'You can only report fraud for grievances in your department'}), 403
+        
+        # Check if already reported
+        existing_report = FraudReport.query.filter_by(
+            grievance_id=grievance_id,
+            reported_by_officer_id=user.id
+        ).first()
+        
+        if existing_report:
+            return jsonify({'error': 'You have already reported this grievance as fraudulent'}), 400
+        
+        # Create fraud report
+        fraud_report = FraudReport(
+            grievance_id=grievance_id,
+            reported_by_officer_id=user.id,
+            complainant_user_id=grievance.user_id,
+            fraud_type=fraud_type,
+            description=description,
+            site_visit_notes=site_visit_notes,
+            evidence=evidence,
+            status='Pending'
+        )
+        db.session.add(fraud_report)
+        
+        # Update grievance status
+        grievance.status = 'Under Investigation - Fraud Reported'
+        grievance.updated_at = datetime.utcnow()
+        
+        # Create update entry
+        update = GrievanceUpdate(
+            grievance_id=grievance_id,
+            status='Under Investigation - Fraud Reported',
+            message=f'Officer {user.name} has reported this complaint as potentially fraudulent after site visit. Admin review pending.',
+            updated_by_role='OFFICER',
+            updated_by_name=user.name
+        )
+        db.session.add(update)
+        
+        # Notify admin
+        admins = User.query.filter_by(role='ADMIN').all()
+        for admin in admins:
+            admin_notification = Notification(
+                user_id=admin.id,
+                title=f'Fraud Report - Grievance #{grievance_id}',
+                message=f'Officer {user.name} reported grievance #{grievance_id} as {fraud_type.replace("_", " ")}. Immediate review required.',
+                notification_type='fraud_report',
+                related_grievance_id=grievance_id,
+                is_read=False
+            )
+            db.session.add(admin_notification)
+        
+        # Notify complainant (warning)
+        complainant = User.query.get(grievance.user_id)
+        if complainant:
+            complainant_notification = Notification(
+                user_id=complainant.id,
+                title=f'Complaint Under Review - Grievance #{grievance_id}',
+                message=f'Your complaint is under investigation for verification. An officer visited the site and raised concerns. Admin will review and contact you if needed.',
+                notification_type='fraud_warning',
+                related_grievance_id=grievance_id,
+                is_read=False
+            )
+            db.session.add(complainant_notification)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Fraud report submitted successfully. Admin will review.',
+            'fraud_report_id': fraud_report.id
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@grievances_bp.route('/fraud-reports', methods=['GET'])
+def get_fraud_reports():
+    """
+    Get fraud reports (Admin only)
+    """
+    try:
+        user = get_current_user_from_token()
+        if not user:
+            return jsonify({'error': 'Unauthorized'}), 401
+        
+        if user.role != 'ADMIN':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        reports = FraudReport.query.order_by(FraudReport.created_at.desc()).all()
+        
+        reports_data = []
+        for report in reports:
+            report_dict = report.to_dict()
+            
+            # Add officer details
+            officer = User.query.get(report.reported_by_officer_id)
+            if officer:
+                report_dict['officer_name'] = officer.name
+                report_dict['officer_department'] = officer.department
+            
+            # Add complainant details
+            complainant = User.query.get(report.complainant_user_id)
+            if complainant:
+                report_dict['complainant_name'] = complainant.name
+                report_dict['complainant_email'] = complainant.email
+                report_dict['complainant_warnings'] = complainant.fraud_warnings
+                report_dict['complainant_suspended'] = complainant.account_suspended
+            
+            # Add grievance details
+            grievance = Grievance.query.get(report.grievance_id)
+            if grievance:
+                report_dict['grievance_text'] = grievance.complaint_text[:200]
+                report_dict['grievance_department'] = grievance.assigned_department
+            
+            reports_data.append(report_dict)
+        
+        return jsonify({
+            'fraud_reports': reports_data
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@grievances_bp.route('/fraud-reports/<int:report_id>/action', methods=['POST'])
+def take_fraud_action(report_id):
+    """
+    Take action on fraud report (Admin only)
+    """
+    try:
+        user = get_current_user_from_token()
+        if not user:
+            return jsonify({'error': 'Unauthorized'}), 401
+        
+        if user.role != 'ADMIN':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        data = request.get_json()
+        action = data.get('action')  # 'verify', 'dismiss', 'warn', 'suspend'
+        admin_notes = data.get('admin_notes', '')
+        
+        if not action:
+            return jsonify({'error': 'action is required'}), 400
+        
+        report = FraudReport.query.get(report_id)
+        if not report:
+            return jsonify({'error': 'Fraud report not found'}), 404
+        
+        complainant = User.query.get(report.complainant_user_id)
+        if not complainant:
+            return jsonify({'error': 'Complainant not found'}), 404
+        
+        if action == 'verify':
+            # Fraud verified - issue warning
+            report.status = 'Verified'
+            report.action_taken = 'Warning Issued'
+            complainant.fraud_warnings += 1
+            
+            # Notify complainant
+            notification = Notification(
+                user_id=complainant.id,
+                title='Warning: Fraudulent Complaint Verified',
+                message=f'Your complaint (Grievance #{report.grievance_id}) has been verified as fraudulent. This is warning #{complainant.fraud_warnings}. Repeated fraudulent complaints will result in account suspension.',
+                notification_type='fraud_verified',
+                related_grievance_id=report.grievance_id,
+                is_read=False
+            )
+            db.session.add(notification)
+            
+        elif action == 'suspend':
+            # Suspend account
+            report.status = 'Verified'
+            report.action_taken = 'Account Suspended'
+            complainant.fraud_warnings += 1
+            complainant.account_suspended = True
+            complainant.suspension_reason = f'Multiple fraudulent complaints. Latest: Grievance #{report.grievance_id}'
+            
+            # Notify complainant
+            notification = Notification(
+                user_id=complainant.id,
+                title='Account Suspended - Fraudulent Activity',
+                message=f'Your account has been suspended due to repeated fraudulent complaints. Contact admin for appeal.',
+                notification_type='account_suspended',
+                related_grievance_id=report.grievance_id,
+                is_read=False
+            )
+            db.session.add(notification)
+            
+        elif action == 'dismiss':
+            # Fraud report dismissed - complaint was genuine
+            report.status = 'Dismissed'
+            report.action_taken = 'Report Dismissed - Complaint Genuine'
+            
+        else:
+            return jsonify({'error': 'Invalid action'}), 400
+        
+        report.admin_notes = admin_notes
+        report.reviewed_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'Action taken successfully: {action}',
+            'complainant_warnings': complainant.fraud_warnings,
+            'account_suspended': complainant.account_suspended
+        }), 200
         
     except Exception as e:
         db.session.rollback()

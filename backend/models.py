@@ -42,6 +42,11 @@ class User(db.Model):
     date_of_birth = db.Column(db.String(20), nullable=True)
     gender = db.Column(db.String(20), nullable=True)
     
+    # Fraud tracking
+    fraud_warnings = db.Column(db.Integer, default=0)  # Number of fraud warnings
+    account_suspended = db.Column(db.Boolean, default=False)  # Account suspension status
+    suspension_reason = db.Column(db.Text, nullable=True)  # Reason for suspension
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -260,4 +265,43 @@ class Notification(db.Model):
             'related_grievance_id': self.related_grievance_id,
             'is_read': self.is_read,
             'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+class FraudReport(db.Model):
+    __tablename__ = 'fraud_reports'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    grievance_id = db.Column(db.Integer, db.ForeignKey('grievances.id'), nullable=False)
+    reported_by_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    complainant_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    fraud_type = db.Column(db.String(50), nullable=False)  # 'false_complaint', 'fake_images', 'wrong_location', 'exaggerated'
+    description = db.Column(db.Text, nullable=False)
+    evidence = db.Column(db.Text, nullable=True)  # JSON with evidence details
+    site_visit_notes = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(20), default='Pending')  # Pending, Verified, Dismissed
+    action_taken = db.Column(db.String(100), nullable=True)  # Warning, Penalty, Account_Suspended, etc.
+    admin_notes = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    reviewed_at = db.Column(db.DateTime, nullable=True)
+    
+    # Relationships
+    grievance = db.relationship('Grievance', backref='fraud_reports')
+    reporting_officer = db.relationship('User', foreign_keys=[reported_by_officer_id], backref='fraud_reports_filed')
+    complainant = db.relationship('User', foreign_keys=[complainant_user_id], backref='fraud_reports_received')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'grievance_id': self.grievance_id,
+            'reported_by_officer_id': self.reported_by_officer_id,
+            'complainant_user_id': self.complainant_user_id,
+            'fraud_type': self.fraud_type,
+            'description': self.description,
+            'evidence': self.evidence,
+            'site_visit_notes': self.site_visit_notes,
+            'status': self.status,
+            'action_taken': self.action_taken,
+            'admin_notes': self.admin_notes,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'reviewed_at': self.reviewed_at.isoformat() if self.reviewed_at else None
         }

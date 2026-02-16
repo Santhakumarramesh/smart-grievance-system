@@ -94,14 +94,23 @@ class AIImageDetector:
                 warnings.append(filesize_result['warning'])
                 confidence_scores.append(filesize_result['confidence'])
             
-            # Calculate overall confidence
-            if len(confidence_scores) > 0:
-                avg_confidence = sum(confidence_scores) / len(confidence_scores)
+            # Calculate overall confidence with weighted scoring
+            # Only metadata and EXIF detections are strong indicators
+            strong_indicators = [s for s in confidence_scores[:2] if s > 0]  # First 2 are metadata/EXIF
+            weak_indicators = confidence_scores[2:] if len(confidence_scores) > 2 else []
+            
+            if len(strong_indicators) > 0:
+                # Strong evidence found (metadata/EXIF)
+                avg_confidence = sum(strong_indicators) / len(strong_indicators)
+            elif len(weak_indicators) > 0:
+                # Only weak evidence (characteristics/file size)
+                avg_confidence = sum(weak_indicators) / len(weak_indicators) * 0.5  # Reduce weight
             else:
                 avg_confidence = 0
             
-            # Determine if AI-generated (high confidence threshold)
-            is_ai_generated = avg_confidence >= 70
+            # Determine if AI-generated (VERY high confidence threshold to avoid false positives)
+            # Only flag if we have strong evidence (metadata/EXIF) with 85%+ confidence
+            is_ai_generated = (len(strong_indicators) > 0 and avg_confidence >= 85)
             
             return {
                 'is_ai_generated': is_ai_generated,
@@ -270,14 +279,14 @@ class AIImageDetector:
     @staticmethod
     def _get_recommendation(is_ai_generated, confidence):
         """Get recommendation based on detection results"""
-        if is_ai_generated and confidence >= 90:
-            return 'REJECT: High confidence AI-generated image detected. Request real photo from complainant.'
-        elif is_ai_generated and confidence >= 70:
-            return 'FLAG: Likely AI-generated image. Manual review required before processing complaint.'
-        elif confidence >= 40:
-            return 'WARN: Some AI generation indicators detected. Verify with complainant if needed.'
+        if is_ai_generated and confidence >= 85:
+            return 'REJECT: Strong evidence of AI-generated image (metadata/EXIF signatures found). Please upload real photos taken with your camera/phone.'
+        elif confidence >= 60:
+            return 'FLAG: Possible AI generation indicators. Officer will verify during site visit.'
+        elif confidence >= 30:
+            return 'WARN: Minor indicators detected. Image accepted but will be verified.'
         else:
-            return 'ACCEPT: Image appears to be authentic. Proceed with complaint processing.'
+            return 'ACCEPT: Image appears authentic. No AI generation indicators found.'
     
     @staticmethod
     def batch_detect(base64_images):
