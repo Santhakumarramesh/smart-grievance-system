@@ -10,8 +10,15 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     phone = db.Column(db.String(15), nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default='CITIZEN')  # CITIZEN, OFFICER, ADMIN
+    role = db.Column(db.String(20), nullable=False, default='CITIZEN')  # CITIZEN, FIELD_OFFICER, SECTION_OFFICER, DEPARTMENT_HEAD, DISTRICT_HEAD, STATE_HEAD, ADMIN
+    role_level = db.Column(db.Integer, default=0)  # 0=Citizen, 1=Field, 2=Section, 3=Dept Head, 4=District, 5=State, 6=Admin
     department = db.Column(db.String(100), nullable=True)  # For officers
+    
+    # Jurisdiction fields
+    ward = db.Column(db.String(50), nullable=True)  # Ward/Area
+    district = db.Column(db.String(100), nullable=True)  # District
+    state = db.Column(db.String(100), nullable=True)  # State
+    jurisdiction_type = db.Column(db.String(20), nullable=True)  # 'ward', 'district', 'state'
     email_verified = db.Column(db.Boolean, default=False)
     phone_verified = db.Column(db.Boolean, default=False)
     aadhaar_last4 = db.Column(db.String(4), nullable=True)
@@ -117,8 +124,21 @@ class Grievance(db.Model):
     complaint_text = db.Column(db.Text, nullable=False)
     predicted_department = db.Column(db.String(100), nullable=False)
     assigned_department = db.Column(db.String(100), nullable=False)
-    assigned_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Officer handling the case
+    assigned_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Current officer handling the case
+    current_role_level = db.Column(db.Integer, default=2)  # Current hierarchy level (starts at Section Officer)
+    escalation_level = db.Column(db.Integer, default=0)  # Number of times escalated
     status = db.Column(db.String(50), nullable=False, default='Received')
+    
+    # Jurisdiction fields
+    ward = db.Column(db.String(50), nullable=True)
+    district = db.Column(db.String(100), nullable=True)
+    state = db.Column(db.String(100), nullable=True)
+    
+    # SLA tracking
+    sla_hours = db.Column(db.Integer, default=48)  # Default 48 hours
+    sla_deadline = db.Column(db.DateTime, nullable=True)
+    sla_breached = db.Column(db.Boolean, default=False)
+    last_action_at = db.Column(db.DateTime, default=datetime.utcnow)  # Last update time
     location = db.Column(db.Text, nullable=True)  # Changed to Text for longer addresses
     images = db.Column(db.Text, nullable=True)  # JSON array of base64 images
     
@@ -304,4 +324,85 @@ class FraudReport(db.Model):
             'admin_notes': self.admin_notes,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'reviewed_at': self.reviewed_at.isoformat() if self.reviewed_at else None
+        }
+
+class RoleHierarchy(db.Model):
+    __tablename__ = 'role_hierarchy'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    department = db.Column(db.String(100), nullable=False)
+    role_name = db.Column(db.String(100), nullable=False)  # e.g., "Junior Engineer", "Line Man"
+    role_level = db.Column(db.Integer, nullable=False)  # 1-5
+    parent_level = db.Column(db.Integer, nullable=True)  # Parent role level
+    sla_hours = db.Column(db.Integer, default=48)  # SLA for this level
+    can_assign_to_field = db.Column(db.Boolean, default=False)  # Can assign to field officers
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'department': self.department,
+            'role_name': self.role_name,
+            'role_level': self.role_level,
+            'parent_level': self.parent_level,
+            'sla_hours': self.sla_hours,
+            'can_assign_to_field': self.can_assign_to_field
+        }
+
+class DepartmentMapping(db.Model):
+    __tablename__ = 'department_mapping'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    department = db.Column(db.String(100), nullable=False)
+    ward = db.Column(db.String(50), nullable=True)
+    district = db.Column(db.String(100), nullable=False)
+    state = db.Column(db.String(100), nullable=False)
+    section_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Default Section Officer
+    department_head_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Department Head
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    section_officer = db.relationship('User', foreign_keys=[section_officer_id])
+    department_head = db.relationship('User', foreign_keys=[department_head_id])
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'department': self.department,
+            'ward': self.ward,
+            'district': self.district,
+            'state': self.state,
+            'section_officer_id': self.section_officer_id,
+            'department_head_id': self.department_head_id
+        }
+
+class EscalationLog(db.Model):
+    __tablename__ = 'escalation_logs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    grievance_id = db.Column(db.Integer, db.ForeignKey('grievances.id'), nullable=False)
+    from_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    to_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    from_role_level = db.Column(db.Integer, nullable=False)
+    to_role_level = db.Column(db.Integer, nullable=False)
+    reason = db.Column(db.String(200), nullable=False)  # 'SLA Breach', 'Manual Escalation', 'Complexity'
+    escalation_type = db.Column(db.String(50), default='auto')  # 'auto', 'manual'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    grievance = db.relationship('Grievance', backref='escalation_logs')
+    from_officer = db.relationship('User', foreign_keys=[from_officer_id])
+    to_officer = db.relationship('User', foreign_keys=[to_officer_id])
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'grievance_id': self.grievance_id,
+            'from_officer_id': self.from_officer_id,
+            'to_officer_id': self.to_officer_id,
+            'from_role_level': self.from_role_level,
+            'to_role_level': self.to_role_level,
+            'reason': self.reason,
+            'escalation_type': self.escalation_type,
+            'created_at': self.created_at.isoformat() if self.created_at else None
         }
