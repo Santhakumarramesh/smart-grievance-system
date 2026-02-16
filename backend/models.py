@@ -256,8 +256,18 @@ class GrievanceComment(db.Model):
     user_name = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Notification tracking for escalation
+    notified_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Officer who was notified
+    notification_sent_at = db.Column(db.DateTime, nullable=True)
+    response_deadline = db.Column(db.DateTime, nullable=True)  # When to escalate if no response
+    escalated = db.Column(db.Boolean, default=False)
+    escalated_at = db.Column(db.DateTime, nullable=True)
+    escalated_to_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    
     # Relationships
     user = db.relationship('User', backref='comments', foreign_keys=[user_id])
+    notified_officer = db.relationship('User', foreign_keys=[notified_officer_id])
+    escalated_to_officer = db.relationship('User', foreign_keys=[escalated_to_officer_id])
     
     def to_dict(self):
         return {
@@ -268,6 +278,8 @@ class GrievanceComment(db.Model):
             'user_role': self.user_role,
             'user_name': self.user_name,
             'created_at': self.created_at.isoformat() if self.created_at else None,
+            'notified_officer_id': self.notified_officer_id,
+            'escalated': self.escalated,
         }
 
 class Notification(db.Model):

@@ -6,6 +6,7 @@ from backend.routes.auth import get_current_user_from_token
 from backend.services.classifier import classifier
 from backend.services.email_service import EmailService
 from backend.services.ai_image_detector import AIImageDetector
+from backend.services.comment_escalation import check_and_escalate_comments, escalate_comment_manually
 from backend.security import require_firewall, SecurityFirewall, SecurityLogger
 
 grievances_bp = Blueprint('grievances', __name__)
@@ -448,33 +449,75 @@ def add_comment(grievance_id):
         )
         
         db.session.add(comment)
-        db.session.commit()
         
-        # Send email notification to the other party
+        # Send email notification to the appropriate party
         if user.role == 'CITIZEN':
-            # Notify officers of the department
-            officers = User.query.filter_by(
-                role='OFFICER',
-                department=grievance.assigned_department
-            ).all()
-            
-            for officer in officers:
-                EmailService.send_email(
-                    officer.email,
-                    f'New Comment on Grievance #{grievance_id}',
-                    f"""
-Dear {officer.name},
+            # Notify ONLY the currently assigned officer (not all officers)
+            if grievance.assigned_officer_id:
+                assigned_officer = User.query.get(grievance.assigned_officer_id)
+                
+                if assigned_officer:
+                    # Track notification for escalation
+                    from datetime import timedelta
+                    comment.notified_officer_id = assigned_officer.id
+                    comment.notification_sent_at = datetime.utcnow()
+                    comment.response_deadline = datetime.utcnow() + timedelta(hours=24)  # 24 hours to respond
+                    
+                    EmailService.send_email(
+                        assigned_officer.email,
+                        f'🔔 New Comment on Grievance #{grievance_id} - Response Required',
+                        f"""
+Dear {assigned_officer.name},
 
-A citizen has added a new comment on Grievance #{grievance_id}:
+A citizen has added a new comment on Grievance #{grievance_id} assigned to you:
 
 "{comment_text}"
 
-View and respond at: http://localhost:5000/track.html?id={grievance_id}
+⚠️ Please respond within 24 hours to avoid escalation to your superior.
+
+View and respond at: http://localhost:8000/track.html?id={grievance_id}
 
 Best regards,
 Smart Grievance System
-                    """
-                )
+                        """
+                    )
+                    
+                    # Create in-app notification
+                    notification = Notification(
+                        user_id=assigned_officer.id,
+                        title=f'New Comment on Grievance #{grievance_id}',
+                        message=f'Citizen has commented: "{comment_text[:100]}..." - Response required within 24 hours.',
+                        notification_type='comment',
+                        related_grievance_id=grievance_id
+                    )
+                    db.session.add(notification)
+            else:
+                # If no specific officer assigned, notify department head
+                dept_head = User.query.filter_by(
+                    department=grievance.assigned_department,
+                    role='OFFICER'
+                ).order_by(User.id.asc()).first()  # Get first officer as fallback
+                
+                if dept_head:
+                    comment.notified_officer_id = dept_head.id
+                    comment.notification_sent_at = datetime.utcnow()
+                    
+                    EmailService.send_email(
+                        dept_head.email,
+                        f'New Comment on Grievance #{grievance_id}',
+                        f"""
+Dear {dept_head.name},
+
+A citizen has added a comment on an unassigned grievance #{grievance_id}:
+
+"{comment_text}"
+
+View at: http://localhost:8000/track.html?id={grievance_id}
+
+Best regards,
+Smart Grievance System
+                        """
+                    )
         else:
             # Notify citizen
             citizen = User.query.get(grievance.user_id)
@@ -755,4 +798,49 @@ def take_fraud_action(report_id):
         
     except Exception as e:
         db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@grievances_bp.route('/check-comment-escalations', methods=['POST'])
+def check_comment_escalations():
+    """
+    Check for overdue comments and escalate them (Admin/System only)
+    This endpoint should be called periodically by a cron job or scheduler
+    """
+    try:
+        user = get_current_user_from_token()
+        
+        # Only admin can manually trigger escalation checks
+        if user and user.role != 'ADMIN':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        # Run escalation check
+        escalated_count = check_and_escalate_comments()
+        
+        return jsonify({
+            'message': 'Escalation check completed',
+            'escalated_count': escalated_count
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@grievances_bp.route('/comments/<int:comment_id>/escalate', methods=['POST'])
+def manually_escalate_comment(comment_id):
+    """
+    Manually escalate a specific comment (Admin only)
+    """
+    try:
+        user = get_current_user_from_token()
+        
+        if not user or user.role != 'ADMIN':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        result = escalate_comment_manually(comment_id)
+        
+        if result['success']:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+        
+    except Exception as e:
         return jsonify({'error': str(e)}), 500

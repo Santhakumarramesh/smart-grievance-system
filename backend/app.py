@@ -12,6 +12,7 @@ from backend.routes.auth import auth_bp
 from backend.routes.grievances import grievances_bp
 from backend.routes.admin import admin_bp
 from backend.services.classifier import classifier
+from backend.services.scheduler import scheduler
 from backend.security import SecurityHeaders, configure_cors_security
 
 def create_app():
@@ -26,6 +27,9 @@ def create_app():
     
     # Initialize extensions
     db.init_app(app)
+    
+    # Initialize scheduler
+    scheduler.init_app(app)
     
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
@@ -62,6 +66,9 @@ def create_app():
         print("   - XSS Protection: Active")
         print("   - SQL Injection Prevention: Active")
         print("   - IP Blocking: Active")
+        
+        # Start background scheduler for comment escalation
+        scheduler.start()
     
     return app
 
