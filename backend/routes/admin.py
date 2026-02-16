@@ -1,9 +1,10 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime, timedelta
 from sqlalchemy import func
-from backend.models import User, Grievance, GrievanceUpdate
+from backend.models import User, Grievance, GrievanceUpdate, Notification
 from backend.extensions import db
 from backend.routes.auth import get_current_user_from_token
+from backend.services.email_service import EmailService
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -254,4 +255,184 @@ def get_departments():
         }), 200
         
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/assign-officer', methods=['POST'])
+def assign_officer():
+    """
+    Assign an officer to a grievance (Admin only)
+    Required: grievance_id, officer_id
+    Sends email notification to officer and user
+    """
+    try:
+        user = get_current_user_from_token()
+        if not user or user.role != 'ADMIN':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        data = request.get_json()
+        grievance_id = data.get('grievance_id')
+        officer_id = data.get('officer_id')
+        
+        if not grievance_id or not officer_id:
+            return jsonify({'error': 'grievance_id and officer_id are required'}), 400
+        
+        # Get grievance
+        grievance = Grievance.query.get(grievance_id)
+        if not grievance:
+            return jsonify({'error': 'Grievance not found'}), 404
+        
+        # Get officer
+        officer = User.query.get(officer_id)
+        if not officer or officer.role != 'OFFICER':
+            return jsonify({'error': 'Officer not found'}), 404
+        
+        # Get citizen
+        citizen = User.query.get(grievance.user_id)
+        if not citizen:
+            return jsonify({'error': 'Citizen not found'}), 404
+        
+        # Store old officer (if any)
+        old_officer_id = grievance.assigned_officer_id
+        
+        # Assign officer
+        grievance.assigned_officer_id = officer_id
+        grievance.status = 'Assigned to Department'
+        grievance.updated_at = datetime.utcnow()
+        
+        # Create update entry
+        update = GrievanceUpdate(
+            grievance_id=grievance.id,
+            status='Assigned to Department',
+            message=f'Case assigned to Officer {officer.name} ({officer.designation or "Officer"}) by Admin.',
+            updated_by_role='ADMIN',
+            updated_by_name=user.name
+        )
+        db.session.add(update)
+        
+        # Create in-app notification for officer
+        officer_notification = Notification(
+            user_id=officer_id,
+            title=f'🚨 New Case Assigned - Grievance #{grievance.id}',
+            message=f'You have been assigned a new case in {grievance.assigned_department} department. Complainant: {citizen.name}. Please review and take action.',
+            notification_type='assignment',
+            related_grievance_id=grievance.id,
+            is_read=False
+        )
+        db.session.add(officer_notification)
+        
+        # Create in-app notification for citizen
+        citizen_notification = Notification(
+            user_id=citizen.id,
+            title=f'Officer Assigned - Grievance #{grievance.id}',
+            message=f'Your complaint has been assigned to {officer.name} ({officer.designation or "Officer"}) for resolution.',
+            notification_type='assignment',
+            related_grievance_id=grievance.id,
+            is_read=False
+        )
+        db.session.add(citizen_notification)
+        
+        db.session.commit()
+        
+        # Send email notification to officer
+        EmailService.send_officer_assignment_notification(
+            officer_email=officer.office_email or officer.email,
+            officer_name=officer.name,
+            grievance_id=grievance.id,
+            complaint_text=grievance.complaint_text,
+            department=grievance.assigned_department,
+            user_name=citizen.name,
+            user_phone=citizen.phone
+        )
+        
+        # Send email notification to citizen
+        EmailService.send_status_update_notification(
+            user_email=citizen.email,
+            user_name=citizen.name,
+            grievance_id=grievance.id,
+            old_status=grievance.status if old_officer_id else 'Received',
+            new_status='Assigned to Department',
+            update_message=f'Your complaint has been assigned to {officer.name} ({officer.designation or "Officer"}) for resolution.',
+            department=grievance.assigned_department,
+            officer_name=officer.name
+        )
+        
+        return jsonify({
+            'message': 'Officer assigned successfully',
+            'grievance': grievance.to_dict(include_officer=True)
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/notifications', methods=['GET'])
+def get_notifications():
+    """
+    Get notifications for the current user
+    """
+    try:
+        user = get_current_user_from_token()
+        if not user:
+            return jsonify({'error': 'Unauthorized'}), 401
+        
+        # Get unread count
+        unread_count = Notification.query.filter_by(user_id=user.id, is_read=False).count()
+        
+        # Get all notifications (limit to last 50)
+        notifications = Notification.query.filter_by(user_id=user.id)\
+            .order_by(Notification.created_at.desc())\
+            .limit(50)\
+            .all()
+        
+        return jsonify({
+            'unread_count': unread_count,
+            'notifications': [n.to_dict() for n in notifications]
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/notifications/<int:notification_id>/mark-read', methods=['PUT'])
+def mark_notification_read(notification_id):
+    """
+    Mark a notification as read
+    """
+    try:
+        user = get_current_user_from_token()
+        if not user:
+            return jsonify({'error': 'Unauthorized'}), 401
+        
+        notification = Notification.query.get(notification_id)
+        if not notification:
+            return jsonify({'error': 'Notification not found'}), 404
+        
+        if notification.user_id != user.id:
+            return jsonify({'error': 'Unauthorized'}), 403
+        
+        notification.is_read = True
+        db.session.commit()
+        
+        return jsonify({'message': 'Notification marked as read'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/notifications/mark-all-read', methods=['PUT'])
+def mark_all_notifications_read():
+    """
+    Mark all notifications as read for current user
+    """
+    try:
+        user = get_current_user_from_token()
+        if not user:
+            return jsonify({'error': 'Unauthorized'}), 401
+        
+        Notification.query.filter_by(user_id=user.id, is_read=False).update({'is_read': True})
+        db.session.commit()
+        
+        return jsonify({'message': 'All notifications marked as read'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
         return jsonify({'error': str(e)}), 500

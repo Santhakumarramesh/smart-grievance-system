@@ -322,6 +322,9 @@ def update_grievance(grievance_id):
         if user.role == 'OFFICER' and grievance.assigned_department != user.department:
             return jsonify({'error': 'Unauthorized to update this grievance'}), 403
         
+        # Store old status for notification
+        old_status = grievance.status
+        
         # Create update entry
         update = GrievanceUpdate(
             grievance_id=grievance.id,
@@ -336,17 +339,24 @@ def update_grievance(grievance_id):
         grievance.status = new_status
         grievance.updated_at = datetime.utcnow()
         
+        # Assign officer if status is "Assigned to Department" and not already assigned
+        if new_status == 'Assigned to Department' and not grievance.assigned_officer_id:
+            grievance.assigned_officer_id = user.id
+        
         db.session.commit()
         
-        # Send email notification to citizen
+        # Send email notification to citizen with detailed update
         citizen = User.query.get(grievance.user_id)
         if citizen:
-            EmailService.send_grievance_notification(
-                citizen.email,
-                grievance.id,
-                grievance.assigned_department,
-                new_status,
-                message
+            EmailService.send_status_update_notification(
+                user_email=citizen.email,
+                user_name=citizen.name,
+                grievance_id=grievance.id,
+                old_status=old_status,
+                new_status=new_status,
+                update_message=message,
+                department=grievance.assigned_department,
+                officer_name=user.name
             )
         
         return jsonify({

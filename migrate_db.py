@@ -97,4 +97,34 @@ with app.app_context():
             print(f"  ✓ {col_name} (already exists)")
     
     print("\n✅ Database schema updated successfully!")
+    
+    # --- Create Notifications Table ---
+    # Re-fetch existing tables after updates
+    existing_tables = inspector.get_table_names()
+    
+    if 'notifications' not in existing_tables:
+        print("\n📋 Creating Notifications table:")
+        try:
+            with db.engine.connect() as connection:
+                connection.execute(db.text('''
+                    CREATE TABLE notifications (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER NOT NULL,
+                        title VARCHAR(200) NOT NULL,
+                        message TEXT NOT NULL,
+                        notification_type VARCHAR(50) NOT NULL,
+                        related_grievance_id INTEGER,
+                        is_read BOOLEAN DEFAULT 0,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users(id),
+                        FOREIGN KEY (related_grievance_id) REFERENCES grievances(id)
+                    )
+                '''))
+                connection.commit()
+            print("  ✓ Notifications table created")
+        except Exception as e:
+            print(f"  ⚠ Error creating notifications table: {str(e)}")
+    else:
+        print("\n✓ Notifications table already exists")
+    
     print("\n✅ Migration complete!")

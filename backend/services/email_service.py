@@ -364,3 +364,122 @@ Smart Grievance System | Digital India Initiative
         """
         
         return EmailService.send_email(user_email, subject, body)
+    
+    @staticmethod
+    def send_officer_assignment_notification(officer_email, officer_name, grievance_id, complaint_text, department, user_name, user_phone):
+        """
+        Send notification to officer when a case is assigned by admin
+        """
+        subject = f"🚨 New Case Assigned - Grievance #{grievance_id}"
+        
+        officer_portal_url = f"http://localhost:8000/officer.html"
+        
+        body = f"""
+Dear {officer_name},
+
+A new grievance has been assigned to you by the Admin.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 CASE DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Complaint ID: #{grievance_id}
+Department: {department}
+Status: Assigned to Department
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👤 COMPLAINANT INFORMATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Name: {user_name}
+Phone: {user_phone}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 COMPLAINT DESCRIPTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{complaint_text[:300]}{'...' if len(complaint_text) > 300 else ''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ ACTION REQUIRED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Please review this case and take necessary action.
+You can update the status and add comments from your officer portal.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔗 OFFICER PORTAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{officer_portal_url}
+
+Thank you for your service.
+
+Best regards,
+Admin Team
+Smart Grievance System | Digital India Initiative 🇮🇳
+        """
+        
+        return EmailService.send_email(officer_email, subject, body)
+    
+    @staticmethod
+    def send_status_update_notification(user_email, user_name, grievance_id, old_status, new_status, update_message, department, officer_name):
+        """
+        Send notification to user when officer updates case status
+        """
+        subject = f"Status Update: Grievance #{grievance_id} - {new_status}"
+        
+        tracking_url = f"http://localhost:8000/track.html?id={grievance_id}"
+        
+        # Status emoji mapping
+        status_emoji = {
+            'Received': '📥',
+            'Assigned to Department': '📋',
+            'Under Progress': '🔄',
+            'Investigation': '🔍',
+            'Reviewed': '✅',
+            'Resolved': '🎉',
+            'Closed': '🔒'
+        }
+        
+        emoji = status_emoji.get(new_status, '📌')
+        
+        body = f"""
+Dear {user_name},
+
+Your grievance status has been updated!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{emoji} STATUS UPDATE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Complaint ID: #{grievance_id}
+Department: {department}
+
+Previous Status: {old_status}
+Current Status: {new_status}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👮 OFFICER UPDATE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Updated by: {officer_name}
+
+Message:
+{update_message}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔗 TRACK YOUR COMPLAINT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+View full timeline and add comments:
+{tracking_url}
+
+Thank you for your patience.
+
+Best regards,
+Smart Grievance System Team
+Digital India Initiative 🇮🇳
+        """
+        
+        return EmailService.send_email(user_email, subject, body)

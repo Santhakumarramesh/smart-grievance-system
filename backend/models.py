@@ -233,3 +233,31 @@ class GrievanceComment(db.Model):
             'user_name': self.user_name,
             'created_at': self.created_at.isoformat() if self.created_at else None,
         }
+
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    notification_type = db.Column(db.String(50), nullable=False)  # 'assignment', 'status_update', 'comment', etc.
+    related_grievance_id = db.Column(db.Integer, db.ForeignKey('grievances.id'), nullable=True)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='notifications', foreign_keys=[user_id])
+    related_grievance = db.relationship('Grievance', backref='notifications')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'title': self.title,
+            'message': self.message,
+            'notification_type': self.notification_type,
+            'related_grievance_id': self.related_grievance_id,
+            'is_read': self.is_read,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
