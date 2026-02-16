@@ -1,5 +1,11 @@
 # 🇮🇳 Smart Grievance Redressal System
 
+[![CI/CD Pipeline](https://github.com/Santhakumarramesh/smart-grievance-system/actions/workflows/ci.yml/badge.svg)](https://github.com/Santhakumarramesh/smart-grievance-system/actions/workflows/ci.yml)
+[![Security Check](https://github.com/Santhakumarramesh/smart-grievance-system/actions/workflows/security-check.yml/badge.svg)](https://github.com/Santhakumarramesh/smart-grievance-system/actions/workflows/security-check.yml)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Security: Enabled](https://img.shields.io/badge/Security-Firewall%20Enabled-green.svg)](SECURITY.md)
+
 A **governance-grade, AI-powered grievance management platform** with hierarchical workflow, multi-language support, fraud prevention, and real-time tracking.
 
 ---

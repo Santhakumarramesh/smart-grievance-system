@@ -52,7 +52,11 @@ with app.app_context():
         'residential_state': 'VARCHAR(100)',
         'residential_pincode': 'VARCHAR(10)',
         'date_of_birth': 'VARCHAR(20)',
-        'gender': 'VARCHAR(20)'
+        'gender': 'VARCHAR(20)',
+        'role_level': 'INTEGER DEFAULT 0',
+        'ward': 'VARCHAR(100)',
+        'district': 'VARCHAR(100)',
+        'jurisdiction_type': 'VARCHAR(50)'
     }
     
     print("\n📋 Adding new columns to User table:")
@@ -77,6 +81,14 @@ with app.app_context():
         'images': 'TEXT',
         'is_flagged': 'BOOLEAN DEFAULT 0',
         'moderation_score': 'INTEGER DEFAULT 0',
+        'current_role_level': 'INTEGER',
+        'escalation_level': 'INTEGER DEFAULT 0',
+        'ward': 'VARCHAR(100)',
+        'district': 'VARCHAR(100)',
+        'sla_hours': 'INTEGER',
+        'sla_deadline': 'DATETIME',
+        'sla_breached': 'BOOLEAN DEFAULT 0',
+        'last_action_at': 'DATETIME',
         'moderation_severity': 'VARCHAR(20)',
         'moderation_flags': 'TEXT',
         'ai_image_detected': 'BOOLEAN DEFAULT 0',
