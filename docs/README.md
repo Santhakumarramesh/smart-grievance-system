@@ -21,6 +21,8 @@ Complete documentation for the Smart Grievance System.
 
 ### For Users
 - **[Login Fix Guide](LOGIN_FIX_GUIDE.md)** - Troubleshooting login issues
+- **[Profile Edit Fix](PROFILE_EDIT_FIX.md)** - Profile editing security enhancements
+- **[Avatar Fix Guide](AVATAR_FIX.md)** - Profile avatar display improvements
 
 ---
 
@@ -80,6 +82,8 @@ docs/
 ├── COMPREHENSIVE_TEST_REPORT.md      # Test results
 ├── FINAL_REVIEW_CHECKLIST.md        # System audit
 ├── LOGIN_FIX_GUIDE.md               # Troubleshooting
+├── PROFILE_EDIT_FIX.md              # Profile security
+├── AVATAR_FIX.md                    # Avatar display
 └── CLEANUP_SUMMARY.md               # Maintenance
 ```
 
