@@ -370,87 +370,7 @@
             </div>
         </div>
 
-        <!-- Default Complaint Location (Optional - can be overridden per complaint) -->
-        <div class="info-section view-mode" id="addressSection">
-            <h2>📍 Default Complaint Location (Optional)</h2>
-            
-            <!-- Important Notice Banner -->
-            <div style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border-left: 4px solid #F59E0B; border-radius: 8px; padding: 14px; margin-bottom: 20px; display: flex; align-items: start; gap: 12px;">
-                <div style="font-size: 22px; flex-shrink: 0;">📍</div>
-                <div>
-                    <div style="font-weight: 700; color: #92400E; margin-bottom: 4px; font-size: 14px;">
-                        Default Location for Your Complaints (Optional)
-                    </div>
-                    <div style="color: #78350F; font-size: 13px; line-height: 1.5;">
-                        You can set a <strong>default location</strong> here if most of your complaints are about the same area (e.g., your neighborhood). You can always specify a different location when submitting each complaint.
-                        <div style="margin-top: 6px; padding: 6px; background: rgba(255, 255, 255, 0.5); border-radius: 4px; font-size: 12px;">
-                            <strong>💡 Tip:</strong> This is optional. You'll always specify the exact complaint location when submitting a complaint.
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="info-grid">
-                <div class="info-item" style="grid-column: 1 / -1;">
-                    <div class="info-label">Default Complaint Area Address (Optional)</div>
-                    <div class="info-value display" id="addressDisplay"></div>
-                    <div class="info-value edit">
-                        <textarea id="addressInput" rows="2"></textarea>
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">City</div>
-                    <div class="info-value display" id="cityDisplay"></div>
-                    <div class="info-value edit">
-                        <input type="text" id="cityInput">
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">State</div>
-                    <div class="info-value display" id="stateDisplay"></div>
-                    <div class="info-value edit">
-                        <select id="stateInput">
-                            <option value="">Select State</option>
-                            <option value="Tamil Nadu">Tamil Nadu</option>
-                            <option value="Karnataka">Karnataka</option>
-                            <option value="Maharashtra">Maharashtra</option>
-                            <option value="Delhi">Delhi</option>
-                            <option value="Kerala">Kerala</option>
-                            <option value="Gujarat">Gujarat</option>
-                            <option value="Rajasthan">Rajasthan</option>
-                            <option value="West Bengal">West Bengal</option>
-                            <option value="Uttar Pradesh">Uttar Pradesh</option>
-                            <option value="Andhra Pradesh">Andhra Pradesh</option>
-                            <option value="Telangana">Telangana</option>
-                            <option value="Punjab">Punjab</option>
-                            <option value="Haryana">Haryana</option>
-                            <option value="Madhya Pradesh">Madhya Pradesh</option>
-                            <option value="Bihar">Bihar</option>
-                            <option value="Odisha">Odisha</option>
-                            <option value="Assam">Assam</option>
-                            <option value="Jharkhand">Jharkhand</option>
-                            <option value="Chhattisgarh">Chhattisgarh</option>
-                            <option value="Uttarakhand">Uttarakhand</option>
-                            <option value="Goa">Goa</option>
-                            <option value="Himachal Pradesh">Himachal Pradesh</option>
-                            <option value="Jammu and Kashmir">Jammu and Kashmir</option>
-                            <option value="Ladakh">Ladakh</option>
-                            <option value="Puducherry">Puducherry</option>
-                            <option value="Chandigarh">Chandigarh</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Pincode</div>
-                    <div class="info-value display" id="pincodeDisplay"></div>
-                    <div class="info-value edit">
-                        <input type="text" id="pincodeInput" maxlength="6" pattern="[0-9]{6}">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- NEW: Residential Address (Permanent Address as per Aadhaar) -->
+        <!-- Residential Address (Permanent Address as per Aadhaar) -->
         <div class="info-section view-mode" id="residentialAddressSection">
             <h2>🏠 Residential Address (As per Aadhaar)</h2>
             
@@ -804,12 +724,6 @@
             document.getElementById('genderDisplay').textContent = currentUser.gender || 'Not provided';
             document.getElementById('aadhaarDisplay').textContent = currentUser.aadhaar_last4 ? `XXXX-XXXX-${currentUser.aadhaar_last4}` : 'Not provided';
             
-            // Default complaint location (optional, legacy fields)
-            document.getElementById('addressDisplay').textContent = currentUser.address || 'Not provided';
-            document.getElementById('cityDisplay').textContent = currentUser.city || 'Not provided';
-            document.getElementById('stateDisplay').textContent = currentUser.state || 'Not provided';
-            document.getElementById('pincodeDisplay').textContent = currentUser.pincode || 'Not provided';
-            
             // Residential address (permanent)
             document.getElementById('residentialAddressDisplay').textContent = currentUser.residential_address || 'Not provided';
             document.getElementById('residentialCityDisplay').textContent = currentUser.residential_city || 'Not provided';
@@ -824,12 +738,6 @@
             document.getElementById('dobInput').value = currentUser.date_of_birth || '';
             document.getElementById('genderInput').value = currentUser.gender || '';
             document.getElementById('aadhaarInput').value = currentUser.aadhaar_last4 ? `XXXX-XXXX-${currentUser.aadhaar_last4}` : '';
-            
-            // Default complaint location
-            document.getElementById('addressInput').value = currentUser.address || '';
-            document.getElementById('cityInput').value = currentUser.city || '';
-            document.getElementById('stateInput').value = currentUser.state || '';
-            document.getElementById('pincodeInput').value = currentUser.pincode || '';
             
             // Residential address
             document.getElementById('residentialAddressInput').value = currentUser.residential_address || '';
@@ -992,11 +900,6 @@
                     phone: document.getElementById('phoneInput').value,
                     date_of_birth: document.getElementById('dobInput').value,
                     gender: document.getElementById('genderInput').value,
-                    // Default complaint location (optional)
-                    address: document.getElementById('addressInput').value,
-                    city: document.getElementById('cityInput').value,
-                    state: document.getElementById('stateInput').value,
-                    pincode: document.getElementById('pincodeInput').value,
                     // Residential address (permanent)
                     residential_address: document.getElementById('residentialAddressInput').value,
                     residential_city: document.getElementById('residentialCityInput').value,
@@ -1016,11 +919,6 @@
                     return;
                 }
                 
-                // Validate default complaint location pincode (optional)
-                if (updatedData.pincode && !/^\d{6}$/.test(updatedData.pincode)) {
-                    showAlert('Please enter a valid 6-digit PIN code for default complaint location', 'error');
-                    return;
-                }
 
                 const data = await apiCall('/auth/profile/update', {
                     method: 'PUT',
