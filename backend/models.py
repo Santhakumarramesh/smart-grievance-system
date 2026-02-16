@@ -127,6 +127,11 @@ class Grievance(db.Model):
     moderation_severity = db.Column(db.String(20), nullable=True)
     moderation_flags = db.Column(db.Text, nullable=True)  # JSON string
     
+    # AI image detection fields
+    ai_image_detected = db.Column(db.Boolean, default=False)
+    ai_detection_confidence = db.Column(db.Float, default=0.0)
+    ai_detection_details = db.Column(db.Text, nullable=True)  # JSON string
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -152,6 +157,9 @@ class Grievance(db.Model):
             'is_flagged': self.is_flagged,
             'moderation_score': self.moderation_score,
             'moderation_severity': self.moderation_severity,
+            'ai_image_detected': self.ai_image_detected,
+            'ai_detection_confidence': self.ai_detection_confidence,
+            'ai_detection_details': json.loads(self.ai_detection_details) if self.ai_detection_details else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }

@@ -5,6 +5,7 @@ from backend.extensions import db
 from backend.routes.auth import get_current_user_from_token
 from backend.services.classifier import classifier
 from backend.services.email_service import EmailService
+from backend.services.ai_image_detector import AIImageDetector
 
 grievances_bp = Blueprint('grievances', __name__)
 
@@ -94,6 +95,41 @@ def submit_grievance():
         if images and len(images) > 5:
             return jsonify({'error': 'Maximum 5 images allowed'}), 400
         
+        # AI-GENERATED IMAGE DETECTION (Anti-Fraud Measure)
+        ai_image_detected = False
+        ai_detection_confidence = 0.0
+        ai_detection_details = None
+        
+        if images and len(images) > 0:
+            ai_detection_result = AIImageDetector.batch_detect(images)
+            
+            if ai_detection_result['ai_detected_count'] > 0:
+                # AI-generated images detected
+                ai_images = [r for r in ai_detection_result['results'] if r['is_ai_generated']]
+                
+                # Get highest confidence detection
+                highest_confidence = max(ai_images, key=lambda x: x['confidence'])
+                
+                if highest_confidence['confidence'] >= 90:
+                    # High confidence AI detection - REJECT
+                    return jsonify({
+                        'error': 'AI-generated image detected',
+                        'message': f'Image #{highest_confidence["image_index"]} appears to be AI-generated (confidence: {highest_confidence["confidence"]}%). Please upload real photos of the actual issue.',
+                        'reason': highest_confidence['reasons'][0] if highest_confidence['reasons'] else 'AI generation indicators detected',
+                        'ai_detection': True
+                    }), 400
+                elif highest_confidence['confidence'] >= 70:
+                    # Medium confidence - FLAG for admin review
+                    print(f"⚠️  WARNING: Possible AI-generated image in complaint (confidence: {highest_confidence['confidence']}%)")
+                    ai_image_detected = True
+                    ai_detection_confidence = highest_confidence['confidence']
+                    ai_detection_details = json.dumps({
+                        'image_index': highest_confidence['image_index'],
+                        'confidence': highest_confidence['confidence'],
+                        'reasons': highest_confidence['reasons'],
+                        'warnings': highest_confidence['warnings']
+                    })
+        
         # Get complainant info from user profile
         complainant_dob = user.date_of_birth
         complainant_gender = user.gender
@@ -112,7 +148,10 @@ def submit_grievance():
             location=location,
             images=images_json,
             complainant_dob=complainant_dob,
-            complainant_gender=complainant_gender
+            complainant_gender=complainant_gender,
+            ai_image_detected=ai_image_detected,
+            ai_detection_confidence=ai_detection_confidence,
+            ai_detection_details=ai_detection_details
         )
         
         db.session.add(grievance)

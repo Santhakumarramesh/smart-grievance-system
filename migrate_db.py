@@ -78,7 +78,10 @@ with app.app_context():
         'is_flagged': 'BOOLEAN DEFAULT 0',
         'moderation_score': 'INTEGER DEFAULT 0',
         'moderation_severity': 'VARCHAR(20)',
-        'moderation_flags': 'TEXT'
+        'moderation_flags': 'TEXT',
+        'ai_image_detected': 'BOOLEAN DEFAULT 0',
+        'ai_detection_confidence': 'REAL DEFAULT 0.0',
+        'ai_detection_details': 'TEXT'
     }
     
     print("\n📋 Adding new columns to Grievance table:")
