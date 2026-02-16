@@ -27,6 +27,9 @@ Complete documentation for the Smart Grievance System.
 ### For Officers
 - **[Email & Translation Status](EMAIL_AND_TRANSLATION_STATUS.md)** - Email notifications and language translation guide
 
+### For Citizens
+- **[Comment Translation Guide](CITIZEN_COMMENT_TRANSLATION.md)** - Translate officer comments to your language
+
 ---
 
 ## 🔧 Technical Documentation
@@ -88,6 +91,7 @@ docs/
 ├── PROFILE_EDIT_FIX.md              # Profile security
 ├── AVATAR_FIX.md                    # Avatar display
 ├── EMAIL_AND_TRANSLATION_STATUS.md  # Email & translation
+├── CITIZEN_COMMENT_TRANSLATION.md   # Citizen translation
 └── CLEANUP_SUMMARY.md               # Maintenance
 ```
 
