@@ -16,9 +16,13 @@ if __name__ == '__main__':
     print(f"📧 Email Mode: {'Demo (Console)' if app.config['DEMO_EMAIL_MODE'] else 'Production (SMTP)'}")
     print("="*70 + "\n")
     
+    # Get environment mode
+    import os
+    is_production = os.getenv('FLASK_ENV', 'development') == 'production'
+    
     app.run(
         host='0.0.0.0',
         port=8000,
-        debug=True,
+        debug=not is_production,  # Disable debug in production
         use_reloader=False  # Disable reloader to prevent double initialization
     )

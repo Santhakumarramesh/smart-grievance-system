@@ -68,9 +68,13 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     port = Config.PORT
+    is_production = os.getenv('FLASK_ENV', 'development') == 'production'
+    
     print(f"\n{'='*60}")
     print(f"🚀 Smart Grievance System Starting...")
     print(f"📍 Running on http://localhost:{port}")
     print(f"📧 Demo Mode: {Config.DEMO_EMAIL_MODE}")
+    print(f"🔧 Environment: {'PRODUCTION' if is_production else 'DEVELOPMENT'}")
     print(f"{'='*60}\n")
-    app.run(host='0.0.0.0', port=port, debug=True)
+    
+    app.run(host='0.0.0.0', port=port, debug=not is_production)
