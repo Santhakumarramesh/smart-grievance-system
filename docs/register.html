@@ -79,6 +79,13 @@
             padding: 25px 30px 30px;
         }
 
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 16px;
+        }
+
         .form-group {
             margin-bottom: 16px;
         }
@@ -91,6 +98,14 @@
             font-size: 0.85rem;
         }
 
+        .form-label .required {
+            color: #EF4444;
+        }
+
+        .password-input-wrapper {
+            position: relative;
+        }
+
         .form-input {
             width: 100%;
             padding: 10px 12px;
@@ -98,78 +113,145 @@
             border-radius: 8px;
             font-size: 0.95rem;
             transition: all 0.3s ease;
+            background: white;
+            box-sizing: border-box;
         }
 
         .form-input:focus {
             outline: none;
-            border-color: #FF9933;
-            box-shadow: 0 0 0 3px rgba(255, 153, 51, 0.1);
+            border-color: #003DA5;
+            box-shadow: 0 0 0 3px rgba(0, 61, 165, 0.1);
         }
 
-        .checkbox-group {
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6B7280;
+            font-size: 1.1rem;
+            padding: 5px;
+        }
+
+        .toggle-password:hover {
+            color: #003DA5;
+        }
+
+        select.form-input {
+            cursor: pointer;
+        }
+
+        .form-help {
+            font-size: 0.75rem;
+            color: #6B7280;
+            margin-top: 4px;
+        }
+
+        .consent-group {
+            margin: 20px 0;
+            padding: 12px;
+            background: rgba(59, 130, 246, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .consent-group label {
             display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            margin: 16px 0;
+            align-items: start;
+            gap: 10px;
+            font-size: 0.85rem;
+            color: #374151;
+            cursor: pointer;
         }
 
-        .checkbox-group input[type="checkbox"] {
+        .consent-group input[type="checkbox"] {
             margin-top: 3px;
             width: 16px;
             height: 16px;
             cursor: pointer;
         }
 
-        .checkbox-group label {
-            font-size: 0.85rem;
-            color: #4B5563;
-            cursor: pointer;
-        }
-
         .btn-register {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(135deg, #FF9933 0%, #138808 100%);
+            background: linear-gradient(135deg, #FF9933 0%, #FF7700 50%, #138808 100%);
             color: white;
             border: none;
             border-radius: 10px;
             font-size: 1rem;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 8px;
+            position: relative;
         }
 
-        .btn-register:hover {
+        .btn-register:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 153, 51, 0.3);
+            box-shadow: 0 8px 16px rgba(255, 153, 51, 0.3);
+        }
+
+        .btn-register:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-register.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         .auth-link {
             text-align: center;
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid #E5E7EB;
+            margin-top: 20px;
             color: #6B7280;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
 
         .auth-link a {
-            color: #FF9933;
+            color: #003DA5;
             text-decoration: none;
             font-weight: 600;
         }
 
         .alert {
-            padding: 10px 12px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            font-size: 0.85rem;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
             display: none;
         }
 
         .alert.show {
             display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .alert-success {
@@ -184,19 +266,35 @@
             color: #991B1B;
         }
 
-        @media (max-width: 600px) {
+        .demo-note {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            color: #92400E;
+        }
+
+        .demo-note strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 480px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
             .register-container {
-                padding: 15px;
+                padding: 10px;
             }
             .register-body {
                 padding: 20px;
             }
         }
     </style>
-    <link rel="stylesheet" href="department-backgrounds.css">
 </head>
-<body>
-    <div class="register-container">
+<body>    <div class="register-container">
         <div class="register-card">
             <div class="register-header">
                 <h1>Create Account</h1>
@@ -206,72 +304,91 @@
             <div class="register-body">
                 <div id="alertContainer"></div>
 
+                <div class="demo-note">
+                    <strong>📝 Demo Mode:</strong>
+                    This is a demo registration. Your data will be stored locally in your browser for testing purposes only.
+                </div>
+
                 <form id="registerForm">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label" for="firstName">First Name <span style="color: #ef4444;">*</span></label>
+                            <label class="form-label">First Name <span class="required">*</span></label>
                             <input type="text" id="firstName" class="form-input" placeholder="First name" required>
                         </div>
-
                         <div class="form-group">
-                            <label class="form-label" for="lastName">Last Name <span style="color: #ef4444;">*</span></label>
+                            <label class="form-label">Last Name <span class="required">*</span></label>
                             <input type="text" id="lastName" class="form-input" placeholder="Last name" required>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="email">Email Address <span style="color: #ef4444;">*</span></label>
+                        <label class="form-label">Email Address <span class="required">*</span></label>
                         <input type="email" id="email" class="form-input" placeholder="your.email@example.com" required>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="phone">Phone Number <span style="color: #ef4444;">*</span></label>
-                        <input type="tel" id="phone" class="form-input" placeholder="10-digit mobile number" required pattern="[0-9]{10}">
-                        <small style="color: var(--text-secondary);">Will be verified via OTP</small>
-                    </div>
-
-                    <!-- Personal Information -->
-                    <div class="form-group">
-                        <label class="form-label" for="dateOfBirth">Date of Birth <span style="color: #ef4444;">*</span></label>
-                        <input type="date" id="dateOfBirth" class="form-input" required>
-                        <small style="color: var(--text-secondary);">You must be 18 or above to register</small>
+                        <label class="form-label">Phone Number <span class="required">*</span></label>
+                        <input type="tel" id="phone" class="form-input" placeholder="10-digit mobile number" 
+                               pattern="[0-9]{10}" maxlength="10" required>
+                        <div class="form-help">Will be verified via OTP</div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="gender">Gender <span style="color: #ef4444;">*</span></label>
+                        <label class="form-label">Date of Birth <span class="required">*</span></label>
+                        <input type="date" id="dob" class="form-input" required>
+                        <div class="form-help">You must be 18 or above to register</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Gender <span class="required">*</span></label>
                         <select id="gender" class="form-input" required>
-                            <option value="">-- Select Gender --</option>
+                            <option value="">Select Gender</option>
                             <option value="Male">Male / पुरुष</option>
                             <option value="Female">Female / महिला</option>
-                            <option value="Transgender">Transgender / ट्रांसजेंडर</option>
-                            <option value="Non-Binary">Non-Binary / गैर-बाइनरी</option>
-                            <option value="Prefer not to say">Prefer not to say / नहीं बताना चाहते</option>
                             <option value="Other">Other / अन्य</option>
+                            <option value="Prefer not to say">Prefer not to say</option>
                         </select>
-                        <small style="color: var(--text-secondary);">As per Government of India norms</small>
+                        <div class="form-help">As per Government of India norms</div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="password">Password <span style="color: #ef4444;">*</span></label>
-                        <input type="password" id="password" class="form-input" placeholder="Create a strong password" required minlength="6">
+                        <label class="form-label">Password <span class="required">*</span></label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="password" class="form-input" 
+                                   placeholder="Create password" required 
+                                   minlength="8" style="padding-right: 40px;">
+                            <button type="button" class="toggle-password" id="togglePassword">👁️</button>
+                        </div>
+                        <div class="form-help">Minimum 8 characters</div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="confirmPassword">Confirm Password <span style="color: #ef4444;">*</span></label>
-                        <input type="password" id="confirmPassword" class="form-input" placeholder="Re-enter password" required>
+                        <label class="form-label">Confirm Password <span class="required">*</span></label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="confirmPassword" class="form-input" 
+                                   placeholder="Re-enter password" required 
+                                   minlength="8" style="padding-right: 40px;">
+                            <button type="button" class="toggle-password" id="toggleConfirmPassword">👁️</button>
+                        </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="aadhaar">Aadhaar Last 4 Digits (Optional)</label>
-                        <input type="text" id="aadhaar" class="form-input" placeholder="Last 4 digits" maxlength="4" pattern="[0-9]{4}">
+                        <label class="form-label">Aadhaar Last 4 Digits <span style="color: #6B7280;">(Optional)</span></label>
+                        <input type="text" id="aadhaar" class="form-input" 
+                               placeholder="Last 4 digits only" pattern="[0-9]{4}" maxlength="4">
+                        <div class="form-help">For identity verification (optional)</div>
                     </div>
 
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="consent" required>
-                        <label for="consent">I consent to the processing of my data</label>
+                    <div class="consent-group">
+                        <label>
+                            <input type="checkbox" id="consent" required>
+                            <span>I consent to the processing of my data and agree to the <a href="#" style="color: #003DA5;">Terms & Conditions</a> and <a href="#" style="color: #003DA5;">Privacy Policy</a></span>
+                        </label>
                     </div>
 
-                    <button type="submit" class="btn-register">Register</button>
+                    <button type="submit" class="btn-register" id="registerBtn">
+                        Register
+                    </button>
                 </form>
 
                 <div class="auth-link">
@@ -281,153 +398,135 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
     <script>
         function showAlert(message, type) {
             const alertContainer = document.getElementById('alertContainer');
-            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            const alertClass = `alert-${type}`;
             alertContainer.innerHTML = `<div class="alert ${alertClass} show">${message}</div>`;
             setTimeout(() => {
                 const alert = alertContainer.querySelector('.alert');
-                if (alert) alert.classList.remove('show');
+                if (alert) {
+                    alert.classList.remove('show');
+                    setTimeout(() => alertContainer.innerHTML = '', 300);
+                }
             }, 5000);
         }
 
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.textContent = type === 'password' ? '👁️' : '🙈';
+        });
 
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const dateOfBirth = document.getElementById('dateOfBirth').value;
-            const gender = document.getElementById('gender').value;
-            const phone = document.getElementById('phone').value;
+        document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('confirmPassword');
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.textContent = type === 'password' ? '👁️' : '🙈';
+        });
 
-            // Password validation
-            if (password !== confirmPassword) {
-                showAlert('❌ Passwords do not match', 'error');
-                return;
-            }
-
-            if (password.length < 6) {
-                showAlert('❌ Password must be at least 6 characters', 'error');
-                return;
-            }
-
-            // Phone validation
-            if (!/^[0-9]{10}$/.test(phone)) {
-                showAlert('❌ Please enter a valid 10-digit phone number', 'error');
-                return;
-            }
-
-            // Date of birth validation
-            if (!dateOfBirth) {
-                showAlert('❌ Please enter your date of birth', 'error');
-                return;
-            }
-
-            // Age validation (must be 18+)
-            const birthDate = new Date(dateOfBirth);
+        // Validate age (must be 18+)
+        document.getElementById('dob').addEventListener('change', function() {
+            const dob = new Date(this.value);
             const today = new Date();
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const monthDiff = today.getMonth() - birthDate.getMonth();
+            const age = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
             
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
                 age--;
             }
 
             if (age < 18) {
-                showAlert('❌ You must be at least 18 years old to register', 'error');
-                return;
-            }
-
-            if (age > 120) {
-                showAlert('❌ Please enter a valid date of birth', 'error');
-                return;
-            }
-
-            // Gender validation
-            if (!gender) {
-                showAlert('❌ Please select your gender', 'error');
-                return;
-            }
-
-            const firstName = document.getElementById('firstName').value.trim();
-            const lastName = document.getElementById('lastName').value.trim();
-            const email = document.getElementById('email').value;
-            
-            // Validate names
-            if (!firstName) {
-                showAlert('❌ Please enter your first name', 'error');
-                return;
-            }
-            
-            if (!lastName) {
-                showAlert('❌ Please enter your last name', 'error');
-                return;
-            }
-            
-            const fullName = `${firstName} ${lastName}`;
-            
-            const formData = {
-                name: fullName,
-                email: email,
-                phone: phone,
-                password: password,
-                date_of_birth: dateOfBirth,
-                gender: gender,
-                aadhaar_last4: document.getElementById('aadhaar').value || null
-            };
-
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Creating Account...';
-
-            try {
-                // Step 1: Register user
-                const registerData = await apiCall('/auth/register', {
-                    method: 'POST',
-                    body: JSON.stringify(formData)
-                });
-
-                showAlert('✅ Account created! Sending verification code...', 'success');
-
-                // Step 2: Send OTP
-                try {
-                    await apiCall('/auth/send-otp', {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            identifier: email,
-                            channel: 'email'
-                        })
-                    });
-
-                    showAlert('✅ Verification code sent! Redirecting...', 'success');
-                    
-                    // Store email for verification page
-                    localStorage.setItem('pendingVerificationEmail', email);
-                    
-                    // Redirect to verification page
-                    setTimeout(() => {
-                        window.location.href = `verify-email.html?email=${encodeURIComponent(email)}`;
-                    }, 1500);
-
-                } catch (otpError) {
-                    console.error('OTP send error:', otpError);
-                    showAlert('⚠️ Account created but OTP failed. Redirecting to login...', 'error');
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 2000);
-                }
-
-            } catch (error) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Register';
-                showAlert('❌ ' + error.message, 'error');
+                showAlert('⚠️ You must be 18 or above to register', 'error');
+                this.value = '';
             }
         });
+
+        // Phone number validation (only numbers)
+        document.getElementById('phone').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        // Aadhaar validation (only numbers)
+        document.getElementById('aadhaar').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        // Form submission
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const consent = document.getElementById('consent').checked;
+            const registerBtn = document.getElementById('registerBtn');
+
+            // Validate password match
+            if (password !== confirmPassword) {
+                showAlert('❌ Passwords do not match!', 'error');
+                return;
+            }
+
+            // Validate password strength
+            if (password.length < 8) {
+                showAlert('❌ Password must be at least 8 characters long!', 'error');
+                return;
+            }
+
+            // Validate consent
+            if (!consent) {
+                showAlert('❌ Please agree to the terms and conditions', 'error');
+                return;
+            }
+
+            // Collect form data
+            const userData = {
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim(),
+                email: document.getElementById('email').value.trim().toLowerCase(),
+                phone: document.getElementById('phone').value,
+                dob: document.getElementById('dob').value,
+                gender: document.getElementById('gender').value,
+                password: password,
+                aadhaar: document.getElementById('aadhaar').value || null,
+                role: 'CITIZEN',
+                registeredAt: new Date().toISOString()
+            };
+
+            // Add loading state
+            registerBtn.classList.add('loading');
+            registerBtn.textContent = '';
+            registerBtn.disabled = true;
+
+            // Simulate API delay
+            setTimeout(() => {
+                // Check if email already exists
+                const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+                const emailExists = existingUsers.some(u => u.email === userData.email);
+
+                if (emailExists) {
+                    showAlert('❌ Email already registered! Please login instead.', 'error');
+                    registerBtn.classList.remove('loading');
+                    registerBtn.textContent = 'Register';
+                    registerBtn.disabled = false;
+                    return;
+                }
+
+                // Save to localStorage (demo mode)
+                existingUsers.push(userData);
+                localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
+
+                // Show success
+                showAlert('✅ Registration successful! Redirecting to login...', 'success');
+
+                // Redirect to login page
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            }, 1500);
+        });
     </script>
-    <script src="government-portal-init.js"></script>
-    <script src="simple-translator.js"></script>
-    <script src="language-selector-widget.js"></script>
 </body>
 </html>
