@@ -22,7 +22,6 @@
             position: relative;
         }
 
-        /* Tricolor Top Border */
         body::before {
             content: '';
             position: fixed;
@@ -37,7 +36,6 @@
             z-index: 1000;
         }
 
-        /* Rangoli Pattern Background */
         body::after {
             content: '';
             position: fixed;
@@ -105,10 +103,14 @@
 
         .form-label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
             color: #1F2937;
+            font-weight: 600;
+            margin-bottom: 8px;
             font-size: 0.9rem;
+        }
+
+        .password-input-wrapper {
+            position: relative;
         }
 
         .form-input {
@@ -118,83 +120,82 @@
             border-radius: 10px;
             font-size: 1rem;
             transition: all 0.3s ease;
-            font-family: inherit;
+            background: white;
+            box-sizing: border-box;
         }
 
         .form-input:focus {
             outline: none;
-            border-color: #FF9933;
-            box-shadow: 0 0 0 4px rgba(255, 153, 51, 0.1);
-            background: rgba(255, 153, 51, 0.02);
+            border-color: #003DA5;
+            box-shadow: 0 0 0 3px rgba(0, 61, 165, 0.1);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6B7280;
+            font-size: 1.2rem;
+            padding: 5px;
+            transition: color 0.2s;
+        }
+
+        .toggle-password:hover {
+            color: #003DA5;
         }
 
         .btn-login {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #FF9933 0%, #138808 100%);
+            background: linear-gradient(135deg, #FF9933 0%, #FF7700 50%, #138808 100%);
             color: white;
             border: none;
             border-radius: 10px;
-            font-size: 1.05rem;
-            font-weight: 700;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 10px;
             position: relative;
             overflow: hidden;
         }
 
-        .btn-login::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .btn-login:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        .btn-login:hover {
+        .btn-login:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 153, 51, 0.3);
+            box-shadow: 0 10px 20px rgba(255, 153, 51, 0.3);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .auth-link {
             text-align: center;
             margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #E5E7EB;
             color: #6B7280;
             font-size: 0.9rem;
         }
 
         .auth-link a {
-            color: #FF9933;
+            color: #003DA5;
             text-decoration: none;
             font-weight: 600;
-            transition: color 0.3s ease;
         }
 
         .auth-link a:hover {
-            color: #138808;
             text-decoration: underline;
         }
 
         .demo-credentials {
-            background: linear-gradient(135deg, 
-                rgba(59, 130, 246, 0.05) 0%, 
-                rgba(255, 255, 255, 1) 100%);
-            border-left: 4px solid #3B82F6;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(147, 197, 253, 0.05) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
             padding: 15px;
-            border-radius: 10px;
             margin-top: 20px;
             font-size: 0.85rem;
         }
@@ -226,9 +227,13 @@
             font-size: 0.8rem;
             color: #1E40AF;
             font-family: 'Courier New', monospace;
+            cursor: pointer;
         }
 
-        /* Alert Messages */
+        .demo-item code:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
         .alert {
             padding: 12px 15px;
             border-radius: 10px;
@@ -265,7 +270,12 @@
             color: #991B1B;
         }
 
-        /* Loading Spinner */
+        .alert-warning {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, white 100%);
+            border-left: 4px solid #F59E0B;
+            color: #92400E;
+        }
+
         .btn-login.loading {
             pointer-events: none;
             opacity: 0.7;
@@ -290,33 +300,23 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Responsive */
         @media (max-width: 480px) {
             .login-container {
                 padding: 15px;
             }
-
             .login-header {
                 padding: 25px 20px 20px;
             }
-
             .login-header h1 {
                 font-size: 1.4rem;
             }
-
             .login-body {
                 padding: 25px 20px;
             }
-
-            .demo-credentials {
-                font-size: 0.8rem;
-            }
         }
     </style>
-    <link rel="stylesheet" href="department-backgrounds.css">
 </head>
-<body>
-    <div class="login-container">
+<body>    <div class="login-container">
         <div class="login-card">
             <div class="login-header">
                 <h1>Smart Grievance System</h1>
@@ -334,19 +334,23 @@
                             id="email" 
                             class="form-input" 
                             placeholder="Enter your email"
-                            required
-                            autocomplete="email">
+                            required>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" for="password">Password</label>
-                        <input 
-                            type="password" 
-                            id="password" 
-                            class="form-input" 
-                            placeholder="Enter your password"
-                            required
-                            autocomplete="current-password">
+                        <div class="password-input-wrapper">
+                            <input 
+                                type="password" 
+                                id="password" 
+                                class="form-input" 
+                                placeholder="Enter your password"
+                                required
+                                style="padding-right: 45px;">
+                            <button type="button" class="toggle-password" id="togglePassword" title="Show/Hide Password">
+                                👁️
+                            </button>
+                        </div>
                     </div>
 
                     <button type="submit" class="btn-login" id="loginBtn">
@@ -365,97 +369,181 @@
                 </div>
 
                 <div class="demo-credentials">
-                    <strong>🎯 Demo Credentials:</strong>
+                    <strong>🎯 Demo Credentials (Click to auto-fill):</strong>
                     <div class="demo-item">
-                        <strong>Admin:</strong> <code>admin@grievance.gov</code> / <code>admin123</code>
+                        <strong>Admin:</strong> <code class="copy-email">admin@grievance.gov</code> / <code class="copy-pass">admin123</code>
                     </div>
                     <div class="demo-item">
-                        <strong>Officer:</strong> <code>electricity@grievance.gov</code> / <code>officer123</code>
+                        <strong>Officer:</strong> <code class="copy-email">electricity@grievance.gov</code> / <code class="copy-pass">officer123</code>
                     </div>
                     <div class="demo-item">
-                        <strong>Citizen:</strong> <code>citizen@example.com</code> / <code>citizen123</code>
+                        <strong>Citizen:</strong> <code class="copy-email">citizen@example.com</code> / <code class="copy-pass">citizen123</code>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="app.js"></script>
     <script>
+        // Demo user credentials database
+        const DEMO_USERS = [
+            { email: 'admin@grievance.gov', password: 'admin123', role: 'ADMIN', name: 'Admin User' },
+            { email: 'electricity@grievance.gov', password: 'officer123', role: 'OFFICER', name: 'Electricity Officer', department: 'Electricity' },
+            { email: 'water@grievance.gov', password: 'officer123', role: 'OFFICER', name: 'Water Officer', department: 'Water Supply' },
+            { email: 'citizen@example.com', password: 'citizen123', role: 'CITIZEN', name: 'Demo Citizen' }
+        ];
+
+        // Login attempt tracking
+        const MAX_ATTEMPTS = 3;
+        const LOCKOUT_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
         function showAlert(message, type) {
             const alertContainer = document.getElementById('alertContainer');
-            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            const alertClass = `alert-${type}`;
             
-            alertContainer.innerHTML = `
-                <div class="alert ${alertClass} show">
-                    ${message}
-                </div>
-            `;
+            alertContainer.innerHTML = `<div class="alert ${alertClass} show">${message}</div>`;
 
             setTimeout(() => {
                 const alert = alertContainer.querySelector('.alert');
                 if (alert) {
                     alert.classList.remove('show');
+                    setTimeout(() => alertContainer.innerHTML = '', 300);
                 }
             }, 5000);
         }
 
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        function getFailedAttempts() {
+            const attempts = localStorage.getItem('failedLoginAttempts');
+            return attempts ? JSON.parse(attempts) : { count: 0, lockoutUntil: null };
+        }
+
+        function setFailedAttempts(count, lockoutUntil = null) {
+            localStorage.setItem('failedLoginAttempts', JSON.stringify({ count, lockoutUntil }));
+        }
+
+        function resetFailedAttempts() {
+            localStorage.removeItem('failedLoginAttempts');
+        }
+
+        function checkLockout() {
+            const attempts = getFailedAttempts();
+            if (attempts.lockoutUntil) {
+                const now = new Date().getTime();
+                if (now < attempts.lockoutUntil) {
+                    const remainingTime = attempts.lockoutUntil - now;
+                    const hours = Math.floor(remainingTime / (1000 * 60 * 60));
+                    const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+                    return `Account locked. Please try again in ${hours}h ${minutes}m.`;
+                } else {
+                    resetFailedAttempts();
+                    return null;
+                }
+            }
+            return null;
+        }
+
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.textContent = type === 'password' ? '👁️' : '🙈';
+        });
+
+        // Auto-fill demo credentials
+        document.querySelectorAll('.copy-email').forEach(code => {
+            code.addEventListener('click', function() {
+                document.getElementById('email').value = this.textContent;
+                showAlert('✅ Email copied to form', 'success');
+            });
+        });
+
+        document.querySelectorAll('.copy-pass').forEach(code => {
+            code.addEventListener('click', function() {
+                document.getElementById('password').value = this.textContent;
+                document.getElementById('password').setAttribute('type', 'text');
+                document.getElementById('togglePassword').textContent = '🙈';
+                showAlert('✅ Password copied to form', 'success');
+            });
+        });
+
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const loginBtn = document.getElementById('loginBtn');
+
+            // Check if account is locked
+            const lockoutMessage = checkLockout();
+            if (lockoutMessage) {
+                showAlert('🔒 ' + lockoutMessage, 'error');
+                return;
+            }
 
             // Add loading state
             loginBtn.classList.add('loading');
             loginBtn.textContent = '';
+            loginBtn.disabled = true;
 
-            try {
-                const data = await apiCall('/auth/login', {
-                    method: 'POST',
-                    body: JSON.stringify({ email, password })
-                });
+            // Simulate API delay
+            setTimeout(() => {
+                // Find matching user
+                const user = DEMO_USERS.find(u => u.email === email && u.password === password);
 
-                // Store token and user
-                setToken(data.token);
-                setUser(data.user);
+                if (user) {
+                    // Successful login
+                    resetFailedAttempts();
+                    
+                    // Store user session
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    localStorage.setItem('isLoggedIn', 'true');
 
-                showAlert('✅ Login successful! Redirecting...', 'success');
+                    showAlert('✅ Login successful! Redirecting...', 'success');
 
-                // Redirect based on role
-                setTimeout(() => {
-                    if (data.user.role === 'ADMIN') {
-                        window.location.href = 'admin.html';
-                    } else if (data.user.role === 'OFFICER') {
-                        window.location.href = 'officer.html';
+                    // Redirect based on role
+                    setTimeout(() => {
+                        if (user.role === 'ADMIN') {
+                            window.location.href = 'admin.html';
+                        } else if (user.role === 'OFFICER') {
+                            window.location.href = 'officer.html';
+                        } else {
+                            window.location.href = 'index.html';
+                        }
+                    }, 1500);
+
+                } else {
+                    // Failed login
+                    const attempts = getFailedAttempts();
+                    const newCount = attempts.count + 1;
+
+                    if (newCount >= MAX_ATTEMPTS) {
+                        // Lock the account
+                        const lockoutUntil = new Date().getTime() + LOCKOUT_DURATION;
+                        setFailedAttempts(newCount, lockoutUntil);
+                        showAlert(`🔒 Too many failed attempts! Account locked for 24 hours.`, 'error');
                     } else {
-                        window.location.href = 'index.html';
+                        setFailedAttempts(newCount);
+                        const remainingAttempts = MAX_ATTEMPTS - newCount;
+                        showAlert(`❌ Invalid email or password! ${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''} remaining.`, 'error');
                     }
-                }, 1000);
 
-            } catch (error) {
-                loginBtn.classList.remove('loading');
-                loginBtn.textContent = 'Login';
-                showAlert('❌ ' + error.message, 'error');
+                    loginBtn.classList.remove('loading');
+                    loginBtn.textContent = 'Login';
+                    loginBtn.disabled = false;
+                }
+            }, 1000);
+        });
+
+        // Check lockout on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const lockoutMessage = checkLockout();
+            if (lockoutMessage) {
+                showAlert('🔒 ' + lockoutMessage, 'warning');
+                document.getElementById('loginBtn').disabled = true;
             }
         });
-
-        // Auto-fill demo credentials on click
-        document.querySelectorAll('.demo-item code').forEach(code => {
-            code.style.cursor = 'pointer';
-            code.addEventListener('click', function() {
-                const text = this.textContent;
-                if (text.includes('@')) {
-                    document.getElementById('email').value = text;
-                } else if (text.length < 15) {
-                    document.getElementById('password').value = text;
-                }
-            });
-        });
     </script>
-    <script src="government-portal-init.js"></script>
-    <script src="simple-translator.js"></script>
-    <script src="language-selector-widget.js"></script>
 </body>
 </html>
