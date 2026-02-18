@@ -55,6 +55,120 @@
         .header-actions {
             display: flex;
             gap: 10px;
+            align-items: center;
+        }
+
+        /* Circular Profile Button with Notification Badge */
+        .profile-button {
+            position: relative;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF9933 0%, #138808 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 3px solid rgba(255,255,255,0.3);
+            transition: all 0.3s;
+        }
+
+        .profile-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(255,153,51,0.4);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #EF4444;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            border: 2px solid #1e3a8a;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 55px;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification-header {
+            padding: 15px;
+            border-bottom: 1px solid #E5E7EB;
+            font-weight: 700;
+            color: #1F2937;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-item {
+            padding: 15px;
+            border-bottom: 1px solid #F3F4F6;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover {
+            background: #F9FAFB;
+        }
+
+        .notification-item.unread {
+            background: #EFF6FF;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .notification-text {
+            font-size: 13px;
+            color: #6B7280;
+            margin-bottom: 5px;
+        }
+
+        .notification-time {
+            font-size: 11px;
+            color: #9CA3AF;
         }
 
         .btn {
@@ -143,6 +257,7 @@
 
         .info-group {
             margin-bottom: 20px;
+            position: relative;
         }
 
         .info-label {
@@ -158,6 +273,39 @@
             padding: 10px;
             background: #F9FAFB;
             border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .locked-icon {
+            color: #EF4444;
+            font-size: 14px;
+            cursor: help;
+            title: "Requires verification to change";
+        }
+
+        .editable-icon {
+            color: #10B981;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .edit-button {
+            padding: 8px 16px;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .edit-button:hover {
+            background: #2563EB;
         }
 
         .stats-grid {
@@ -241,12 +389,109 @@
             margin-bottom: 15px;
         }
 
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3B82F6;
+        }
+
+        .form-input:disabled {
+            background: #F3F4F6;
+            cursor: not-allowed;
+        }
+
+        .verification-note {
+            font-size: 12px;
+            color: #EF4444;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
         @media (max-width: 768px) {
             .profile-grid {
                 grid-template-columns: 1fr;
             }
             .stats-grid {
                 grid-template-columns: 1fr 1fr;
+            }
+            .notification-dropdown {
+                width: 300px;
             }
         }
     </style>
@@ -258,6 +503,29 @@
             <div class="header-actions">
                 <a href="index.html" class="btn btn-secondary">Home</a>
                 <a href="track.html" class="btn btn-secondary">Track</a>
+                
+                <!-- Circular Profile Button with Notifications -->
+                <div style="position: relative;">
+                    <div class="profile-button" onclick="toggleNotifications()" id="profileBtn">
+                        <span id="profileInitial">U</span>
+                        <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                    </div>
+                    
+                    <!-- Notification Dropdown -->
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <span>📬 Notifications</span>
+                            <button onclick="markAllRead()" style="background: none; border: none; color: #3B82F6; cursor: pointer; font-size: 12px; font-weight: 600;">Mark all read</button>
+                        </div>
+                        <div id="notificationList">
+                            <div class="empty-state" style="padding: 30px;">
+                                <div style="font-size: 48px;">📭</div>
+                                <p>No notifications</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <button onclick="logout()" class="btn btn-primary">Logout</button>
             </div>
         </div>
@@ -274,19 +542,37 @@
                 </div>
 
                 <div class="info-group">
+                    <div class="info-label">Full Name</div>
+                    <div class="info-value">
+                        <span id="displayName">-</span>
+                        <span class="editable-icon" onclick="openEditModal('name')" title="Click to edit">✏️</span>
+                    </div>
+                </div>
+
+                <div class="info-group">
                     <div class="info-label">Email Address</div>
-                    <div class="info-value" id="userEmail">-</div>
+                    <div class="info-value">
+                        <span id="userEmail">-</span>
+                        <span class="locked-icon" title="Requires verification to change">🔒</span>
+                    </div>
+                    <div class="verification-note">🔒 Email changes require verification</div>
                 </div>
 
                 <div class="info-group">
                     <div class="info-label">Phone Number</div>
-                    <div class="info-value" id="userPhone">-</div>
+                    <div class="info-value">
+                        <span id="userPhone">-</span>
+                        <span class="locked-icon" title="Requires verification to change">🔒</span>
+                    </div>
+                    <div class="verification-note">🔒 Phone changes require OTP verification</div>
                 </div>
 
                 <div class="info-group">
                     <div class="info-label">Member Since</div>
                     <div class="info-value" id="memberSince">-</div>
                 </div>
+
+                <button class="edit-button" onclick="openEditModal('profile')">✏️ Edit Profile</button>
             </div>
 
             <!-- Right Column - Activity -->
@@ -322,100 +608,39 @@
         </div>
     </div>
 
+    <!-- Edit Profile Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">✏️ Edit Profile</div>
+                <button class="close-modal" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" id="editName" class="form-input" placeholder="Enter full name">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email Address 🔒</label>
+                        <input type="email" id="editEmail" class="form-input" disabled>
+                        <div class="verification-note">Email changes require admin approval</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Phone Number 🔒</label>
+                        <input type="tel" id="editPhone" class="form-input" disabled>
+                        <div class="verification-note">Phone changes require OTP verification</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 16px;">
+                        Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="demo-system.js"></script>
     <script>
-        // Check if logged in
-        if (!grievanceSystem.isLoggedIn()) {
-            window.location.href = 'login.html';
-        }
-
-        function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-IN', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-        }
-
-        function getStatusClass(status) {
-            if (status === 'Resolved' || status === 'Closed') return 'status-resolved';
-            if (status === 'Under Progress' || status === 'Investigation') return 'status-progress';
-            return 'status-received';
-        }
-
-        function loadProfile() {
-            const user = grievanceSystem.getUser();
-            if (!user) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            // Display user info
-            document.getElementById('userName').textContent = user.name || 'User';
-            document.getElementById('userRole').textContent = user.role || 'CITIZEN';
-            document.getElementById('userEmail').textContent = user.email || 'N/A';
-            document.getElementById('userPhone').textContent = user.phone || 'N/A';
-            document.getElementById('memberSince').textContent = formatDate(user.registeredAt) || 'Recently';
-
-            // Load complaints
-            const complaints = grievanceSystem.getUserGrievances();
-            
-            // Update statistics
-            const total = complaints.length;
-            const pending = complaints.filter(c => !['Resolved', 'Closed'].includes(c.status)).length;
-            const resolved = complaints.filter(c => c.status === 'Resolved' || c.status === 'Closed').length;
-
-            document.getElementById('totalCount').textContent = total;
-            document.getElementById('pendingCount').textContent = pending;
-            document.getElementById('resolvedCount').textContent = resolved;
-
-            // Display complaints
-            const container = document.getElementById('complaintsContainer');
-            
-            if (complaints.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">📭</div>
-                        <p>No complaints filed yet</p>
-                        <button onclick="window.location.href='index.html'" class="btn btn-primary" style="margin-top: 15px;">
-                            File Your First Complaint
-                        </button>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = complaints.map(complaint => `
-                <div class="complaint-item">
-                    <div class="complaint-header">
-                        <span class="complaint-id">${complaint.id}</span>
-                        <span class="complaint-status ${getStatusClass(complaint.status)}">
-                            ${complaint.status}
-                        </span>
-                    </div>
-                    <div class="complaint-title">${complaint.title}</div>
-                    <div class="complaint-meta">
-                        ${complaint.department} • Filed on ${formatDate(complaint.createdAt)}
-                    </div>
-                    <button onclick="window.location.href='track.html?id=${complaint.id}'" 
-                            class="btn btn-primary" 
-                            style="margin-top: 10px; font-size: 12px; padding: 6px 12px;">
-                        Track Status →
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                grievanceSystem.logout();
-            }
-        }
-
-        // Load profile on page load
-        window.addEventListener('DOMContentLoaded', loadProfile);
-    </script>
-</body>
-</html>
