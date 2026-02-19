@@ -1,596 +1,886 @@
-// Translation System for Smart Grievance System
-// Supports 12 Indian Languages
+// =====================================================
+// COMPREHENSIVE INDIAN LANGUAGE TRANSLATIONS
+// Based on Google Keyboard usage & Indian Census data
+// =====================================================
 
-const translations = {
+const TRANSLATIONS = {
     en: {
-        // Common
-        'app_name': 'Smart Grievance System',
-        'welcome': 'Welcome',
-        'logout': 'Logout',
-        'submit': 'Submit',
-        'cancel': 'Cancel',
-        'save': 'Save',
-        'edit': 'Edit',
-        'delete': 'Delete',
-        'view': 'View',
-        'update': 'Update',
-        'back': 'Back',
-        'next': 'Next',
-        'previous': 'Previous',
-        'loading': 'Loading...',
-        'success': 'Success',
-        'error': 'Error',
-        'warning': 'Warning',
-        
-        // Auth
-        'login': 'Login',
-        'register': 'Register',
-        'email': 'Email',
-        'password': 'Password',
-        'name': 'Name',
-        'phone': 'Phone Number',
-        'login_title': 'Login to Your Account',
-        'register_title': 'Create New Account',
-        'forgot_password': 'Forgot Password?',
-        'dont_have_account': "Don't have an account?",
-        'already_have_account': 'Already have an account?',
-        
-        // Dashboard
-        'dashboard': 'Dashboard',
-        'my_grievances': 'My Grievances',
-        'submit_grievance': 'Submit Grievance',
-        'track_grievance': 'Track Grievance',
-        'profile': 'Profile',
-        
-        // Grievance
-        'complaint_text': 'Describe your complaint',
-        'location': 'Location',
-        'department': 'Department',
-        'status': 'Status',
-        'submitted_on': 'Submitted On',
-        'grievance_id': 'Grievance ID',
-        'complaint_details': 'Complaint Details',
-        
-        // Status
-        'received': 'Received',
-        'assigned': 'Assigned to Department',
-        'in_progress': 'Under Progress',
-        'investigation': 'Investigation',
-        'reviewed': 'Reviewed',
-        'resolved': 'Resolved',
-        'closed': 'Closed',
-        
-        // Officer
-        'officer_dashboard': 'Officer Dashboard',
-        'department_grievances': 'Department Grievances',
-        'update_status': 'Update Status',
-        'add_comment': 'Add Comment',
-        
-        // Admin
-        'admin_dashboard': 'Admin Dashboard',
-        'all_officers': 'All Officers',
-        'create_officer': 'Create Officer',
-        'analytics': 'Analytics',
-        'total_grievances': 'Total Grievances',
-        
-        // Language
-        'change_language': 'Change Language',
-        'select_language': 'Select Language'
+        code: 'en',
+        name: 'English',
+        nativeName: 'English',
+        flag: '🇬🇧',
+        // Common UI Elements
+        home: 'Home',
+        login: 'Login',
+        register: 'Register',
+        logout: 'Logout',
+        profile: 'My Profile',
+        editProfile: 'Edit Profile',
+        fileComplaint: 'File a Complaint',
+        trackComplaint: 'Track Complaint',
+        myComplaints: 'My Complaints',
+        dashboard: 'Dashboard',
+        notifications: 'Notifications',
+        search: 'Search',
+        submit: 'Submit',
+        cancel: 'Cancel',
+        save: 'Save',
+        edit: 'Edit',
+        delete: 'Delete',
+        back: 'Back',
+        // Form Fields
+        name: 'Full Name',
+        email: 'Email Address',
+        phone: 'Phone Number',
+        password: 'Password',
+        confirmPassword: 'Confirm Password',
+        dob: 'Date of Birth',
+        gender: 'Gender',
+        address: 'Address',
+        // Complaint Fields
+        title: 'Complaint Title',
+        description: 'Description',
+        department: 'Department',
+        location: 'Location',
+        status: 'Status',
+        priority: 'Priority',
+        grievanceId: 'Grievance ID',
+        uploadImage: 'Upload Image',
+        // Status Values
+        received: 'Received',
+        assigned: 'Assigned to Department',
+        inProgress: 'Under Progress',
+        resolved: 'Resolved',
+        closed: 'Closed',
+        // Departments
+        electricity: 'Electricity',
+        water: 'Water Supply',
+        roads: 'Roads',
+        sanitation: 'Sanitation',
+        transport: 'Public Transport',
+        healthcare: 'Healthcare',
+        education: 'Education',
+        police: 'Police',
+        // Messages
+        loginSuccess: 'Login successful!',
+        logoutConfirm: 'Are you sure you want to logout?',
+        complaintSubmitted: 'Complaint submitted successfully!',
+        noComplaints: 'No complaints filed yet',
+        noNotifications: 'No notifications',
+        loading: 'Loading...',
+        // Statistics
+        total: 'Total',
+        pending: 'Pending',
+        inProgressStat: 'In Progress',
+        resolvedStat: 'Resolved'
     },
     
     hi: {
-        // Common
-        'app_name': 'स्मार्ट शिकायत प्रणाली',
-        'welcome': 'स्वागत है',
-        'logout': 'लॉग आउट',
-        'submit': 'जमा करें',
-        'cancel': 'रद्द करें',
-        'save': 'सहेजें',
-        'edit': 'संपादित करें',
-        'delete': 'हटाएं',
-        'view': 'देखें',
-        'update': 'अपडेट करें',
-        'back': 'वापस',
-        'next': 'अगला',
-        'previous': 'पिछला',
-        'loading': 'लोड हो रहा है...',
-        'success': 'सफलता',
-        'error': 'त्रुटि',
-        'warning': 'चेतावनी',
-        
-        // Auth
-        'login': 'लॉगिन',
-        'register': 'पंजीकरण',
-        'email': 'ईमेल',
-        'password': 'पासवर्ड',
-        'name': 'नाम',
-        'phone': 'फोन नंबर',
-        'login_title': 'अपने खाते में लॉगिन करें',
-        'register_title': 'नया खाता बनाएं',
-        'forgot_password': 'पासवर्ड भूल गए?',
-        'dont_have_account': 'खाता नहीं है?',
-        'already_have_account': 'पहले से खाता है?',
-        
-        // Dashboard
-        'dashboard': 'डैशबोर्ड',
-        'my_grievances': 'मेरी शिकायतें',
-        'submit_grievance': 'शिकायत दर्ज करें',
-        'track_grievance': 'शिकायत ट्रैक करें',
-        'profile': 'प्रोफ़ाइल',
-        
-        // Grievance
-        'complaint_text': 'अपनी शिकायत का विवरण दें',
-        'location': 'स्थान',
-        'department': 'विभाग',
-        'status': 'स्थिति',
-        'submitted_on': 'जमा किया गया',
-        'grievance_id': 'शिकायत आईडी',
-        'complaint_details': 'शिकायत विवरण',
-        
-        // Status
-        'received': 'प्राप्त',
-        'assigned': 'विभाग को सौंपा गया',
-        'in_progress': 'प्रगति में',
-        'investigation': 'जांच',
-        'reviewed': 'समीक्षा की गई',
-        'resolved': 'हल हो गया',
-        'closed': 'बंद',
-        
-        // Language
-        'change_language': 'भाषा बदलें',
-        'select_language': 'भाषा चुनें'
+        code: 'hi',
+        name: 'Hindi',
+        nativeName: 'हिंदी',
+        flag: '🇮🇳',
+        home: 'होम',
+        login: 'लॉगिन',
+        register: 'रजिस्टर करें',
+        logout: 'लॉगआउट',
+        profile: 'मेरी प्रोफ़ाइल',
+        editProfile: 'प्रोफ़ाइल संपादित करें',
+        fileComplaint: 'शिकायत दर्ज करें',
+        trackComplaint: 'शिकायत ट्रैक करें',
+        myComplaints: 'मेरी शिकायतें',
+        dashboard: 'डैशबोर्ड',
+        notifications: 'सूचनाएं',
+        search: 'खोजें',
+        submit: 'जमा करें',
+        cancel: 'रद्द करें',
+        save: 'सहेजें',
+        edit: 'संपादित करें',
+        delete: 'हटाएं',
+        back: 'वापस',
+        name: 'पूरा नाम',
+        email: 'ईमेल पता',
+        phone: 'फ़ोन नंबर',
+        password: 'पासवर्ड',
+        confirmPassword: 'पासवर्ड की पुष्टि करें',
+        dob: 'जन्म तिथि',
+        gender: 'लिंग',
+        address: 'पता',
+        title: 'शिकायत शीर्षक',
+        description: 'विवरण',
+        department: 'विभाग',
+        location: 'स्थान',
+        status: 'स्थिति',
+        priority: 'प्राथमिकता',
+        grievanceId: 'शिकायत आईडी',
+        uploadImage: 'छवि अपलोड करें',
+        received: 'प्राप्त',
+        assigned: 'विभाग को सौंपा गया',
+        inProgress: 'प्रगति में',
+        resolved: 'हल किया गया',
+        closed: 'बंद',
+        electricity: 'बिजली',
+        water: 'जल आपूर्ति',
+        roads: 'सड़कें',
+        sanitation: 'स्वच्छता',
+        transport: 'सार्वजनिक परिवहन',
+        healthcare: 'स्वास्थ्य सेवा',
+        education: 'शिक्षा',
+        police: 'पुलिस',
+        loginSuccess: 'लॉगिन सफल!',
+        logoutConfirm: 'क्या आप वाकई लॉगआउट करना चाहते हैं?',
+        complaintSubmitted: 'शिकायत सफलतापूर्वक जमा की गई!',
+        noComplaints: 'अभी तक कोई शिकायत दर्ज नहीं की गई',
+        noNotifications: 'कोई सूचना नहीं',
+        loading: 'लोड हो रहा है...',
+        total: 'कुल',
+        pending: 'लंबित',
+        inProgressStat: 'प्रगति में',
+        resolvedStat: 'हल किया गया'
     },
     
     ta: {
-        // Common
-        'app_name': 'ஸ்மார்ட் குறைதீர்ப்பு அமைப்பு',
-        'welcome': 'வரவேற்கிறோம்',
-        'logout': 'வெளியேறு',
-        'submit': 'சமர்ப்பிக்கவும்',
-        'cancel': 'ரத்து செய்',
-        'save': 'சேமி',
-        'edit': 'திருத்து',
-        'delete': 'நீக்கு',
-        'view': 'பார்க்க',
-        'update': 'புதுப்பிக்கவும்',
-        'back': 'பின்',
-        'next': 'அடுத்து',
-        'previous': 'முந்தைய',
-        'loading': 'ஏற்றுகிறது...',
-        'success': 'வெற்றி',
-        'error': 'பிழை',
-        'warning': 'எச்சரிக்கை',
-        
-        // Auth
-        'login': 'உள்நுழைய',
-        'register': 'பதிவு செய்க',
-        'email': 'மின்னஞ்சல்',
-        'password': 'கடவுச்சொல்',
-        'name': 'பெயர்',
-        'phone': 'தொலைபேசி எண்',
-        'login_title': 'உங்கள் கணக்கில் உள்நுழைக',
-        'register_title': 'புதிய கணக்கை உருவாக்கவும்',
-        
-        // Dashboard
-        'dashboard': 'டாஷ்போர்டு',
-        'my_grievances': 'எனது குறைகள்',
-        'submit_grievance': 'குறை சமர்ப்பிக்கவும்',
-        'track_grievance': 'குறையைக் கண்காணிக்கவும்',
-        'profile': 'சுயவிவரம்',
-        
-        // Grievance
-        'complaint_text': 'உங்கள் புகாரை விவரிக்கவும்',
-        'location': 'இடம்',
-        'department': 'துறை',
-        'status': 'நிலை',
-        'submitted_on': 'சமர்ப்பிக்கப்பட்டது',
-        'grievance_id': 'குறை ஐடி',
-        
-        // Language
-        'change_language': 'மொழியை மாற்று',
-        'select_language': 'மொழியைத் தேர்ந்தெடுக்கவும்'
+        code: 'ta',
+        name: 'Tamil',
+        nativeName: 'தமிழ்',
+        flag: '🇮🇳',
+        home: 'முகப்பு',
+        login: 'உள்நுழைவு',
+        register: 'பதிவு செய்க',
+        logout: 'வெளியேறு',
+        profile: 'என் சுயவிவரம்',
+        editProfile: 'சுயவிவரத்தைத் திருத்து',
+        fileComplaint: 'புகார் பதிவு செய்க',
+        trackComplaint: 'புகார் கண்காணிப்பு',
+        myComplaints: 'என் புகார்கள்',
+        dashboard: 'கட்டுப்பாட்டு பலகை',
+        notifications: 'அறிவிப்புகள்',
+        search: 'தேடு',
+        submit: 'சமர்ப்பிக்கவும்',
+        cancel: 'ரத்து செய்',
+        save: 'சேமி',
+        edit: 'திருத்து',
+        delete: 'நீக்கு',
+        back: 'பின்செல்',
+        name: 'முழு பெயர்',
+        email: 'மின்னஞ்சல் முகவரி',
+        phone: 'தொலைபேசி எண்',
+        password: 'கடவுச்சொல்',
+        confirmPassword: 'கடவுச்சொல்லை உறுதிப்படுத்தவும்',
+        dob: 'பிறந்த தேதி',
+        gender: 'பாலினம்',
+        address: 'முகவரி',
+        title: 'புகார் தலைப்பு',
+        description: 'விளக்கம்',
+        department: 'துறை',
+        location: 'இடம்',
+        status: 'நிலை',
+        priority: 'முன்னுரிமை',
+        grievanceId: 'புகார் எண்',
+        uploadImage: 'படத்தை பதிவேற்றவும்',
+        received: 'பெறப்பட்டது',
+        assigned: 'துறைக்கு ஒதுக்கப்பட்டது',
+        inProgress: 'முன்னேற்றத்தில்',
+        resolved: 'தீர்க்கப்பட்டது',
+        closed: 'மூடப்பட்டது',
+        electricity: 'மின்சாரம்',
+        water: 'நீர் வழங்கல்',
+        roads: 'சாலைகள்',
+        sanitation: 'சுகாதாரம்',
+        transport: 'பொது போக்குவரத்து',
+        healthcare: 'சுகாதாரம்',
+        education: 'கல்வி',
+        police: 'காவல்துறை',
+        loginSuccess: 'உள்நுழைவு வெற்றிகரமாக!',
+        logoutConfirm: 'நீங்கள் நிச்சயமாக வெளியேற விரும்புகிறீர்களா?',
+        complaintSubmitted: 'புகார் வெற்றிகரமாக சமர்ப்பிக்கப்பட்டது!',
+        noComplaints: 'இன்னும் புகார்கள் எதுவும் பதிவு செய்யப்படவில்லை',
+        noNotifications: 'அறிவிப்புகள் இல்லை',
+        loading: 'ஏற்றுகிறது...',
+        total: 'மொத்தம்',
+        pending: 'நிலுவையில்',
+        inProgressStat: 'முன்னேற்றத்தில்',
+        resolvedStat: 'தீர்க்கப்பட்டது'
     },
     
     te: {
-        // Common
-        'app_name': 'స్మార్ట్ ఫిర్యాదు వ్యవస్థ',
-        'welcome': 'స్వాగతం',
-        'logout': 'లాగౌట్',
-        'submit': 'సమర్పించండి',
-        'cancel': 'రద్దు చేయి',
-        'save': 'సేవ్ చేయి',
-        'edit': 'సవరించు',
-        'view': 'చూడండి',
-        'update': 'నవీకరించు',
-        'back': 'వెనుకకు',
-        
-        // Auth
-        'login': 'లాగిన్',
-        'register': 'నమోదు',
-        'email': 'ఇమెయిల్',
-        'password': 'పాస్‌వర్డ్',
-        'name': 'పేరు',
-        'phone': 'ఫోన్ నంబర్',
-        
-        // Dashboard
-        'dashboard': 'డాష్‌బోర్డ్',
-        'my_grievances': 'నా ఫిర్యాదులు',
-        'submit_grievance': 'ఫిర్యాదు సమర్పించండి',
-        'profile': 'ప్రొఫైల్',
-        
-        // Language
-        'change_language': 'భాషను మార్చండి',
-        'select_language': 'భాషను ఎంచుకోండి'
+        code: 'te',
+        name: 'Telugu',
+        nativeName: 'తెలుగు',
+        flag: '🇮🇳',
+        home: 'హోమ్',
+        login: 'లాగిన్',
+        register: 'నమోదు చేయండి',
+        logout: 'లాగ్అవుట్',
+        profile: 'నా ప్రొఫైల్',
+        editProfile: 'ప్రొఫైల్‌ను సవరించండి',
+        fileComplaint: 'ఫిర్యాదు దాఖలు చేయండి',
+        trackComplaint: 'ఫిర్యాదును ట్రాక్ చేయండి',
+        myComplaints: 'నా ఫిర్యాదులు',
+        dashboard: 'డ్యాష్‌బోర్డ్',
+        notifications: 'నోటిఫికేషన్‌లు',
+        search: 'శోధించండి',
+        submit: 'సమర్పించు',
+        cancel: 'రద్దు చేయి',
+        save: 'సేవ్ చేయి',
+        edit: 'సవరించు',
+        delete: 'తొలగించు',
+        back: 'వెనక్కి',
+        name: 'పూర్తి పేరు',
+        email: 'ఇమెయిల్ చిరునామా',
+        phone: 'ఫోన్ నంబర్',
+        password: 'పాస్‌వర్డ్',
+        confirmPassword: 'పాస్‌వర్డ్‌ను నిర్ధారించండి',
+        dob: 'పుట్టిన తేదీ',
+        gender: 'లింగం',
+        address: 'చిరునామా',
+        title: 'ఫిర్యాదు శీర్షిక',
+        description: 'వివరణ',
+        department: 'విభాగం',
+        location: 'స్థానం',
+        status: 'స్థితి',
+        priority: 'ప్రాధాన్యత',
+        grievanceId: 'ఫిర్యాదు ID',
+        uploadImage: 'చిత్రాన్ని అప్‌లోడ్ చేయండి',
+        received: 'స్వీకరించబడింది',
+        assigned: 'విభాగానికి కేటాయించబడింది',
+        inProgress: 'పురోగతిలో',
+        resolved: 'పరిష్కరించబడింది',
+        closed: 'మూసివేయబడింది',
+        electricity: 'విద్యుత్',
+        water: 'నీటి సరఫరా',
+        roads: 'రోడ్లు',
+        sanitation: 'పారిశుధ్యం',
+        transport: 'ప్రజా రవాణా',
+        healthcare: 'ఆరోగ్య సంరక్షణ',
+        education: 'విద్య',
+        police: 'పోలీసు',
+        loginSuccess: 'లాగిన్ విజయవంతం!',
+        logoutConfirm: 'మీరు ఖచ్చితంగా లాగ్అవుట్ చేయాలనుకుంటున్నారా?',
+        complaintSubmitted: 'ఫిర్యాదు విజయవంతంగా సమర్పించబడింది!',
+        noComplaints: 'ఇంకా ఫిర్యాదులు దాఖలు చేయబడలేదు',
+        noNotifications: 'నోటిఫికేషన్‌లు లేవు',
+        loading: 'లోడ్ అవుతోంది...',
+        total: 'మొత్తం',
+        pending: 'పెండింగ్',
+        inProgressStat: 'పురోగతిలో',
+        resolvedStat: 'పరిష్కరించబడింది'
     },
     
     bn: {
-        // Common
-        'app_name': 'স্মার্ট অভিযোগ সিস্টেম',
-        'welcome': 'স্বাগতম',
-        'logout': 'লগআউট',
-        'submit': 'জমা দিন',
-        'cancel': 'বাতিল',
-        'save': 'সংরক্ষণ',
-        'edit': 'সম্পাদনা',
-        'view': 'দেখুন',
-        'update': 'আপডেট',
-        'back': 'পিছনে',
-        
-        // Auth
-        'login': 'লগইন',
-        'register': 'নিবন্ধন',
-        'email': 'ইমেইল',
-        'password': 'পাসওয়ার্ড',
-        'name': 'নাম',
-        'phone': 'ফোন নম্বর',
-        
-        // Dashboard
-        'dashboard': 'ড্যাশবোর্ড',
-        'my_grievances': 'আমার অভিযোগ',
-        'submit_grievance': 'অভিযোগ জমা দিন',
-        'profile': 'প্রোফাইল',
-        
-        // Language
-        'change_language': 'ভাষা পরিবর্তন করুন',
-        'select_language': 'ভাষা নির্বাচন করুন'
+        code: 'bn',
+        name: 'Bengali',
+        nativeName: 'বাংলা',
+        flag: '🇮🇳',
+        home: 'হোম',
+        login: 'লগইন',
+        register: 'নিবন্ধন করুন',
+        logout: 'লগআউট',
+        profile: 'আমার প্রোফাইল',
+        editProfile: 'প্রোফাইল সম্পাদনা করুন',
+        fileComplaint: 'অভিযোগ দাখিল করুন',
+        trackComplaint: 'অভিযোগ ট্র্যাক করুন',
+        myComplaints: 'আমার অভিযোগ',
+        dashboard: 'ড্যাশবোর্ড',
+        notifications: 'বিজ্ঞপ্তি',
+        search: 'অনুসন্ধান',
+        submit: 'জমা দিন',
+        cancel: 'বাতিল',
+        save: 'সংরক্ষণ করুন',
+        edit: 'সম্পাদনা',
+        delete: 'মুছুন',
+        back: 'ফিরে যান',
+        name: 'পূর্ণ নাম',
+        email: 'ইমেইল ঠিকানা',
+        phone: 'ফোন নম্বর',
+        password: 'পাসওয়ার্ড',
+        confirmPassword: 'পাসওয়ার্ড নিশ্চিত করুন',
+        dob: 'জন্ম তারিখ',
+        gender: 'লিঙ্গ',
+        address: 'ঠিকানা',
+        title: 'অভিযোগের শিরোনাম',
+        description: 'বিবরণ',
+        department: 'বিভাগ',
+        location: 'অবস্থান',
+        status: 'অবস্থা',
+        priority: 'অগ্রাধিকার',
+        grievanceId: 'অভিযোগ আইডি',
+        uploadImage: 'ছবি আপলোড করুন',
+        received: 'প্রাপ্ত',
+        assigned: 'বিভাগে বরাদ্দ',
+        inProgress: 'চলমান',
+        resolved: 'সমাধান করা হয়েছে',
+        closed: 'বন্ধ',
+        electricity: 'বিদ্যুৎ',
+        water: 'জল সরবরাহ',
+        roads: 'রাস্তা',
+        sanitation: 'পরিচ্ছন্নতা',
+        transport: 'গণপরিবহন',
+        healthcare: 'স্বাস্থ্যসেবা',
+        education: 'শিক্ষা',
+        police: 'পুলিশ',
+        loginSuccess: 'লগইন সফল!',
+        logoutConfirm: 'আপনি কি নিশ্চিত লগআউট করতে চান?',
+        complaintSubmitted: 'অভিযোগ সফলভাবে জমা দেওয়া হয়েছে!',
+        noComplaints: 'এখনও কোনো অভিযোগ দাখিল করা হয়নি',
+        noNotifications: 'কোনো বিজ্ঞপ্তি নেই',
+        loading: 'লোড হচ্ছে...',
+        total: 'মোট',
+        pending: 'অপেক্ষমাণ',
+        inProgressStat: 'চলমান',
+        resolvedStat: 'সমাধান করা হয়েছে'
     },
     
     mr: {
-        // Common
-        'app_name': 'स्मार्ट तक्रार प्रणाली',
-        'welcome': 'स्वागत आहे',
-        'logout': 'लॉगआउट',
-        'submit': 'सबमिट करा',
-        'cancel': 'रद्द करा',
-        'save': 'जतन करा',
-        'edit': 'संपादित करा',
-        'view': 'पहा',
-        'update': 'अपडेट करा',
-        
-        // Auth
-        'login': 'लॉगिन',
-        'register': 'नोंदणी',
-        'email': 'ईमेल',
-        'password': 'पासवर्ड',
-        'name': 'नाव',
-        'phone': 'फोन नंबर',
-        
-        // Dashboard
-        'dashboard': 'डॅशबोर्ड',
-        'my_grievances': 'माझ्या तक्रारी',
-        'submit_grievance': 'तक्रार सबमिट करा',
-        'profile': 'प्रोफाइल',
-        
-        // Language
-        'change_language': 'भाषा बदला',
-        'select_language': 'भाषा निवडा'
+        code: 'mr',
+        name: 'Marathi',
+        nativeName: 'मराठी',
+        flag: '🇮🇳',
+        home: 'होम',
+        login: 'लॉगिन',
+        register: 'नोंदणी करा',
+        logout: 'लॉगआउट',
+        profile: 'माझे प्रोफाइल',
+        editProfile: 'प्रोफाइल संपादित करा',
+        fileComplaint: 'तक्रार नोंदवा',
+        trackComplaint: 'तक्रार ट्रॅक करा',
+        myComplaints: 'माझ्या तक्रारी',
+        dashboard: 'डॅशबोर्ड',
+        notifications: 'सूचना',
+        search: 'शोधा',
+        submit: 'सबमिट करा',
+        cancel: 'रद्द करा',
+        save: 'जतन करा',
+        edit: 'संपादित करा',
+        delete: 'हटवा',
+        back: 'परत',
+        name: 'पूर्ण नाव',
+        email: 'ईमेल पत्ता',
+        phone: 'फोन नंबर',
+        password: 'पासवर्ड',
+        confirmPassword: 'पासवर्ड पुष्टी करा',
+        dob: 'जन्मतारीख',
+        gender: 'लिंग',
+        address: 'पत्ता',
+        title: 'तक्रारीचे शीर्षक',
+        description: 'वर्णन',
+        department: 'विभाग',
+        location: 'स्थान',
+        status: 'स्थिती',
+        priority: 'प्राधान्य',
+        grievanceId: 'तक्रार आयडी',
+        uploadImage: 'प्रतिमा अपलोड करा',
+        received: 'प्राप्त झाले',
+        assigned: 'विभागाला नियुक्त',
+        inProgress: 'प्रगतीपथावर',
+        resolved: 'निराकरण केले',
+        closed: 'बंद',
+        electricity: 'वीज',
+        water: 'पाणी पुरवठा',
+        roads: 'रस्ते',
+        sanitation: 'स्वच्छता',
+        transport: 'सार्वजनिक वाहतूक',
+        healthcare: 'आरोग्यसेवा',
+        education: 'शिक्षण',
+        police: 'पोलीस',
+        loginSuccess: 'लॉगिन यशस्वी!',
+        logoutConfirm: 'तुम्हाला खात्री आहे की तुम्ही लॉगआउट करू इच्छिता?',
+        complaintSubmitted: 'तक्रार यशस्वीरित्या सबमिट झाली!',
+        noComplaints: 'अद्याप कोणत्याही तक्रारी नोंदवल्या नाहीत',
+        noNotifications: 'कोणत्याही सूचना नाहीत',
+        loading: 'लोड होत आहे...',
+        total: 'एकूण',
+        pending: 'प्रलंबित',
+        inProgressStat: 'प्रगतीपथावर',
+        resolvedStat: 'निराकरण केले'
     },
     
     gu: {
-        // Common
-        'app_name': 'સ્માર્ટ ફરિયાદ સિસ્ટમ',
-        'welcome': 'સ્વાગત છે',
-        'logout': 'લૉગઆઉટ',
-        'submit': 'સબમિટ કરો',
-        'cancel': 'રદ કરો',
-        'save': 'સાચવો',
-        'edit': 'સંપાદિત કરો',
-        'view': 'જુઓ',
-        'update': 'અપડેટ કરો',
-        
-        // Auth
-        'login': 'લૉગિન',
-        'register': 'નોંધણી',
-        'email': 'ઈમેલ',
-        'password': 'પાસવર્ડ',
-        'name': 'નામ',
-        'phone': 'ફોન નંબર',
-        
-        // Dashboard
-        'dashboard': 'ડેશબોર્ડ',
-        'my_grievances': 'મારી ફરિયાદો',
-        'submit_grievance': 'ફરિયાદ સબમિટ કરો',
-        'profile': 'પ્રોફાઇલ',
-        
-        // Language
-        'change_language': 'ભાષા બદલો',
-        'select_language': 'ભાષા પસંદ કરો'
+        code: 'gu',
+        name: 'Gujarati',
+        nativeName: 'ગુજરાતી',
+        flag: '🇮🇳',
+        home: 'હોમ',
+        login: 'લૉગિન',
+        register: 'રજિસ્ટર કરો',
+        logout: 'લૉગઆઉટ',
+        profile: 'મારી પ્રોફાઇલ',
+        editProfile: 'પ્રોફાઇલ સંપાદિત કરો',
+        fileComplaint: 'ફરિયાદ નોંધાવો',
+        trackComplaint: 'ફરિયાદ ટ્રૅક કરો',
+        myComplaints: 'મારી ફરિયાદો',
+        dashboard: 'ડૅશબોર્ડ',
+        notifications: 'નોટિફિકેશન્સ',
+        search: 'શોધો',
+        submit: 'સબમિટ કરો',
+        cancel: 'રદ કરો',
+        save: 'સાચવો',
+        edit: 'સંપાદિત કરો',
+        delete: 'કાઢી નાખો',
+        back: 'પાછા',
+        name: 'પૂરું નામ',
+        email: 'ઇમેઇલ સરનામું',
+        phone: 'ફોન નંબર',
+        password: 'પાસવર્ડ',
+        confirmPassword: 'પાસવર્ડની પુષ્ટિ કરો',
+        dob: 'જન્મ તારીખ',
+        gender: 'જાતિ',
+        address: 'સરનામું',
+        title: 'ફરિયાદનું શીર્ષક',
+        description: 'વર્ણન',
+        department: 'વિભાગ',
+        location: 'સ્થાન',
+        status: 'સ્થિતિ',
+        priority: 'પ્રાથમિકતા',
+        grievanceId: 'ફરિયાદ આઈડી',
+        uploadImage: 'છબી અપલોડ કરો',
+        received: 'પ્રાપ્ત',
+        assigned: 'વિભાગને સોંપાયેલ',
+        inProgress: 'ચાલુ છે',
+        resolved: 'ઉકેલાઈ ગયું',
+        closed: 'બંધ',
+        electricity: 'વીજળી',
+        water: 'પાણી પુરવઠો',
+        roads: 'રસ્તાઓ',
+        sanitation: 'સ્વચ્છતા',
+        transport: 'જાહેર પરિવહન',
+        healthcare: 'આરોગ્યસંભાળ',
+        education: 'શિક્ષણ',
+        police: 'પોલીસ',
+        loginSuccess: 'લૉગિન સફળ!',
+        logoutConfirm: 'શું તમે ખરેખર લૉગઆઉટ કરવા માંગો છો?',
+        complaintSubmitted: 'ફરિયાદ સફળતાપૂર્વક સબમિટ થઈ!',
+        noComplaints: 'હજી સુધી કોઈ ફરિયાદ નોંધાવી નથી',
+        noNotifications: 'કોઈ નોટિફિકેશન્સ નથી',
+        loading: 'લોડ થઈ રહ્યું છે...',
+        total: 'કુલ',
+        pending: 'બાકી',
+        inProgressStat: 'ચાલુ છે',
+        resolvedStat: 'ઉકેલાઈ ગયું'
     },
     
     kn: {
-        // Common
-        'app_name': 'ಸ್ಮಾರ್ಟ್ ದೂರು ವ್ಯವಸ್ಥೆ',
-        'welcome': 'ಸ್ವಾಗತ',
-        'logout': 'ಲಾಗ್ಔಟ್',
-        'submit': 'ಸಲ್ಲಿಸಿ',
-        'cancel': 'ರದ್ದುಮಾಡಿ',
-        'save': 'ಉಳಿಸಿ',
-        'edit': 'ಸಂಪಾದಿಸಿ',
-        'view': 'ವೀಕ್ಷಿಸಿ',
-        'update': 'ನವೀಕರಿಸಿ',
-        
-        // Auth
-        'login': 'ಲಾಗಿನ್',
-        'register': 'ನೋಂದಣಿ',
-        'email': 'ಇಮೇಲ್',
-        'password': 'ಪಾಸ್‌ವರ್ಡ್',
-        'name': 'ಹೆಸರು',
-        'phone': 'ಫೋನ್ ಸಂಖ್ಯೆ',
-        
-        // Dashboard
-        'dashboard': 'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್',
-        'my_grievances': 'ನನ್ನ ದೂರುಗಳು',
-        'submit_grievance': 'ದೂರು ಸಲ್ಲಿಸಿ',
-        'profile': 'ಪ್ರೊಫೈಲ್',
-        
-        // Language
-        'change_language': 'ಭಾಷೆ ಬದಲಿಸಿ',
-        'select_language': 'ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ'
+        code: 'kn',
+        name: 'Kannada',
+        nativeName: 'ಕನ್ನಡ',
+        flag: '🇮🇳',
+        home: 'ಮುಖಪುಟ',
+        login: 'ಲಾಗಿನ್',
+        register: 'ನೋಂದಣಿ ಮಾಡಿ',
+        logout: 'ಲಾಗ್ಔಟ್',
+        profile: 'ನನ್ನ ಪ್ರೊಫೈಲ್',
+        editProfile: 'ಪ್ರೊಫೈಲ್ ಸಂಪಾದಿಸಿ',
+        fileComplaint: 'ದೂರು ದಾಖಲಿಸಿ',
+        trackComplaint: 'ದೂರು ಟ್ರ್ಯಾಕ್ ಮಾಡಿ',
+        myComplaints: 'ನನ್ನ ದೂರುಗಳು',
+        dashboard: 'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್',
+        notifications: 'ಅಧಿಸೂಚನೆಗಳು',
+        search: 'ಹುಡುಕಿ',
+        submit: 'ಸಲ್ಲಿಸಿ',
+        cancel: 'ರದ್ದುಮಾಡಿ',
+        save: 'ಉಳಿಸಿ',
+        edit: 'ಸಂಪಾದಿಸಿ',
+        delete: 'ಅಳಿಸಿ',
+        back: 'ಹಿಂದಕ್ಕೆ',
+        name: 'ಪೂರ್ಣ ಹೆಸರು',
+        email: 'ಇಮೇಲ್ ವಿಳಾಸ',
+        phone: 'ಫೋನ್ ಸಂಖ್ಯೆ',
+        password: 'ಪಾಸ್‌ವರ್ಡ್',
+        confirmPassword: 'ಪಾಸ್‌ವರ್ಡ್ ದೃಢೀಕರಿಸಿ',
+        dob: 'ಹುಟ್ಟಿದ ದಿನಾಂಕ',
+        gender: 'ಲಿಂಗ',
+        address: 'ವಿಳಾಸ',
+        title: 'ದೂರು ಶೀರ್ಷಿಕೆ',
+        description: 'ವಿವರಣೆ',
+        department: 'ವಿಭಾಗ',
+        location: 'ಸ್ಥಳ',
+        status: 'ಸ್ಥಿತಿ',
+        priority: 'ಆದ್ಯತೆ',
+        grievanceId: 'ದೂರು ID',
+        uploadImage: 'ಚಿತ್ರ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ',
+        received: 'ಸ್ವೀಕರಿಸಲಾಗಿದೆ',
+        assigned: 'ವಿಭಾಗಕ್ಕೆ ನಿಯೋಜಿಸಲಾಗಿದೆ',
+        inProgress: 'ಪ್ರಗತಿಯಲ್ಲಿದೆ',
+        resolved: 'ಪರಿಹರಿಸಲಾಗಿದೆ',
+        closed: 'ಮುಚ್ಚಲಾಗಿದೆ',
+        electricity: 'ವಿದ್ಯುತ್',
+        water: 'ನೀರು ಪೂರೈಕೆ',
+        roads: 'ರಸ್ತೆಗಳು',
+        sanitation: 'ನೈರ್ಮಲ್ಯ',
+        transport: 'ಸಾರ್ವಜನಿಕ ಸಾರಿಗೆ',
+        healthcare: 'ಆರೋಗ್ಯ ಸೇವೆ',
+        education: 'ಶಿಕ್ಷಣ',
+        police: 'ಪೊಲೀಸ್',
+        loginSuccess: 'ಲಾಗಿನ್ ಯಶಸ್ವಿಯಾಗಿದೆ!',
+        logoutConfirm: 'ನೀವು ಖಚಿತವಾಗಿ ಲಾಗ್ಔಟ್ ಮಾಡಲು ಬಯಸುವಿರಾ?',
+        complaintSubmitted: 'ದೂರು ಯಶಸ್ವಿಯಾಗಿ ಸಲ್ಲಿಸಲಾಗಿದೆ!',
+        noComplaints: 'ಇನ್ನೂ ಯಾವುದೇ ದೂರುಗಳನ್ನು ದಾಖಲಿಸಲಾಗಿಲ್ಲ',
+        noNotifications: 'ಯಾವುದೇ ಅಧಿಸೂಚನೆಗಳಿಲ್ಲ',
+        loading: 'ಲೋಡ್ ಆಗುತ್ತಿದೆ...',
+        total: 'ಒಟ್ಟು',
+        pending: 'ಬಾಕಿ',
+        inProgressStat: 'ಪ್ರಗತಿಯಲ್ಲಿದೆ',
+        resolvedStat: 'ಪರಿಹರಿಸಲಾಗಿದೆ'
     },
     
     ml: {
-        // Common
-        'app_name': 'സ്മാർട്ട് പരാതി സംവിധാനം',
-        'welcome': 'സ്വാഗതം',
-        'logout': 'ലോഗൗട്ട്',
-        'submit': 'സമർപ്പിക്കുക',
-        'cancel': 'റദ്ദാക്കുക',
-        'save': 'സംരക്ഷിക്കുക',
-        'edit': 'എഡിറ്റ് ചെയ്യുക',
-        'view': 'കാണുക',
-        'update': 'അപ്ഡേറ്റ് ചെയ്യുക',
-        
-        // Auth
-        'login': 'ലോഗിൻ',
-        'register': 'രജിസ്റ്റർ',
-        'email': 'ഇമെയിൽ',
-        'password': 'പാസ്‌വേഡ്',
-        'name': 'പേര്',
-        'phone': 'ഫോൺ നമ്പർ',
-        
-        // Dashboard
-        'dashboard': 'ഡാഷ്‌ബോർഡ്',
-        'my_grievances': 'എന്റെ പരാതികൾ',
-        'submit_grievance': 'പരാതി സമർപ്പിക്കുക',
-        'profile': 'പ്രൊഫൈൽ',
-        
-        // Language
-        'change_language': 'ഭാഷ മാറ്റുക',
-        'select_language': 'ഭാഷ തിരഞ്ഞെടുക്കുക'
+        code: 'ml',
+        name: 'Malayalam',
+        nativeName: 'മലയാളം',
+        flag: '🇮🇳',
+        home: 'ഹോം',
+        login: 'ലോഗിൻ',
+        register: 'രജിസ്റ്റർ ചെയ്യുക',
+        logout: 'ലോഗൗട്ട്',
+        profile: 'എന്റെ പ്രൊഫൈൽ',
+        editProfile: 'പ്രൊഫൈൽ എഡിറ്റ് ചെയ്യുക',
+        fileComplaint: 'പരാതി ഫയൽ ചെയ്യുക',
+        trackComplaint: 'പരാതി ട്രാക്ക് ചെയ്യുക',
+        myComplaints: 'എന്റെ പരാതികൾ',
+        dashboard: 'ഡാഷ്ബോർഡ്',
+        notifications: 'അറിയിപ്പുകൾ',
+        search: 'തിരയുക',
+        submit: 'സമർപ്പിക്കുക',
+        cancel: 'റദ്ദാക്കുക',
+        save: 'സേവ് ചെയ്യുക',
+        edit: 'എഡിറ്റ് ചെയ്യുക',
+        delete: 'ഇല്ലാതാക്കുക',
+        back: 'തിരികെ',
+        name: 'പൂർണ്ണമായ പേര്',
+        email: 'ഇമെയിൽ വിലാസം',
+        phone: 'ഫോൺ നമ്പർ',
+        password: 'പാസ്‌വേഡ്',
+        confirmPassword: 'പാസ്‌വേഡ് സ്ഥിരീകരിക്കുക',
+        dob: 'ജനനത്തീയതി',
+        gender: 'ലിംഗം',
+        address: 'വിലാസം',
+        title: 'പരാതി ശീർഷകം',
+        description: 'വിവരണം',
+        department: 'വകുപ്പ്',
+        location: 'സ്ഥലം',
+        status: 'നില',
+        priority: 'മുൻഗണന',
+        grievanceId: 'പരാതി ID',
+        uploadImage: 'ചിത്രം അപ്‌ലോഡ് ചെയ്യുക',
+        received: 'സ്വീകരിച്ചു',
+        assigned: 'വകുപ്പിന് നൽകി',
+        inProgress: 'പുരോഗതിയിൽ',
+        resolved: 'പരിഹരിച്ചു',
+        closed: 'അടച്ചു',
+        electricity: 'വൈദ്യുതി',
+        water: 'ജലവിതരണം',
+        roads: 'റോഡുകൾ',
+        sanitation: 'ശുചിത്വം',
+        transport: 'പൊതുഗതാഗതം',
+        healthcare: 'ആരോഗ്യസംരക്ഷണം',
+        education: 'വിദ്യാഭ്യാസം',
+        police: 'പോലീസ്',
+        loginSuccess: 'ലോഗിൻ വിജയിച്ചു!',
+        logoutConfirm: 'നിങ്ങൾക്ക് ലോഗൗട്ട് ചെയ്യണമെന്ന് ഉറപ്പാണോ?',
+        complaintSubmitted: 'പരാതി വിജയകരമായി സമർപ്പിച്ചു!',
+        noComplaints: 'ഇതുവരെ പരാതികളൊന്നും ഫയൽ ചെയ്തിട്ടില്ല',
+        noNotifications: 'അറിയിപ്പുകളൊന്നുമില്ല',
+        loading: 'ലോഡ് ചെയ്യുന്നു...',
+        total: 'ആകെ',
+        pending: 'തീർപ്പാക്കാത്തത്',
+        inProgressStat: 'പുരോഗതിയിൽ',
+        resolvedStat: 'പരിഹരിച്ചു'
     },
     
     pa: {
-        // Common
-        'app_name': 'ਸਮਾਰਟ ਸ਼ਿਕਾਇਤ ਪ੍ਰਣਾਲੀ',
-        'welcome': 'ਸੁਆਗਤ ਹੈ',
-        'logout': 'ਲਾਗਆਉਟ',
-        'submit': 'ਜਮ੍ਹਾਂ ਕਰੋ',
-        'cancel': 'ਰੱਦ ਕਰੋ',
-        'save': 'ਸੁਰੱਖਿਅਤ ਕਰੋ',
-        'edit': 'ਸੰਪਾਦਿਤ ਕਰੋ',
-        'view': 'ਦੇਖੋ',
-        'update': 'ਅੱਪਡੇਟ ਕਰੋ',
-        
-        // Auth
-        'login': 'ਲਾਗਇਨ',
-        'register': 'ਰਜਿਸਟਰ',
-        'email': 'ਈਮੇਲ',
-        'password': 'ਪਾਸਵਰਡ',
-        'name': 'ਨਾਮ',
-        'phone': 'ਫ਼ੋਨ ਨੰਬਰ',
-        
-        // Dashboard
-        'dashboard': 'ਡੈਸ਼ਬੋਰਡ',
-        'my_grievances': 'ਮੇਰੀਆਂ ਸ਼ਿਕਾਇਤਾਂ',
-        'submit_grievance': 'ਸ਼ਿਕਾਇਤ ਜਮ੍ਹਾਂ ਕਰੋ',
-        'profile': 'ਪ੍ਰੋਫਾਈਲ',
-        
-        // Language
-        'change_language': 'ਭਾਸ਼ਾ ਬਦਲੋ',
-        'select_language': 'ਭਾਸ਼ਾ ਚੁਣੋ'
+        code: 'pa',
+        name: 'Punjabi',
+        nativeName: 'ਪੰਜਾਬੀ',
+        flag: '🇮🇳',
+        home: 'ਹੋਮ',
+        login: 'ਲੌਗਇਨ',
+        register: 'ਰਜਿਸਟਰ ਕਰੋ',
+        logout: 'ਲੌਗਆਊਟ',
+        profile: 'ਮੇਰਾ ਪ੍ਰੋਫਾਈਲ',
+        editProfile: 'ਪ੍ਰੋਫਾਈਲ ਸੰਪਾਦਿਤ ਕਰੋ',
+        fileComplaint: 'ਸ਼ਿਕਾਇਤ ਦਰਜ ਕਰੋ',
+        trackComplaint: 'ਸ਼ਿਕਾਇਤ ਟਰੈਕ ਕਰੋ',
+        myComplaints: 'ਮੇਰੀਆਂ ਸ਼ਿਕਾਇਤਾਂ',
+        dashboard: 'ਡੈਸ਼ਬੋਰਡ',
+        notifications: 'ਸੂਚਨਾਵਾਂ',
+        search: 'ਖੋਜੋ',
+        submit: 'ਜਮ੍ਹਾਂ ਕਰੋ',
+        cancel: 'ਰੱਦ ਕਰੋ',
+        save: 'ਸੁਰੱਖਿਅਤ ਕਰੋ',
+        edit: 'ਸੰਪਾਦਿਤ ਕਰੋ',
+        delete: 'ਮਿਟਾਓ',
+        back: 'ਵਾਪਸ',
+        name: 'ਪੂਰਾ ਨਾਮ',
+        email: 'ਈਮੇਲ ਪਤਾ',
+        phone: 'ਫ਼ੋਨ ਨੰਬਰ',
+        password: 'ਪਾਸਵਰਡ',
+        confirmPassword: 'ਪਾਸਵਰਡ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ',
+        dob: 'ਜਨਮ ਮਿਤੀ',
+        gender: 'ਲਿੰਗ',
+        address: 'ਪਤਾ',
+        title: 'ਸ਼ਿਕਾਇਤ ਸਿਰਲੇਖ',
+        description: 'ਵੇਰਵਾ',
+        department: 'ਵਿਭਾਗ',
+        location: 'ਸਥਾਨ',
+        status: 'ਸਥਿਤੀ',
+        priority: 'ਤਰਜੀਹ',
+        grievanceId: 'ਸ਼ਿਕਾਇਤ ID',
+        uploadImage: 'ਚਿੱਤਰ ਅੱਪਲੋਡ ਕਰੋ',
+        received: 'ਪ੍ਰਾਪਤ ਕੀਤਾ',
+        assigned: 'ਵਿਭਾਗ ਨੂੰ ਸੌਂਪਿਆ',
+        inProgress: 'ਪ੍ਰਗਤੀ 'ਤੇ',
+        resolved: 'ਹੱਲ ਕੀਤਾ',
+        closed: 'ਬੰਦ',
+        electricity: 'ਬਿਜਲੀ',
+        water: 'ਪਾਣੀ ਸਪਲਾਈ',
+        roads: 'ਸੜਕਾਂ',
+        sanitation: 'ਸਫ਼ਾਈ',
+        transport: 'ਜਨਤਕ ਆਵਾਜਾਈ',
+        healthcare: 'ਸਿਹਤ ਸੇਵਾ',
+        education: 'ਸਿੱਖਿਆ',
+        police: 'ਪੁਲਿਸ',
+        loginSuccess: 'ਲੌਗਇਨ ਸਫਲ!',
+        logoutConfirm: 'ਕੀ ਤੁਸੀਂ ਯਕੀਨੀ ਤੌਰ \'ਤੇ ਲੌਗਆਊਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?',
+        complaintSubmitted: 'ਸ਼ਿਕਾਇਤ ਸਫਲਤਾਪੂਰਵਕ ਦਰਜ ਕੀਤੀ!',
+        noComplaints: 'ਅਜੇ ਤੱਕ ਕੋਈ ਸ਼ਿਕਾਇਤ ਦਰਜ ਨਹੀਂ ਕੀਤੀ',
+        noNotifications: 'ਕੋਈ ਸੂਚਨਾਵਾਂ ਨਹੀਂ',
+        loading: 'ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...',
+        total: 'ਕੁੱਲ',
+        pending: 'ਬਕਾਇਆ',
+        inProgressStat: 'ਪ੍ਰਗਤੀ \'ਤੇ',
+        resolvedStat: 'ਹੱਲ ਕੀਤਾ'
     },
     
     or: {
-        // Common
-        'app_name': 'ସ୍ମାର୍ଟ ଅଭିଯୋଗ ବ୍ୟବସ୍ଥା',
-        'welcome': 'ସ୍ୱାଗତ',
-        'logout': 'ଲଗଆଉଟ୍',
-        'submit': 'ଦାଖଲ କରନ୍ତୁ',
-        'cancel': 'ବାତିଲ କରନ୍ତୁ',
-        'save': 'ସଞ୍ଚୟ କରନ୍ତୁ',
-        'edit': 'ସମ୍ପାଦନା କରନ୍ତୁ',
-        'view': 'ଦେଖନ୍ତୁ',
-        'update': 'ଅପଡେଟ୍ କରନ୍ତୁ',
-        
-        // Auth
-        'login': 'ଲଗଇନ୍',
-        'register': 'ପଞ୍ଜୀକରଣ',
-        'email': 'ଇମେଲ୍',
-        'password': 'ପାସୱାର୍ଡ',
-        'name': 'ନାମ',
-        'phone': 'ଫୋନ୍ ନମ୍ବର',
-        
-        // Dashboard
-        'dashboard': 'ଡ୍ୟାସବୋର୍ଡ',
-        'my_grievances': 'ମୋର ଅଭିଯୋଗ',
-        'submit_grievance': 'ଅଭିଯୋଗ ଦାଖଲ କରନ୍ତୁ',
-        'profile': 'ପ୍ରୋଫାଇଲ୍',
-        
-        // Language
-        'change_language': 'ଭାଷା ପରିବର୍ତ୍ତନ କରନ୍ତୁ',
-        'select_language': 'ଭାଷା ଚୟନ କରନ୍ତୁ'
+        code: 'or',
+        name: 'Odia',
+        nativeName: 'ଓଡ଼ିଆ',
+        flag: '🇮🇳',
+        home: 'ହୋମ',
+        login: 'ଲଗଇନ',
+        register: 'ରେଜିଷ୍ଟର କରନ୍ତୁ',
+        logout: 'ଲଗଆଉଟ',
+        profile: 'ମୋର ପ୍ରୋଫାଇଲ',
+        editProfile: 'ପ୍ରୋଫାଇଲ ସମ୍ପାଦନା କରନ୍ତୁ',
+        fileComplaint: 'ଅଭିଯୋଗ ଦାଖଲ କରନ୍ତୁ',
+        trackComplaint: 'ଅଭିଯୋଗ ଟ୍ରାକ କରନ୍ତୁ',
+        myComplaints: 'ମୋର ଅଭିଯୋଗଗୁଡିକ',
+        dashboard: 'ଡ୍ୟାସବୋର୍ଡ',
+        notifications: 'ସୂଚନାଗୁଡିକ',
+        search: 'ଖୋଜନ୍ତୁ',
+        submit: 'ଦାଖଲ କରନ୍ତୁ',
+        cancel: 'ବାତିଲ କରନ୍ତୁ',
+        save: 'ସଞ୍ଚୟ କରନ୍ତୁ',
+        edit: 'ସମ୍ପାଦନା',
+        delete: 'ବିଲୋପ କରନ୍ତୁ',
+        back: 'ପଛକୁ',
+        name: 'ପୂର୍ଣ୍ଣ ନାମ',
+        email: 'ଇମେଲ ଠିକଣା',
+        phone: 'ଫୋନ ନମ୍ବର',
+        password: 'ପାସୱାର୍ଡ',
+        confirmPassword: 'ପାସୱାର୍ଡ ନିଶ୍ଚିତ କରନ୍ତୁ',
+        dob: 'ଜନ୍ମ ତାରିଖ',
+        gender: 'ଲିଙ୍ଗ',
+        address: 'ଠିକଣା',
+        title: 'ଅଭିଯୋଗ ଶୀର୍ଷକ',
+        description: 'ବର୍ଣ୍ଣନା',
+        department: 'ବିଭାଗ',
+        location: 'ସ୍ଥାନ',
+        status: 'ସ୍ଥିତି',
+        priority: 'ପ୍ରାଥମିକତା',
+        grievanceId: 'ଅଭିଯୋଗ ID',
+        uploadImage: 'ଚିତ୍ର ଅପଲୋଡ କରନ୍ତୁ',
+        received: 'ଗ୍ରହଣ କରାଯାଇଛି',
+        assigned: 'ବିଭାଗକୁ ନିର୍ଦ୍ଦିଷ୍ଟ',
+        inProgress: 'ପ୍ରଗତିରେ',
+        resolved: 'ସମାଧାନ କରାଯାଇଛି',
+        closed: 'ବନ୍ଦ',
+        electricity: 'ବିଦ୍ୟୁତ',
+        water: 'ଜଳ ଯୋଗାଣ',
+        roads: 'ରାସ୍ତାଗୁଡିକ',
+        sanitation: 'ପରିଷ୍କାରତା',
+        transport: 'ସାର୍ବଜନୀନ ପରିବହନ',
+        healthcare: 'ସ୍ୱାସ୍ଥ୍ୟସେବା',
+        education: 'ଶିକ୍ଷା',
+        police: 'ପୋଲିସ',
+        loginSuccess: 'ଲଗଇନ ସଫଳ!',
+        logoutConfirm: 'ଆପଣ ନିଶ୍ଚିତ ଲଗଆଉଟ କରିବାକୁ ଚାହୁଁଛନ୍ତି କି?',
+        complaintSubmitted: 'ଅଭିଯୋଗ ସଫଳତାପୂର୍ବକ ଦାଖଲ ହୋଇଛି!',
+        noComplaints: 'ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ଅଭିଯୋଗ ଦାଖଲ ହୋଇନାହିଁ',
+        noNotifications: 'କୌଣସି ସୂଚନା ନାହିଁ',
+        loading: 'ଲୋଡ ହେଉଛି...',
+        total: 'ମୋଟ',
+        pending: 'ବିଚାରାଧୀନ',
+        inProgressStat: 'ପ୍ରଗତିରେ',
+        resolvedStat: 'ସମାଧାନ କରାଯାଇଛି'
+    },
+    
+    as: {
+        code: 'as',
+        name: 'Assamese',
+        nativeName: 'অসমীয়া',
+        flag: '🇮🇳',
+        home: 'হ'ম',
+        login: 'লগইন',
+        register: 'পঞ্জীয়ন কৰক',
+        logout: 'লগআউট',
+        profile: 'মোৰ প্ৰ'ফাইল',
+        editProfile: 'প্ৰ'ফাইল সম্পাদনা কৰক',
+        fileComplaint: 'অভিযোগ দাখিল কৰক',
+        trackComplaint: 'অভিযোগ ট্ৰেক কৰক',
+        myComplaints: 'মোৰ অভিযোগসমূহ',
+        dashboard: 'ডেচব'ৰ্ড',
+        notifications: 'জাননীসমূহ',
+        search: 'সন্ধান কৰক',
+        submit: 'দাখিল কৰক',
+        cancel: 'বাতিল কৰক',
+        save: 'সংৰক্ষণ কৰক',
+        edit: 'সম্পাদনা কৰক',
+        delete: 'মচি পেলাওক',
+        back: 'উভতি যাওক',
+        name: 'সম্পূৰ্ণ নাম',
+        email: 'ইমেইল ঠিকনা',
+        phone: 'ফোন নম্বৰ',
+        password: 'পাছৱৰ্ড',
+        confirmPassword: 'পাছৱৰ্ড নিশ্চিত কৰক',
+        dob: 'জন্ম তাৰিখ',
+        gender: 'লিংগ',
+        address: 'ঠিকনা',
+        title: 'অভিযোগৰ শীৰ্ষক',
+        description: 'বিৱৰণ',
+        department: 'বিভাগ',
+        location: 'স্থান',
+        status: 'স্থিতি',
+        priority: 'অগ্ৰাধিকাৰ',
+        grievanceId: 'অভিযোগ ID',
+        uploadImage: 'ছবি আপলোড কৰক',
+        received: 'প্ৰাপ্ত',
+        assigned: 'বিভাগলৈ নিযুক্ত',
+        inProgress: 'প্ৰগতিত',
+        resolved: 'সমাধান কৰা হৈছে',
+        closed: 'বন্ধ',
+        electricity: 'বিদ্যুৎ',
+        water: 'পানী যোগান',
+        roads: 'পথসমূহ',
+        sanitation: 'পৰিচ্ছন্নতা',
+        transport: 'ৰাজহুৱা পৰিবহন',
+        healthcare: 'স্বাস্থ্যসেৱা',
+        education: 'শিক্ষা',
+        police: 'আৰক্ষী',
+        loginSuccess: 'লগইন সফল!',
+        logoutConfirm: 'আপুনি নিশ্চিতনে লগআউট কৰিব বিচাৰে?',
+        complaintSubmitted: 'অভিযোগ সফলতাৰে দাখিল কৰা হৈছে!',
+        noComplaints: 'এতিয়ালৈকে কোনো অভিযোগ দাখিল কৰা হোৱা নাই',
+        noNotifications: 'কোনো জাননী নাই',
+        loading: 'ল'ড হৈ আছে...',
+        total: 'মুঠ',
+        pending: 'বিচাৰাধীন',
+        inProgressStat: 'প্ৰগতিত',
+        resolvedStat: 'সমাধান কৰা হৈছে'
     },
     
     ur: {
-        // Common
-        'app_name': 'سمارٹ شکایت نظام',
-        'welcome': 'خوش آمدید',
-        'logout': 'لاگ آؤٹ',
-        'submit': 'جمع کرائیں',
-        'cancel': 'منسوخ کریں',
-        'save': 'محفوظ کریں',
-        'edit': 'ترمیم کریں',
-        'view': 'دیکھیں',
-        'update': 'اپ ڈیٹ کریں',
-        
-        // Auth
-        'login': 'لاگ ان',
-        'register': 'رجسٹر',
-        'email': 'ای میل',
-        'password': 'پاس ورڈ',
-        'name': 'نام',
-        'phone': 'فون نمبر',
-        
-        // Dashboard
-        'dashboard': 'ڈیش بورڈ',
-        'my_grievances': 'میری شکایات',
-        'submit_grievance': 'شکایت جمع کرائیں',
-        'profile': 'پروفائل',
-        
-        // Language
-        'change_language': 'زبان تبدیل کریں',
-        'select_language': 'زبان منتخب کریں'
+        code: 'ur',
+        name: 'Urdu',
+        nativeName: 'اردو',
+        flag: '🇮🇳',
+        home: 'ہوم',
+        login: 'لاگ ان',
+        register: 'رجسٹر کریں',
+        logout: 'لاگ آؤٹ',
+        profile: 'میری پروفائل',
+        editProfile: 'پروفائل میں ترمیم کریں',
+        fileComplaint: 'شکایت درج کریں',
+        trackComplaint: 'شکایت ٹریک کریں',
+        myComplaints: 'میری شکایات',
+        dashboard: 'ڈیش بورڈ',
+        notifications: 'اطلاعات',
+        search: 'تلاش کریں',
+        submit: 'جمع کرائیں',
+        cancel: 'منسوخ کریں',
+        save: 'محفوظ کریں',
+        edit: 'ترمیم کریں',
+        delete: 'حذف کریں',
+        back: 'واپس',
+        name: 'پورا نام',
+        email: 'ای میل ایڈریس',
+        phone: 'فون نمبر',
+        password: 'پاس ورڈ',
+        confirmPassword: 'پاس ورڈ کی تصدیق کریں',
+        dob: 'تاریخ پیدائش',
+        gender: 'جنس',
+        address: 'پتہ',
+        title: 'شکایت کا عنوان',
+        description: 'تفصیل',
+        department: 'محکمہ',
+        location: 'مقام',
+        status: 'صورتحال',
+        priority: 'ترجیح',
+        grievanceId: 'شکایت آئی ڈی',
+        uploadImage: 'تصویر اپ لوڈ کریں',
+        received: 'موصول ہوا',
+        assigned: 'محکمے کو تفویض',
+        inProgress: 'پیش رفت میں',
+        resolved: 'حل ہو گیا',
+        closed: 'بند',
+        electricity: 'بجلی',
+        water: 'پانی کی فراہمی',
+        roads: 'سڑکیں',
+        sanitation: 'صفائی',
+        transport: 'عوامی نقل و حمل',
+        healthcare: 'صحت کی دیکھ بھال',
+        education: 'تعلیم',
+        police: 'پولیس',
+        loginSuccess: 'لاگ ان کامیاب!',
+        logoutConfirm: 'کیا آپ واقعی لاگ آؤٹ کرنا چاہتے ہیں؟',
+        complaintSubmitted: 'شکایت کامیابی سے جمع کرائی گئی!',
+        noComplaints: 'ابھی تک کوئی شکایت درج نہیں کی گئی',
+        noNotifications: 'کوئی اطلاعات نہیں',
+        loading: 'لوڈ ہو رہا ہے...',
+        total: 'کل',
+        pending: 'زیر التواء',
+        inProgressStat: 'پیش رفت میں',
+        resolvedStat: 'حل ہو گیا'
     }
 };
 
-// Translation helper function
-function translate(key, lang = null) {
-    const currentLang = lang || localStorage.getItem('preferredLanguage') || 'en';
-    return translations[currentLang]?.[key] || translations['en'][key] || key;
-}
+// Current language
+let currentLanguage = localStorage.getItem('appLanguage') || 'en';
 
-// Apply translations to page
-function applyTranslations() {
-    const currentLang = localStorage.getItem('preferredLanguage') || 'en';
-    
-    // Translate elements with data-translate attribute
-    document.querySelectorAll('[data-translate]').forEach(element => {
-        const key = element.getAttribute('data-translate');
-        const translation = translate(key, currentLang);
-        
-        if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
-            element.placeholder = translation;
-        } else {
-            element.textContent = translation;
-        }
-    });
-}
-
-// Language switcher component
-function createLanguageSwitcher() {
-    const currentLang = localStorage.getItem('preferredLanguage') || 'en';
-    const languages = [
-        { code: 'en', name: 'English', flag: '🇬🇧' },
-        { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
-        { code: 'bn', name: 'বাংলা', flag: '🇮🇳' },
-        { code: 'ta', name: 'தமிழ்', flag: '🇮🇳' },
-        { code: 'te', name: 'తెలుగు', flag: '🇮🇳' },
-        { code: 'mr', name: 'मराठी', flag: '🇮🇳' },
-        { code: 'gu', name: 'ગુજરાતી', flag: '🇮🇳' },
-        { code: 'kn', name: 'ಕನ್ನಡ', flag: '🇮🇳' },
-        { code: 'ml', name: 'മലയാളം', flag: '🇮🇳' },
-        { code: 'pa', name: 'ਪੰਜਾਬੀ', flag: '🇮🇳' },
-        { code: 'or', name: 'ଓଡ଼ିଆ', flag: '🇮🇳' },
-        { code: 'ur', name: 'اردو', flag: '🇮🇳' }
-    ];
-    
-    const currentLangObj = languages.find(l => l.code === currentLang) || languages[0];
-    
-    return `
-        <div class="language-switcher" style="position: relative; display: inline-block;">
-            <button class="language-btn" onclick="toggleLanguageMenu()" style="
-                background: white;
-                border: 2px solid #E5E7EB;
-                border-radius: 8px;
-                padding: 8px 12px;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                font-size: 0.9rem;
-                transition: all 0.3s ease;
-            ">
-                <span>${currentLangObj.flag}</span>
-                <span>${currentLangObj.name}</span>
-                <span style="font-size: 0.7rem;">▼</span>
-            </button>
-            <div id="languageMenu" class="language-menu" style="
-                display: none;
-                position: absolute;
-                top: 100%;
-                right: 0;
-                margin-top: 8px;
-                background: white;
-                border: 2px solid #E5E7EB;
-                border-radius: 12px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                z-index: 1000;
-                min-width: 200px;
-                max-height: 400px;
-                overflow-y: auto;
-            ">
-                ${languages.map(lang => `
-                    <div class="language-option" onclick="changeLanguage('${lang.code}')" style="
-                        padding: 12px 16px;
-                        cursor: pointer;
-                        display: flex;
-                        align-items: center;
-                        gap: 10px;
-                        transition: background 0.2s ease;
-                        ${lang.code === currentLang ? 'background: rgba(255, 153, 51, 0.1);' : ''}
-                    " onmouseover="this.style.background='rgba(255, 153, 51, 0.05)'" onmouseout="this.style.background='${lang.code === currentLang ? 'rgba(255, 153, 51, 0.1)' : 'white'}'">
-                        <span style="font-size: 1.5rem;">${lang.flag}</span>
-                        <span style="font-weight: ${lang.code === currentLang ? '600' : '400'};">${lang.name}</span>
-                        ${lang.code === currentLang ? '<span style="margin-left: auto; color: #FF9933;">✓</span>' : ''}
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-    `;
-}
-
-function toggleLanguageMenu() {
-    const menu = document.getElementById('languageMenu');
-    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-}
-
-function changeLanguage(code) {
-    localStorage.setItem('preferredLanguage', code);
-    window.location.reload();
-}
-
-// Close language menu when clicking outside
-document.addEventListener('click', (e) => {
-    const languageSwitcher = document.querySelector('.language-switcher');
-    if (languageSwitcher && !languageSwitcher.contains(e.target)) {
-        const menu = document.getElementById('languageMenu');
-        if (menu) menu.style.display = 'none';
+// Language functions
+function setLanguage(lang) {
+    if (TRANSLATIONS[lang]) {
+        currentLanguage = lang;
+        localStorage.setItem('appLanguage', lang);
+        return true;
     }
-});
+    return false;
+}
 
-// Auto-apply translations on page load
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyTranslations);
-} else {
-    applyTranslations();
+function getLanguage() {
+    return currentLanguage;
+}
+
+function translate(key) {
+    return TRANSLATIONS[currentLanguage][key] || TRANSLATIONS['en'][key] || key;
+}
+
+function getAllLanguages() {
+    return Object.keys(TRANSLATIONS).map(code => ({
+        code: code,
+        name: TRANSLATIONS[code].name,
+        nativeName: TRANSLATIONS[code].nativeName,
+        flag: TRANSLATIONS[code].flag
+    }));
+}
+
+// Export for demo-system.js
+if (typeof window !== 'undefined') {
+    window.TRANSLATIONS = TRANSLATIONS;
+    window.languageUtils = {
+        setLanguage,
+        getLanguage,
+        translate,
+        getAllLanguages
+    };
 }
