@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Test - Smart Grievance System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: green; }
+        .error { color: red; }
+        button {
+            background: #003DA5;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #002060;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #003DA5;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Quick System Test</h1>
+    
+    <div class="test-box">
+        <h2>Test 1: Core System</h2>
+        <button onclick="testCoreSystem()">Run Test</button>
+        <div id="test1"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Test 2: AI Classification</h2>
+        <button onclick="testAI()">Run Test</button>
+        <div id="test2"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Test 3: Submit Complaint</h2>
+        <button onclick="testSubmit()">Run Test</button>
+        <div id="test3"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Test 4: Login System</h2>
+        <button onclick="testLogin()">Run Test</button>
+        <div id="test4"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Quick Actions</h2>
+        <button onclick="window.location.href='index.html'">Go to Homepage</button>
+        <button onclick="window.location.href='login.html'">Go to Login</button>
+        <button onclick="window.location.href='register.html'">Go to Register</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script src="demo-system.js"></script>
+    <script>
+        function testCoreSystem() {
+            const div = document.getElementById('test1');
+            div.innerHTML = '<h3>Testing...</h3>';
+            
+            let html = '';
+            
+            // Test 1: Check if grievanceSystem exists
+            if (window.grievanceSystem) {
+                html += '<p class="success">✅ grievanceSystem loaded</p>';
+                
+                // Test 2: Check functions
+                const functions = ['submitGrievance', 'trackGrievance', 'classifyDepartmentAI', 'detectFraud'];
+                functions.forEach(fn => {
+                    if (window.grievanceSystem[fn]) {
+                        html += `<p class="success">✅ ${fn} available</p>`;
+                    } else {
+                        html += `<p class="error">❌ ${fn} missing</p>`;
+                    }
+                });
+            } else {
+                html += '<p class="error">❌ grievanceSystem NOT loaded</p>';
+            }
+            
+            div.innerHTML = html;
+        }
+
+        function testAI() {
+            const div = document.getElementById('test2');
+            div.innerHTML = '<h3>Testing AI...</h3>';
+            
+            try {
+                const result = window.grievanceSystem.classifyDepartmentAI(
+                    'Street light not working',
+                    'The street light on main road has been out for 2 weeks'
+                );
+                
+                div.innerHTML = `
+                    <p class="success">✅ AI Classification Working!</p>
+                    <p><strong>Detected:</strong> ${result.department}</p>
+                    <p><strong>Confidence:</strong> ${result.confidence}%</p>
+                    <p><strong>Scores:</strong> ${JSON.stringify(result.scores)}</p>
+                `;
+            } catch (error) {
+                div.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+
+        function testSubmit() {
+            const div = document.getElementById('test3');
+            div.innerHTML = '<h3>Testing Submit...</h3>';
+            
+            try {
+                // First login as citizen
+                const user = {
+                    id: 999,
+                    email: 'test@test.com',
+                    name: 'Test User',
+                    role: 'CITIZEN',
+                    phone: '9876543210'
+                };
+                
+                window.grievanceSystem.setUser(user);
+                localStorage.setItem('isLoggedIn', 'true');
+                
+                // Submit complaint
+                const grievance = window.grievanceSystem.submitGrievance({
+                    title: 'Test Complaint - Power Outage',
+                    description: 'Testing the complaint submission system with a power outage complaint',
+                    department: 'Electricity',
+                    location: 'Test Location',
+                    phone: '9876543210'
+                });
+                
+                div.innerHTML = `
+                    <p class="success">✅ Complaint Submitted!</p>
+                    <p><strong>ID:</strong> ${grievance.id}</p>
+                    <p><strong>Title:</strong> ${grievance.title}</p>
+                    <p><strong>Department:</strong> ${grievance.department}</p>
+                    <p><strong>Status:</strong> ${grievance.status}</p>
+                    <p><strong>Priority:</strong> ${grievance.priority}</p>
+                    <p><strong>AI Detected:</strong> ${grievance.aiDetected ? 'Yes' : 'No'} (${grievance.aiConfidence}%)</p>
+                    <p><strong>Fraud Score:</strong> ${grievance.fraudScore}%</p>
+                `;
+            } catch (error) {
+                div.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+
+        function testLogin() {
+            const div = document.getElementById('test4');
+            div.innerHTML = '<h3>Testing Login...</h3>';
+            
+            const loginAttempts = [
+                { email: 'admin@grievance.gov', password: 'admin123', expected: 'ADMIN' },
+                { email: 'electricity@grievance.gov', password: 'officer123', expected: 'OFFICER' },
+                { email: 'citizen@example.com', password: 'citizen123', expected: 'CITIZEN' }
+            ];
+            
+            let html = '';
+            
+            loginAttempts.forEach(attempt => {
+                const users = [
+                    { email: 'admin@grievance.gov', password: 'admin123', role: 'ADMIN', name: 'Admin', id: 1 },
+                    { email: 'electricity@grievance.gov', password: 'officer123', role: 'OFFICER', name: 'Officer', id: 2, department: 'Electricity' },
+                    { email: 'citizen@example.com', password: 'citizen123', role: 'CITIZEN', name: 'Citizen', id: 3 }
+                ];
+                
+                const user = users.find(u => u.email === attempt.email && u.password === attempt.password);
+                
+                if (user && user.role === attempt.expected) {
+                    html += `<p class="success">✅ ${user.email} → ${user.role} (Correct!)</p>`;
+                } else {
+                    html += `<p class="error">❌ ${attempt.email} → Failed</p>`;
+                }
+            });
+            
+            div.innerHTML = html;
+        }
+
+        // Auto-run core test on load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(testCoreSystem, 500);
+        });
+    </script>
+</body>
+</html>
