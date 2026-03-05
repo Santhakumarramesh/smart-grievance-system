@@ -154,7 +154,7 @@
         const user = getUser();
         if (user.role !== 'ADMIN') {
             showAlert('Access denied. Admins only.', 'error');
-            setTimeout(() => window.location.href = '/index.html', 2000);
+            setTimeout(() => window.location.href = user.role === 'OFFICER' ? 'officer.html' : 'index.html', 2000);
         }
 
         // Load analytics
@@ -166,26 +166,26 @@
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-label">Total Grievances</div>
-                            <div class="stat-value">${data.total_grievances}</div>
+                            <div class="stat-value">${data.total_grievances ?? 0}</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-label">Total Citizens</div>
-                            <div class="stat-value">${data.total_users}</div>
+                            <div class="stat-value">${data.total_users ?? 0}</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-label">Total Officers</div>
-                            <div class="stat-value">${data.total_officers}</div>
+                            <div class="stat-value">${data.total_officers ?? 0}</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-label">Avg Resolution Time</div>
-                            <div class="stat-value">${data.avg_resolution_time_days} days</div>
+                            <div class="stat-value">${data.avg_resolution_time_days ?? 0} days</div>
                         </div>
                     </div>
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
                         <div>
                             <h3 style="margin-bottom: 1rem;">By Status</h3>
-                            ${Object.entries(data.counts_by_status).map(([status, count]) => `
+                            ${Object.entries(data.counts_by_status || {}).map(([status, count]) => `
                                 <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
                                     <span>${status}</span>
                                     <span class="badge ${getStatusBadgeClass(status)}">${count}</span>
@@ -195,7 +195,7 @@
 
                         <div>
                             <h3 style="margin-bottom: 1rem;">By Department</h3>
-                            ${Object.entries(data.counts_by_department).map(([dept, count]) => `
+                            ${Object.entries(data.counts_by_department || {}).map(([dept, count]) => `
                                 <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
                                     <span>${dept}</span>
                                     <span class="badge badge-progress">${count}</span>
@@ -218,7 +218,8 @@
                 const data = await apiCall('/admin/users');
                 const usersList = document.getElementById('usersList');
 
-                if (data.users.length === 0) {
+                const users = data.users || [];
+                if (users.length === 0) {
                     usersList.innerHTML = '<p style="color: var(--text-secondary);">No users registered yet.</p>';
                     return;
                 }
@@ -238,7 +239,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                ${data.users.map(u => `
+                                ${users.map(u => `
                                     <tr>
                                         <td>${u.name}</td>
                                         <td>${u.email}</td>

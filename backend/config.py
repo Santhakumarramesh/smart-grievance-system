@@ -34,5 +34,5 @@ class Config:
     MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ml', 'artifacts', 'model.joblib')
     VECTORIZER_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ml', 'artifacts', 'vectorizer.joblib')
     
-    # App settings
-    PORT = int(os.environ.get('PORT', 5000))
+    # App settings (8000 for local dev, use PORT env for production)
+    PORT = int(os.environ.get('PORT', 8000))

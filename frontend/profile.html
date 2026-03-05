@@ -625,7 +625,13 @@
                 currentUser = userData.user;
                 
                 if (!currentUser) {
-                    window.location.href = '/login.html';
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                // Officers use officer-profile.html
+                if (currentUser.role === 'OFFICER') {
+                    window.location.href = 'officer-profile.html';
                     return;
                 }
 

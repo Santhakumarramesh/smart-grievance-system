@@ -331,8 +331,12 @@
                 const userData = await apiCall('/auth/me');
                 currentUser = userData.user;
                 
-                if (!currentUser || currentUser.role !== 'OFFICER') {
-                    window.location.href = '/login.html';
+                if (!currentUser) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                if (currentUser.role !== 'OFFICER') {
+                    window.location.href = currentUser.role === 'ADMIN' ? 'admin.html' : 'profile.html';
                     return;
                 }
 
@@ -377,7 +381,8 @@
 
         async function loadStatistics() {
             try {
-                const grievances = await apiCall(`/grievances/department/${currentUser.department}`);
+                const data = await apiCall(`/grievances/department/${encodeURIComponent(currentUser.department)}`);
+                const grievances = data.grievances || [];
                 const total = grievances.length;
                 const resolved = grievances.filter(g => g.status === 'Resolved' || g.status === 'Closed').length;
                 const pending = grievances.filter(g => g.status !== 'Resolved' && g.status !== 'Closed').length;
@@ -391,14 +396,14 @@
         }
 
         function goBack() {
-            window.location.href = '/officer.html';
+            window.location.href = 'officer.html';
         }
 
         // Logout functionality
         document.getElementById('logoutBtn').addEventListener('click', () => {
             removeToken();
-            localStorage.removeItem('user');
-            window.location.href = '/login.html';
+            removeUser();
+            window.location.href = 'login.html';
         });
 
         // Load profile on page load

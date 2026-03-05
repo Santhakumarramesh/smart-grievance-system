@@ -89,7 +89,7 @@
         const user = getUser();
         if (user.role !== 'OFFICER') {
             showAlert('Access denied. Officers only.', 'error');
-            setTimeout(() => window.location.href = '/index.html', 2000);
+            setTimeout(() => window.location.href = user.role === 'ADMIN' ? 'admin.html' : 'index.html', 2000);
         }
 
         let currentGrievanceId = null;
@@ -102,8 +102,9 @@
             try {
                 const data = await apiCall(`/grievances/department/${encodeURIComponent(user.department)}`);
                 const grievancesList = document.getElementById('grievancesList');
+                const grievances = data.grievances || [];
 
-                if (data.grievances.length === 0) {
+                if (grievances.length === 0) {
                     grievancesList.innerHTML = '<p style="color: var(--text-secondary);">No grievances assigned to your department yet.</p>';
                     return;
                 }
@@ -122,7 +123,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                ${data.grievances.map(g => `
+                                ${grievances.map(g => `
                                     <tr>
                                         <td>#${g.id}</td>
                                         <td style="max-width: 300px;">

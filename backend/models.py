@@ -174,7 +174,7 @@ class Grievance(db.Model):
             'predicted_department': self.predicted_department,
             'assigned_department': self.assigned_department,
             'assigned_officer_id': self.assigned_officer_id,
-            'status': self.status,
+            'status': self.status or 'Received',
             'location': self.location,
             'images': json.loads(self.images) if self.images else [],
             'complainant_dob': self.complainant_dob,

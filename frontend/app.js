@@ -27,7 +27,7 @@ function removeUser() {
     localStorage.removeItem('user');
 }
 
-// API call helper
+// API call helper with robust error handling
 async function apiCall(endpoint, options = {}) {
     const token = getToken();
     const headers = {
@@ -36,12 +36,29 @@ async function apiCall(endpoint, options = {}) {
         ...options.headers
     };
 
-    const response = await fetch(`${API_BASE}${endpoint}`, {
-        ...options,
-        headers
-    });
+    let response;
+    try {
+        response = await fetch(`${API_BASE}${endpoint}`, {
+            ...options,
+            headers
+        });
+    } catch (err) {
+        throw new Error('Network error. Please check your connection and try again.');
+    }
 
-    const data = await response.json();
+    let data;
+    try {
+        data = await response.json();
+    } catch {
+        throw new Error('Invalid response from server');
+    }
+
+    if (response.status === 401) {
+        removeToken();
+        removeUser();
+        window.location.href = 'login.html';
+        throw new Error('Session expired. Please login again.');
+    }
 
     if (!response.ok) {
         throw new Error(data.error || 'Something went wrong');
@@ -95,16 +112,29 @@ function formatDate(dateString) {
 
 // Get status badge class
 function getStatusBadgeClass(status) {
+    if (!status) return 'badge-received';
     const statusMap = {
         'Received': 'badge-received',
         'Assigned to Department': 'badge-assigned',
+        'Assigned': 'badge-assigned',
         'Under Progress': 'badge-progress',
+        'In Progress': 'badge-progress',
         'Investigation': 'badge-investigation',
         'Reviewed': 'badge-reviewed',
         'Resolved': 'badge-resolved',
-        'Closed': 'badge-closed'
+        'Closed': 'badge-closed',
+        'Rejected': 'badge-closed'
     };
     return statusMap[status] || 'badge-received';
+}
+
+// Get home URL based on user role
+function getHomeUrl() {
+    const user = getUser();
+    if (!user) return 'index.html';
+    if (user.role === 'ADMIN') return 'admin.html';
+    if (user.role === 'OFFICER') return 'officer.html';
+    return 'index.html';
 }
 
 // Update header with user info

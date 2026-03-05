@@ -651,6 +651,17 @@
             try {
                 const data = await apiCall('/auth/me');
                 currentUser = data.user;
+                
+                // Redirect Admin and Officer to their respective portals
+                if (currentUser.role === 'ADMIN') {
+                    window.location.href = 'admin.html';
+                    return;
+                }
+                if (currentUser.role === 'OFFICER') {
+                    window.location.href = 'officer.html';
+                    return;
+                }
+                
                 document.getElementById('userWelcome').textContent = `Welcome, ${currentUser.name}`;
                 
                 // Check residential address
@@ -670,9 +681,10 @@
         // Load statistics
         async function loadStatistics() {
             try {
-                const grievances = await apiCall('/grievances/my-grievances');
-                const total = grievances.grievances.length;
-                const resolved = grievances.grievances.filter(g => g.status === 'Resolved' || g.status === 'Closed').length;
+                const data = await apiCall('/grievances/my-grievances');
+                const grievances = data.grievances || [];
+                const total = grievances.length;
+                const resolved = grievances.filter(g => g.status === 'Resolved' || g.status === 'Closed').length;
                 const pending = total - resolved;
                 
                 document.getElementById('totalGrievances').textContent = total;
@@ -744,17 +756,18 @@
             try {
                 const data = await apiCall('/grievances/my-grievances');
                 const list = document.getElementById('grievancesList');
+                const grievances = data.grievances || [];
                 
-                if (data.grievances.length === 0) {
+                if (grievances.length === 0) {
                     list.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">No grievances submitted yet</p>';
                     return;
                 }
 
-                list.innerHTML = data.grievances.map(g => `
+                list.innerHTML = grievances.map(g => `
                     <div class="grievance-card">
                         <div class="grievance-header">
                             <div class="grievance-id">Grievance #${g.id}</div>
-                            <span class="status-badge status-${g.status.toLowerCase().replace(/\s+/g, '-')}">${g.status}</span>
+                            <span class="badge ${getStatusBadgeClass(g.status)}">${g.status || 'Received'}</span>
                         </div>
                         <div class="grievance-content">
                             <strong>${g.assigned_department}</strong><br>

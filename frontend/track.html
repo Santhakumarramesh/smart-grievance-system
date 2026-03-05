@@ -15,7 +15,7 @@
             <h1>Smart Grievance System</h1>
             <div class="header-actions">
                 <div class="user-info"></div>
-                <button onclick="window.location.href='/index.html'" class="btn btn-secondary">Back to Home</button>
+                <button id="backToHomeBtn" class="btn btn-secondary">Back to Home</button>
                 <button id="logoutBtn" class="btn btn-secondary">Logout</button>
             </div>
         </div>
@@ -151,8 +151,13 @@
 
         if (!grievanceId) {
             showAlert('No grievance ID provided', 'error');
-            setTimeout(() => window.location.href = '/index.html', 2000);
+            setTimeout(() => window.location.href = getHomeUrl(), 2000);
         }
+
+        // Back to Home button - goes to correct portal based on role
+        document.getElementById('backToHomeBtn').addEventListener('click', () => {
+            window.location.href = getHomeUrl();
+        });
 
         // Load grievance details
         async function loadGrievance() {
@@ -170,7 +175,7 @@
                         </div>
                         <div>
                             <div class="stat-label">Current Status</div>
-                            <div><span class="badge ${getStatusBadgeClass(grievance.status)}">${grievance.status}</span></div>
+                            <div><span class="badge ${getStatusBadgeClass(grievance.status || 'Received')}">${grievance.status || 'Received'}</span></div>
                         </div>
                         <div>
                             <div class="stat-label">Submitted On</div>
@@ -326,8 +331,8 @@
                 }
 
             } catch (error) {
-                showAlert(error.message, 'error');
-                setTimeout(() => window.location.href = '/index.html', 2000);
+                showAlert(error.message || 'Failed to load grievance', 'error');
+                setTimeout(() => window.location.href = getHomeUrl(), 2000);
             }
         }
 
