@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1e40af">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Smart Grievance Redressal System | Government of India</title>
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="government-portal-theme.css">
     <link rel="stylesheet" href="improved-contrast.css">
@@ -593,20 +597,26 @@
                     <label class="form-label">
                         Complaint Details <span class="required">*</span>
                     </label>
-                    <textarea id="complaint" class="form-textarea" 
-                        placeholder="Describe your complaint in detail (minimum 20 characters)" 
-                        required minlength="20"></textarea>
-                    <small class="form-hint">Our AI will automatically assign your complaint to the appropriate department</small>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <textarea id="complaint" class="form-textarea" 
+                            placeholder="Describe your complaint in detail (minimum 20 characters)" 
+                            required minlength="20"></textarea>
+                        <button type="button" id="voiceBtn" title="Voice input" style="padding: 0.5rem; background: #3B82F6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.2rem;">🎤</button>
+                    </div>
+                    <small class="form-hint">Our AI will automatically assign your complaint to the appropriate department. Click 🎤 for voice input.</small>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">
                         Complaint Location <span class="required">*</span>
                     </label>
-                    <input type="text" id="location" class="form-input" 
-                        placeholder="Enter exact location: Building/House No, Street, Area, Landmark, City, State, PIN" 
-                        required>
-                    <small class="form-hint">Enter the location where the complaint is (not your residential address)</small>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="location" class="form-input" 
+                            placeholder="Enter exact location: Building/House No, Street, Area, Landmark, City, State, PIN" 
+                            required>
+                        <button type="button" id="geoBtn" class="btn btn-secondary" style="white-space: nowrap;">📍 Use GPS</button>
+                    </div>
+                    <small class="form-hint">Enter the location where the complaint is. Click "Use GPS" to auto-detect.</small>
                 </div>
 
                 <div class="form-group">
@@ -913,6 +923,47 @@
                 }, 5000);
             }
         }
+
+        // Voice input (Web Speech API)
+        document.getElementById('voiceBtn').addEventListener('click', function() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showAlert('Voice input not supported in this browser', 'error');
+                return;
+            }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const rec = new SpeechRecognition();
+            rec.continuous = false;
+            rec.interimResults = false;
+            rec.lang = 'en-IN';
+            rec.onresult = (e) => {
+                const text = e.results[0][0].transcript;
+                document.getElementById('complaint').value += (document.getElementById('complaint').value ? ' ' : '') + text;
+            };
+            rec.onerror = () => showAlert('Could not hear. Please try again.', 'error');
+            rec.start();
+            showAlert('Listening... Speak your complaint.', 'info');
+        });
+
+        // Geolocation
+        document.getElementById('geoBtn').addEventListener('click', function() {
+            if (!navigator.geolocation) {
+                showAlert('Geolocation not supported', 'error');
+                return;
+            }
+            document.getElementById('geoBtn').textContent = 'Getting location...';
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude.toFixed(6);
+                    const lon = pos.coords.longitude.toFixed(6);
+                    document.getElementById('location').value = `Lat: ${lat}, Long: ${lon} (GPS coordinates)`;
+                    document.getElementById('geoBtn').textContent = '📍 Use GPS';
+                },
+                () => {
+                    showAlert('Could not get location. Enter manually.', 'error');
+                    document.getElementById('geoBtn').textContent = '📍 Use GPS';
+                }
+            );
+        });
 
         // Logout
         document.getElementById('logoutBtn').addEventListener('click', function() {

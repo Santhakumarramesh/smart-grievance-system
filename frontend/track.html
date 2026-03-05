@@ -122,6 +122,31 @@
             <div id="commentsList" style="margin-top: 2rem;">
                 <div class="spinner"></div>
             </div>
+
+            <!-- Rating Section (shown when Resolved/Closed) -->
+            <div id="ratingSection" style="display: none; margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 12px; border: 2px solid #22c55e;">
+                <h3 style="margin-bottom: 1rem;">⭐ Rate Your Experience</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">How was the resolution of your complaint?</p>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; font-size: 2rem;" id="starRating">
+                    <span data-rating="1" style="cursor: pointer;">☆</span>
+                    <span data-rating="2" style="cursor: pointer;">☆</span>
+                    <span data-rating="3" style="cursor: pointer;">☆</span>
+                    <span data-rating="4" style="cursor: pointer;">☆</span>
+                    <span data-rating="5" style="cursor: pointer;">☆</span>
+                </div>
+                <textarea id="ratingFeedback" placeholder="Optional feedback..." rows="2" style="width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; border-radius: 6px;"></textarea>
+                <button id="submitRatingBtn" class="btn btn-success">Submit Rating</button>
+                <p id="ratingThanks" style="display: none; color: #22c55e; font-weight: 600;">Thank you for your feedback!</p>
+            </div>
+
+            <!-- QR Code & Share -->
+            <div id="qrSection" style="margin-top: 1.5rem; text-align: center;">
+                <p style="margin-bottom: 0.5rem; font-weight: 600;">📱 Scan to track</p>
+                <img id="qrImage" src="" alt="QR Code" style="max-width: 150px; border-radius: 8px;">
+                <div style="margin-top: 1rem;">
+                    <button onclick="shareGrievance()" class="btn btn-secondary" style="padding: 0.4rem 1rem;">📤 Share</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -329,6 +354,13 @@
                     document.getElementById('timeline').innerHTML = 
                         '<p style="color: var(--text-secondary);">No updates yet.</p>';
                 }
+
+                // Show rating section if resolved, load QR
+                if (['Resolved', 'Closed'].includes(grievance.status)) {
+                    document.getElementById('ratingSection').style.display = 'block';
+                    loadRatingAndSetup();
+                }
+                document.getElementById('qrImage').src = `/api/grievances/${grievanceId}/qr`;
 
             } catch (error) {
                 showAlert(error.message || 'Failed to load grievance', 'error');
@@ -675,6 +707,52 @@
             loadComments();
         }
         
+        function shareGrievance() {
+            const url = window.location.href;
+            const text = `Track my grievance #${grievanceId} - Smart Grievance System`;
+            if (navigator.share) {
+                navigator.share({ title: 'Grievance Tracking', text, url }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(url).then(() => showAlert('Link copied!', 'success'));
+            }
+        }
+
+        // Rating: load existing, setup stars, submit
+        let selectedRating = 0;
+        async function loadRatingAndSetup() {
+            try {
+                const data = await apiCall(`/grievances/${grievanceId}/rating`);
+                if (data.rating) {
+                    selectedRating = data.rating;
+                    document.querySelectorAll('#starRating span').forEach((s, i) => {
+                        s.textContent = i < data.rating ? '★' : '☆';
+                    });
+                    document.getElementById('ratingThanks').style.display = 'block';
+                    document.getElementById('submitRatingBtn').style.display = 'none';
+                }
+            } catch (_) {}
+            document.querySelectorAll('#starRating span').forEach((s) => {
+                s.addEventListener('click', () => {
+                    selectedRating = parseInt(s.dataset.rating);
+                    document.querySelectorAll('#starRating span').forEach((st, i) => {
+                        st.textContent = i < selectedRating ? '★' : '☆';
+                    });
+                });
+            });
+            document.getElementById('submitRatingBtn').addEventListener('click', async () => {
+                if (selectedRating < 1) { showAlert('Please select a rating', 'error'); return; }
+                try {
+                    await apiCall(`/grievances/${grievanceId}/rate`, {
+                        method: 'POST',
+                        body: JSON.stringify({ rating: selectedRating, feedback_text: document.getElementById('ratingFeedback').value })
+                    });
+                    document.getElementById('ratingThanks').style.display = 'block';
+                    document.getElementById('submitRatingBtn').style.display = 'none';
+                    showAlert('Thank you for your feedback!', 'success');
+                } catch (e) { showAlert(e.message, 'error'); }
+            });
+        }
+
         // Reload comments when global language changes
         document.getElementById('commentLanguageSelect').addEventListener('change', function() {
             const selectedLang = this.value;

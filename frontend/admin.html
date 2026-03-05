@@ -23,7 +23,13 @@
     <div class="container">
         <!-- Analytics -->
         <div class="card">
-            <h2 class="card-title">System Analytics</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 class="card-title" style="margin: 0;">System Analytics</h2>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button onclick="downloadExport('grievances')" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.875rem;">📥 Export Excel</button>
+                    <button onclick="downloadExport('audit')" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.875rem;">📋 Audit Log</button>
+                </div>
+            </div>
             <div id="analytics">
                 <div class="spinner"></div>
             </div>
@@ -152,6 +158,20 @@
         }
 
         const user = getUser();
+        
+        async function downloadExport(type) {
+            try {
+                const url = type === 'audit' ? '/api/admin/audit/export?days=7' : '/api/admin/export/grievances';
+                const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + getToken() } });
+                const blob = await res.blob();
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = type === 'audit' ? 'audit_log.pdf' : 'grievances_export.xlsx';
+                a.click();
+                URL.revokeObjectURL(a.href);
+            } catch (e) { showAlert('Export failed: ' + e.message, 'error'); }
+        }
+        
         if (user.role !== 'ADMIN') {
             showAlert('Access denied. Admins only.', 'error');
             setTimeout(() => window.location.href = user.role === 'OFFICER' ? 'officer.html' : 'index.html', 2000);

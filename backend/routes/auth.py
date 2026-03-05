@@ -8,6 +8,7 @@ from backend.config import Config
 from backend.services.otp_service import OTPService
 from backend.services.email_service import EmailService
 from backend.security import require_firewall, validate_request_data, SecurityFirewall, SecurityLogger
+from backend.services.audit_service import log_audit
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -117,7 +118,7 @@ def register():
         
         db.session.add(user)
         db.session.commit()
-        
+        log_audit(user.id, 'register', 'user', user.id)
         return jsonify({
             'message': 'Registration successful. Please verify your email.',
             'user_id': user.id,
@@ -245,7 +246,7 @@ def login():
         
         # Create token
         token = create_token(user.id)
-        
+        log_audit(user.id, 'login', 'user', user.id)
         return jsonify({
             'message': 'Login successful',
             'token': token,

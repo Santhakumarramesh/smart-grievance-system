@@ -8,9 +8,12 @@ load_dotenv()
 
 from backend.config import Config
 from backend.extensions import db
+from backend import models  # noqa: F401 - register all models including addons
+from backend.models_addons import AuditLog, GrievanceRating  # noqa: F401
 from backend.routes.auth import auth_bp
 from backend.routes.grievances import grievances_bp
 from backend.routes.admin import admin_bp
+from backend.routes.addons import addons_bp
 from backend.services.classifier import classifier
 from backend.services.scheduler import scheduler
 from backend.security import SecurityHeaders, configure_cors_security
@@ -35,6 +38,7 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(grievances_bp, url_prefix='/api/grievances')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    app.register_blueprint(addons_bp, url_prefix='/api')
     
     # Serve frontend files
     @app.route('/')
