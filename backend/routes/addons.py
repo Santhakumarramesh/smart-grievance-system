@@ -26,11 +26,21 @@ def public_stats():
             func.count(Grievance.id)
         ).group_by(Grievance.assigned_department).all()
         
+        # Avg resolution time (days) for resolved grievances
+        resolved_grievances = Grievance.query.filter(
+            Grievance.status.in_(['Resolved', 'Closed']),
+            Grievance.created_at.isnot(None),
+            Grievance.updated_at.isnot(None)
+        ).all()
+        total_days = sum((g.updated_at - g.created_at).total_seconds() / 86400 for g in resolved_grievances)
+        avg_resolution_days = round(total_days / len(resolved_grievances), 1) if resolved_grievances else 0
+        
         return jsonify({
             'total_grievances': total,
             'resolved': resolved,
             'pending': pending,
             'resolution_rate': round(resolved / total * 100, 1) if total else 0,
+            'avg_resolution_days': avg_resolution_days,
             'by_department': {d: c for d, c in dept_counts},
             'updated_at': datetime.utcnow().isoformat()
         }), 200

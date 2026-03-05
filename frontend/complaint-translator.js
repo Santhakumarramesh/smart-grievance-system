@@ -108,11 +108,40 @@ function showTranslationModal(text, currentLang, targetElementId) {
     });
 }
 
-// Translate text (simplified version - shows romanized/transliterated version)
+// Translation dictionary for common complaint words/phrases (English -> target language)
+const complaintTranslations = {
+    hi: { 'water': 'पानी', 'electricity': 'बिजली', 'problem': 'समस्या', 'issue': 'मुद्दा', 'complaint': 'शिकायत', 'road': 'सड़क', 'street': 'गली', 'light': 'लाइट', 'supply': 'आपूर्ति', 'shortage': 'कमी', 'not working': 'काम नहीं कर रहा', 'broken': 'टूटा हुआ', 'leak': 'रिसाव', 'dirty': 'गंदा', 'overflow': 'अतिप्रवाह', 'pothole': 'गड्ढा', 'repair': 'मरम्मत', 'fix': 'ठीक करें', 'urgent': 'जरूरी', 'please': 'कृपया', 'help': 'मदद', 'area': 'क्षेत्र', 'street light': 'स्ट्रीट लाइट', 'power cut': 'बिजली कटौती', 'no water': 'पानी नहीं', 'garbage': 'कचरा', 'drainage': 'नाली', 'sewage': 'सीवेज', 'health': 'स्वास्थ्य', 'safety': 'सुरक्षा', 'satisfied': 'संतुष्ट', 'service': 'सेवा', 'my': 'मेरी', 'in': 'में', 'and': 'और', 'with': 'के साथ' },
+    ta: { 'water': 'நீர்', 'electricity': 'மின்சாரம்', 'problem': 'பிரச்சனை', 'issue': 'சிக்கல்', 'complaint': 'புகார்', 'road': 'சாலை', 'street': 'தெரு', 'light': 'விளக்கு', 'supply': 'வழங்கல்', 'shortage': 'பற்றாக்குறை', 'not working': 'செயல்படவில்லை', 'broken': 'உடைந்தது', 'leak': 'கசிவு', 'dirty': 'அழுக்கு', 'overflow': 'ஓழிவு', 'pothole': 'குழி', 'repair': 'பழுது', 'fix': 'சரிசெய்', 'urgent': 'அவசரம்', 'please': 'தயவுசெய்து', 'help': 'உதவி', 'area': 'பகுதி', 'street light': 'தெரு விளக்கு', 'power cut': 'மின்சார வெட்டு', 'no water': 'நீர் இல்லை', 'garbage': 'குப்பை', 'drainage': 'வடிகால்', 'sewage': 'கழிவு நீர்', 'health': 'சுகாதாரம்', 'safety': 'பாதுகாப்பு', 'satisfied': 'திருப்தி', 'service': 'சேவை', 'my': 'என்', 'in': 'இல்', 'and': 'மற்றும்', 'not': 'இல்லை', 'with': 'உடன்', 'electricity shortage': 'மின்சார பற்றாக்குறை', 'not satisfied': 'திருப்தி இல்லை' },
+    te: { 'water': 'నీరు', 'electricity': 'విద్యుత్', 'problem': 'సమస్య', 'issue': 'ఇష్యూ', 'complaint': 'ఫిర్యాదు', 'road': 'రోడ్', 'street': 'వీధి', 'light': 'లైట్', 'supply': 'సరఫరా', 'shortage': 'అలాభం', 'not working': 'పనిచేయడం లేదు', 'broken': 'విరిగిన', 'leak': 'లీక్', 'dirty': 'అశుభ్రం', 'overflow': 'ఓవర్ఫ్లో', 'pothole': 'గుడి', 'repair': 'రిపేర్', 'fix': 'సరిచేయండి', 'urgent': 'అత్యవసరం', 'please': 'దయచేసి', 'help': 'సహాయం', 'area': 'ప్రాంతం', 'street light': 'వీధి దీపం', 'power cut': 'విద్యుత్ కట్', 'no water': 'నీరు లేదు', 'garbage': 'చెత్త', 'drainage': 'డ్రైనేజ్', 'sewage': 'మురుగునీరు', 'health': 'ఆరోగ్యం', 'safety': 'భద్రత' },
+    bn: { 'water': 'পানি', 'electricity': 'বিদ্যুৎ', 'problem': 'সমস্যা', 'issue': 'সমস্যা', 'complaint': 'অভিযোগ', 'road': 'রাস্তা', 'street': 'রাস্তা', 'light': 'লাইট', 'supply': 'সরবরাহ', 'shortage': 'স্বল্পতা', 'not working': 'কাজ করছে না', 'broken': 'ভাঙা', 'leak': 'লিক', 'dirty': 'নোংরা', 'overflow': 'ওভারফ্লো', 'pothole': 'গর্ত', 'repair': 'মেরামত', 'fix': 'ঠিক করুন', 'urgent': 'জরুরি', 'please': 'অনুগ্রহ করে', 'help': 'সাহায্য', 'area': 'এলাকা', 'street light': 'রাস্তার আলো', 'power cut': 'বিদ্যুৎ কাট', 'no water': 'পানি নেই', 'garbage': 'আবর্জনা', 'drainage': 'নালা', 'sewage': 'মলমূত্র', 'health': 'স্বাস্থ্য', 'safety': 'নিরাপত্তা' },
+    mr: { 'water': 'पाणी', 'electricity': 'वीज', 'problem': 'समस्या', 'issue': 'मुद्दा', 'complaint': 'तक्रार', 'road': 'रस्ता', 'street': 'रस्ता', 'light': 'दिवा', 'supply': 'पुरवठा', 'shortage': 'कमतरता', 'not working': 'काम करत नाही', 'broken': 'तुटलेले', 'leak': 'गळती', 'dirty': 'घाण', 'overflow': 'ओव्हरफ्लो', 'pothole': 'खड्डा', 'repair': 'दुरुस्ती', 'fix': 'बरा करा', 'urgent': 'तातडीचे', 'please': 'कृपया', 'help': 'मदत', 'area': 'क्षेत्र', 'street light': 'रस्ता दिवा', 'power cut': 'वीज कट', 'no water': 'पाणी नाही', 'garbage': 'कचरा', 'drainage': 'नाली', 'sewage': 'सांडपाणी', 'health': 'आरोग्य', 'safety': 'सुरक्षा', 'satisfied': 'समाधान', 'service': 'सेवा', 'my': 'माझ्या', 'in': 'मध्ये', 'and': 'आणि', 'not': 'नाही', 'with': 'सोबत', 'electricity shortage': 'वीज कमतरता', 'not satisfied': 'समाधानी नाही' },
+    gu: { 'water': 'પાણી', 'electricity': 'વીજળી', 'problem': 'સમસ્યા', 'issue': 'મુદ્દો', 'complaint': 'ફરિયાદ', 'road': 'રસ્તો', 'street': 'શેરી', 'light': 'લાઇટ', 'supply': 'પુરવઠો', 'shortage': 'ઉણપ', 'not working': 'કામ નથી કરતું', 'broken': 'ટૂટેલું', 'leak': 'લીક', 'dirty': 'ગંદું', 'overflow': 'ઓવરફ્લો', 'pothole': 'ખાડો', 'repair': 'મરામત', 'fix': 'ઠીક કરો', 'urgent': 'જરૂરી', 'please': 'કૃપા કરીને', 'help': 'મદદ', 'area': 'વિસ્તાર', 'street light': 'શેરી લાઇટ', 'power cut': 'વીજળી કટ', 'no water': 'પાણી નથી', 'garbage': 'કચરો', 'drainage': 'ડ્રેનેજ', 'sewage': 'મલમૂત્ર', 'health': 'આરોગ્ય', 'safety': 'સુરક્ષા' },
+    kn: { 'water': 'ನೀರು', 'electricity': 'ವಿದ್ಯುತ್', 'problem': 'ಸಮಸ್ಯೆ', 'issue': 'ಸಮಸ್ಯೆ', 'complaint': 'ದೂರು', 'road': 'ರಸ್ತೆ', 'street': 'ರಸ್ತೆ', 'light': 'ದೀಪ', 'supply': 'ಸರಬರಾಜು', 'shortage': 'ಕೊರತೆ', 'not working': 'ಕೆಲಸ ಮಾಡುವುದಿಲ್ಲ', 'broken': 'ಮುರಿದ', 'leak': 'ಸೋರಿಕೆ', 'dirty': 'ಅಶುದ್ಧ', 'overflow': 'ಓವರ್‌ಫ್ಲೋ', 'pothole': 'ಗುಳಿ', 'repair': 'ರಿಪೇರಿ', 'fix': 'ಸರಿಪಡಿಸಿ', 'urgent': 'ತುರ್ತು', 'please': 'ದಯವಿಟ್ಟು', 'help': 'ಸಹಾಯ', 'area': 'ಪ್ರದೇಶ', 'street light': 'ರಸ್ತೆ ದೀಪ', 'power cut': 'ವಿದ್ಯುತ್ ಕಟ್', 'no water': 'ನೀರು ಇಲ್ಲ', 'garbage': 'ಕಸ', 'drainage': 'ಜಲನಾಳ', 'sewage': 'ಮಲಮೂತ್ರ', 'health': 'ಆರೋಗ್ಯ', 'safety': 'ಭದ್ರತೆ' },
+    ml: { 'water': 'വെള്ളം', 'electricity': 'വൈദ്യുതി', 'problem': 'പ്രശ്നം', 'issue': 'പ്രശ്നം', 'complaint': 'പരാതി', 'road': 'റോഡ്', 'street': 'തെരുവ്', 'light': 'ലൈറ്റ്', 'supply': 'വിതരണം', 'shortage': 'കുറവ്', 'not working': 'പ്രവർത്തിക്കുന്നില്ല', 'broken': 'പൊട്ടിയ', 'leak': 'ലീക്ക്', 'dirty': 'അഴുക്ക്', 'overflow': 'ഓവർഫ്ലോ', 'pothole': 'കുഴി', 'repair': 'റിപ്പയർ', 'fix': 'ശരിയാക്കുക', 'urgent': 'അടിയന്തിരം', 'please': 'ദയവായി', 'help': 'സഹായം', 'area': 'പ്രദേശം', 'street light': 'തെരുവ് വെളിച്ചം', 'power cut': 'വൈദ്യുതി കട്ട്', 'no water': 'വെള്ളം ഇല്ല', 'garbage': 'കച്ചര', 'drainage': 'ഡ്രെയിനേജ്', 'sewage': 'മലമൂത്രം', 'health': 'ആരോഗ്യം', 'safety': 'സുരക്ഷ' },
+    pa: { 'water': 'ਪਾਣੀ', 'electricity': 'ਬਿਜਲੀ', 'problem': 'ਸਮੱਸਿਆ', 'issue': 'ਮੁੱਦਾ', 'complaint': 'ਸ਼ਿਕਾਇਤ', 'road': 'ਸੜਕ', 'street': 'ਗਲੀ', 'light': 'ਲਾਈਟ', 'supply': 'ਸਪਲਾਈ', 'shortage': 'ਕਮੀ', 'not working': 'ਕੰਮ ਨਹੀਂ ਕਰ ਰਿਹਾ', 'broken': 'ਟੁੱਟਿਆ', 'leak': 'ਲੀਕ', 'dirty': 'ਗੰਦਾ', 'overflow': 'ਓਵਰਫਲੋ', 'pothole': 'ਖੱਡ', 'repair': 'ਮੁਰੰਮਤ', 'fix': 'ਠੀਕ ਕਰੋ', 'urgent': 'ਜਰੂਰੀ', 'please': 'ਕ੍ਰਿਪਾ ਕਰਕੇ', 'help': 'ਮਦਦ', 'area': 'ਖੇਤਰ', 'street light': 'ਗਲੀ ਲਾਈਟ', 'power cut': 'ਬਿਜਲੀ ਕੱਟ', 'no water': 'ਪਾਣੀ ਨਹੀਂ', 'garbage': 'ਕੂੜਾ', 'drainage': 'ਨਾਲੀ', 'sewage': 'ਮਲਮੂਤਰ', 'health': 'ਸਿਹਤ', 'safety': 'ਸੁਰੱਖਿਆ' },
+    or: { 'water': 'ଜଳ', 'electricity': 'ବିଦ୍ୟୁତ୍', 'problem': 'ସମସ୍ୟା', 'issue': 'ସମସ୍ୟା', 'complaint': 'ଅଭିଯୋଗ', 'road': 'ରାସ୍ତା', 'street': 'ରାସ୍ତା', 'light': 'ଆଲୋକ', 'supply': 'ଯୋଗାଣ', 'shortage': 'ଅଭାବ', 'not working': 'କାମ କରୁନାହିଁ', 'broken': 'ଭାଙ୍ଗିଯାଇଛି', 'leak': 'ଲିକ୍', 'dirty': 'ଅଗଳା', 'overflow': 'ଓଭରଫ୍ଲୋ', 'pothole': 'ଗତି', 'repair': 'ମରାମତି', 'fix': 'ଠିକ୍ କରନ୍ତୁ', 'urgent': 'ଜରୁରୀ', 'please': 'ଦୟାକରି', 'help': 'ସହାୟତା', 'area': 'କ୍ଷେତ୍ର', 'street light': 'ରାସ୍ତା ଆଲୋକ', 'power cut': 'ବିଦ୍ୟୁତ୍ କଟ୍', 'no water': 'ଜଳ ନାହିଁ', 'garbage': 'ଆବର୍ଜନା', 'drainage': 'ଡ୍ରେନେଜ୍', 'sewage': 'ମଳମୂତ୍ର', 'health': 'ସ୍ୱାସ୍ଥ୍ୟ', 'safety': 'ସୁରକ୍ଷା' },
+    as: { 'water': 'পানী', 'electricity': 'বিদ্যুৎ', 'problem': 'সমস্যা', 'issue': 'সমস্যা', 'complaint': 'অভিযোগ', 'road': 'পথ', 'street': 'পথ', 'light': 'পোহৰ', 'supply': 'যোগান', 'shortage': 'অভাব', 'not working': 'কাম নকৰে', 'broken': 'ভাঙি', 'leak': 'লিক', 'dirty': 'নোংরা', 'overflow': 'ওভাৰফ্লো', 'pothole': 'গর্ত', 'repair': 'মেৰামতি', 'fix': 'ঠিক কৰক', 'urgent': 'জৰুৰী', 'please': 'অনুগ্ৰহ কৰি', 'help': 'সাহায্য', 'area': 'অঞ্চল', 'street light': 'পথৰ পোহৰ', 'power cut': 'বিদ্যুৎ কাট', 'no water': 'পানী নাই', 'garbage': 'আবর্জনা', 'drainage': 'নলা', 'sewage': 'মলমূত্র', 'health': 'স্বাস্থ্য', 'safety': 'নিরাপত্তা' }
+};
+
+function translateComplaintText(text, targetLang) {
+    if (!text || targetLang === 'en') return text;
+    const dict = complaintTranslations[targetLang];
+    if (!dict) return text;
+    let result = String(text);
+    // Process longer phrases first (e.g. "electricity shortage" before "electricity")
+    const phrases = Object.keys(dict).sort((a, b) => b.length - a.length);
+    for (const phrase of phrases) {
+        const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp('\\b' + escaped + '\\b', 'gi');
+        result = result.replace(regex, dict[phrase]);
+    }
+    return result;
+}
+
+// Translate text using dictionary
 async function translateText(text, targetLang) {
     const resultDiv = document.getElementById('translationResult');
     
-    // Show loading
     resultDiv.innerHTML = `
         <div class="translation-loading">
             <div class="spinner"></div>
@@ -120,24 +149,21 @@ async function translateText(text, targetLang) {
         </div>
     `;
     
-    // Simulate translation delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 300));
     
-    // For demo purposes, show the text with language indicator
-    // In production, you would integrate with Google Translate API or similar
     const langData = availableLanguages.find(l => l.code === targetLang);
+    const translatedText = translateComplaintText(text, targetLang);
     
     resultDiv.innerHTML = `
         <div class="translation-text">
             <div class="translation-lang-badge">${langData.nativeName}</div>
-            <p>${text}</p>
+            <p>${translatedText}</p>
             <div class="translation-help">
                 <strong>Translation Help:</strong>
                 <ul>
                     <li>Read the original complaint carefully</li>
-                    <li>Use context clues to understand the issue</li>
                     <li>Key words: ${extractKeywords(text).join(', ')}</li>
-                    <li>If needed, consult with a colleague who speaks this language</li>
+                    <li>For official purposes, refer to the original text</li>
                 </ul>
             </div>
         </div>

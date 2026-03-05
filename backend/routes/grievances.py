@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
+import json
 from backend.models import Grievance, GrievanceUpdate, GrievanceComment, User, FraudReport, Notification
 from backend.extensions import db
 from backend.routes.auth import get_current_user_from_token
@@ -7,6 +8,7 @@ from backend.services.classifier import classifier
 from backend.services.email_service import EmailService
 from backend.services.ai_image_detector import AIImageDetector
 from backend.services.comment_escalation import check_and_escalate_comments, escalate_comment_manually
+from backend.services.audit_service import log_audit
 from backend.security import require_firewall, SecurityFirewall, SecurityLogger
 
 grievances_bp = Blueprint('grievances', __name__)
@@ -144,7 +146,6 @@ def submit_grievance():
         complainant_gender = user.gender
         
         # Store images as JSON
-        import json
         images_json = json.dumps(images) if images else None
         
         # Create grievance
@@ -200,6 +201,8 @@ def submit_grievance():
             f'Your complaint has been assigned to {predicted_department} department.'
         )
         
+        log_audit(user.id, 'create_grievance', 'grievance', grievance.id, json.dumps({'department': predicted_department}))
+        
         return jsonify({
             'message': 'Grievance submitted successfully',
             'grievance_id': grievance.id,
@@ -252,8 +255,9 @@ def get_grievance(grievance_id):
         if user.role == 'OFFICER' and grievance.assigned_department != user.department:
             return jsonify({'error': 'Unauthorized to view this grievance'}), 403
         
+        include_officer = user.role in ['OFFICER', 'ADMIN']
         return jsonify({
-            'grievance': grievance.to_dict(include_updates=True, include_comments=True)
+            'grievance': grievance.to_dict(include_updates=True, include_comments=True, include_officer=include_officer)
         }), 200
         
     except Exception as e:
@@ -367,6 +371,8 @@ def update_grievance(grievance_id):
                 department=grievance.assigned_department,
                 officer_name=user.name
             )
+        
+        log_audit(user.id, 'update_grievance', 'grievance', grievance_id, json.dumps({'old_status': old_status, 'new_status': new_status}))
         
         return jsonify({
             'message': 'Grievance updated successfully',

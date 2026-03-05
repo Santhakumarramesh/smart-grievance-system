@@ -700,7 +700,15 @@
                 document.getElementById('totalGrievances').textContent = total;
                 document.getElementById('resolvedGrievances').textContent = resolved;
                 document.getElementById('pendingGrievances').textContent = pending;
-                document.getElementById('avgResolutionTime').textContent = '7'; // Placeholder
+                
+                // Fetch avg resolution from public stats
+                try {
+                    const statsRes = await fetch('/api/public/stats');
+                    const stats = await statsRes.json();
+                    document.getElementById('avgResolutionTime').textContent = stats.avg_resolution_days ?? 0;
+                } catch (_) {
+                    document.getElementById('avgResolutionTime').textContent = '0';
+                }
             } catch (error) {
                 console.error('Failed to load statistics:', error);
             }
@@ -973,5 +981,9 @@
         // Initialize
         checkAuth();
     </script>
+    <script src="translations.js"></script>
+    <script src="government-portal-init.js"></script>
+    <script src="simple-translator.js"></script>
+    <script src="language-selector-widget.js"></script>
 </body>
 </html>

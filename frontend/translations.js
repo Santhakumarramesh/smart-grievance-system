@@ -475,13 +475,13 @@ const translations = {
 
 // Translation helper function
 function translate(key, lang = null) {
-    const currentLang = lang || localStorage.getItem('preferredLanguage') || 'en';
+    const currentLang = lang || localStorage.getItem('selectedLanguage') || localStorage.getItem('preferredLanguage') || 'en';
     return translations[currentLang]?.[key] || translations['en'][key] || key;
 }
 
 // Apply translations to page
 function applyTranslations() {
-    const currentLang = localStorage.getItem('preferredLanguage') || 'en';
+    const currentLang = localStorage.getItem('selectedLanguage') || localStorage.getItem('preferredLanguage') || 'en';
     
     // Translate elements with data-translate attribute
     document.querySelectorAll('[data-translate]').forEach(element => {

@@ -73,6 +73,11 @@ def create_app():
         
         # Start background scheduler for comment escalation
         scheduler.start()
+        
+        # In development, clear any IP blocks (e.g. from prior testing)
+        if os.getenv('FLASK_ENV', 'development') == 'development':
+            from backend.security.firewall import blocked_ips
+            blocked_ips.difference_update(('127.0.0.1', 'localhost', '::1'))
     
     return app
 

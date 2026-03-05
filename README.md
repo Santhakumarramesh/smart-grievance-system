@@ -52,9 +52,27 @@ A comprehensive, AI-powered grievance management system for citizens to file, tr
 
 ---
 
-## 🚀 Live Demo
+## 🚀 Deploy & Run
 
-**Website**: https://santhakumarramesh.github.io/smart-grievance-system/
+### Deploy to GitHub + Render (Full App)
+See **[DEPLOY.md](DEPLOY.md)** for step-by-step instructions to:
+- Push code to GitHub
+- Deploy the full Flask app on Render.com (free tier)
+- Auto-deploy on every push via GitHub Actions
+
+### Run Locally
+```bash
+pip install -r requirements.txt
+python -m backend.seed    # Create demo accounts
+python run.py
+```
+Open **http://localhost:8000**
+
+---
+
+## 🚀 Live Demo (Static)
+
+**Static showcase**: https://santhakumarramesh.github.io/smart-grievance-system/
 
 ### Test Accounts
 ```

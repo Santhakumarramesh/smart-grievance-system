@@ -152,6 +152,7 @@
     </div>
 
     <script src="app.js"></script>
+    <script src="translations.js"></script>
     <script>
         if (!checkAuth()) {
             throw new Error('Not authenticated');
@@ -264,7 +265,7 @@
                                         <td>${u.name}</td>
                                         <td>${u.email}</td>
                                         <td>${u.phone}</td>
-                                        <td>${u.city || '-'}, ${u.state || '-'}</td>
+                                        <td>${u.residential_city || u.city || '-'}, ${u.residential_state || u.state || '-'}</td>
                                         <td><span class="badge badge-progress">${u.grievance_count}</span></td>
                                         <td>
                                             ${u.email_verified 
@@ -290,7 +291,7 @@
                 const data = await apiCall('/admin/officers');
                 const officersList = document.getElementById('officersList');
 
-                if (data.officers.length === 0) {
+                if (!data.officers || data.officers.length === 0) {
                     officersList.innerHTML = '<p style="color: var(--text-secondary);">No officers created yet.</p>';
                     return;
                 }
@@ -311,6 +312,9 @@
 
                 const state = 'Tamil Nadu'; // Can be made dynamic based on user location
                 const authority = higherAuthority[state] || higherAuthority['Default'];
+
+                // Store for assign-officer dropdown
+                window.officersData = data.officers || [];
 
                 officersList.innerHTML = `
                     <div style="background: linear-gradient(135deg, #FF9933 0%, #FFFFFF 50%, #138808 100%); padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #FF9933;">
@@ -391,7 +395,7 @@
                 const data = await apiCall(url);
                 const grievancesList = document.getElementById('grievancesList');
 
-                if (data.grievances.length === 0) {
+                if (!data.grievances || data.grievances.length === 0) {
                     grievancesList.innerHTML = '<p style="color: var(--text-secondary);">No grievances found.</p>';
                     return;
                 }
@@ -593,8 +597,14 @@
                             </div>
                         </div>
                     ` : `
-                        <div style="background: #FEE2E2; border-left: 4px solid #EF4444; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
-                            <p style="color: #991B1B; margin: 0;">⚠️ No officer assigned to this complaint yet</p>
+                        <div style="background: #FEF3C7; border-left: 4px solid #F59E0B; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                            <p style="color: #92400E; margin: 0 0 0.75rem 0; font-weight: 600;">⚠️ No officer assigned to this complaint yet</p>
+                            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                                <select id="assignOfficerSelect" class="form-select" style="max-width: 280px;">
+                                    <option value="">Select officer from ${grievance.assigned_department}...</option>
+                                </select>
+                                <button onclick="assignOfficerToGrievance(${grievance.id})" class="btn btn-primary" style="padding: 0.5rem 1rem;">Assign Officer</button>
+                            </div>
                         </div>
                     `}
                     
@@ -633,6 +643,36 @@
             `;
             
             modal.style.display = 'block';
+            
+            // Populate assign officer dropdown if no officer assigned
+            if (!grievance.assigned_officer && window.officersData) {
+                const select = document.getElementById('assignOfficerSelect');
+                if (select) {
+                    const deptOfficers = window.officersData.filter(o => o.department === grievance.assigned_department);
+                    select.innerHTML = '<option value="">Select officer...</option>' + 
+                        deptOfficers.map(o => `<option value="${o.id}">${o.name} (${o.designation || 'Officer'})</option>`).join('');
+                }
+            }
+        }
+        
+        async function assignOfficerToGrievance(grievanceId) {
+            const select = document.getElementById('assignOfficerSelect');
+            const officerId = select ? parseInt(select.value) : 0;
+            if (!officerId) {
+                showAlert('Please select an officer', 'error');
+                return;
+            }
+            try {
+                await apiCall('/admin/assign-officer', {
+                    method: 'POST',
+                    body: JSON.stringify({ grievance_id: grievanceId, officer_id: officerId })
+                });
+                showAlert('Officer assigned successfully!', 'success');
+                closeDetailsModal();
+                loadGrievances();
+            } catch (e) {
+                showAlert(e.message || 'Failed to assign officer', 'error');
+            }
         }
         
         function closeDetailsModal() {

@@ -45,15 +45,26 @@ def get_superior_officer(current_officer, grievance):
     if not next_role:
         return None
     
-    # Find officer at next level in same department
-    superior = User.query.filter_by(
-        role='OFFICER',
-        department=grievance.assigned_department
-    ).filter(
-        User.id != current_officer.id  # Not the same officer
-    ).first()
+    # Find officer at next level in same department (prefer higher role_level when set)
+    # Hierarchy: Field(1) -> Section(2) -> DeptHead(3) -> District(4) -> State(5) -> Admin(6)
+    superior = None
+    if next_level <= 5:
+        superior = User.query.filter(
+            User.role == 'OFFICER',
+            User.department == grievance.assigned_department,
+            User.id != current_officer.id,
+            User.role_level > 0,
+            User.role_level >= next_level
+        ).order_by(User.role_level.asc()).first()
     
-    # If no officer found in same department, escalate to admin
+    # Fallback: any officer in same department
+    if not superior:
+        superior = User.query.filter_by(
+            role='OFFICER',
+            department=grievance.assigned_department
+        ).filter(User.id != current_officer.id).first()
+    
+    # If no officer in department, escalate to admin
     if not superior:
         superior = User.query.filter_by(role='ADMIN').first()
     

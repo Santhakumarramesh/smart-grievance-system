@@ -35,7 +35,12 @@ class SecurityFirewall:
     
     @staticmethod
     def check_ip_blocked(ip_address):
-        """Check if IP is blocked"""
+        """Check if IP is blocked (localhost never blocked in development)"""
+        import os
+        if os.getenv('FLASK_ENV', 'development') == 'development' and ip_address:
+            first = (ip_address or '').split(',')[0].strip()
+            if first in ('127.0.0.1', 'localhost', '::1'):
+                return False
         return ip_address in blocked_ips
     
     @staticmethod
@@ -184,6 +189,26 @@ class SecurityFirewall:
         return True, remaining
 
 
+def _bypass_firewall_in_dev():
+    """In development, bypass firewall entirely for easier testing"""
+    import os
+    return os.getenv('FLASK_ENV', 'development') != 'production'
+
+
+def _is_trusted_ip(ip_address):
+    """Bypass firewall for localhost in development"""
+    import os
+    if os.getenv('FLASK_ENV', 'development') == 'development':
+        if not ip_address:
+            return True
+        first_ip = (ip_address or '').split(',')[0].strip()
+        if first_ip in ('127.0.0.1', 'localhost', '::1'):
+            return True
+        if first_ip.startswith('::ffff:127.') or first_ip.startswith('127.'):
+            return True
+    return False
+
+
 def require_firewall(max_requests=10, window_minutes=1):
     """
     Decorator to apply firewall protection to routes
@@ -191,8 +216,16 @@ def require_firewall(max_requests=10, window_minutes=1):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
+            # In development, skip firewall for easier local testing
+            if _bypass_firewall_in_dev():
+                return f(*args, **kwargs)
+            
             # Get client IP
             ip_address = request.remote_addr or request.environ.get('HTTP_X_FORWARDED_FOR', 'unknown')
+            
+            # Bypass for trusted IPs
+            if _is_trusted_ip(ip_address):
+                return f(*args, **kwargs)
             
             # Check if IP is blocked
             if SecurityFirewall.check_ip_blocked(ip_address):

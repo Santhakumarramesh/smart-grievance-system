@@ -21,12 +21,13 @@ const availableLanguages = [
 
 // Get current language from localStorage or default to English
 function getCurrentLanguage() {
-    return localStorage.getItem('selectedLanguage') || 'en';
+    return localStorage.getItem('selectedLanguage') || localStorage.getItem('preferredLanguage') || 'en';
 }
 
 // Set language
 function setLanguage(langCode) {
     localStorage.setItem('selectedLanguage', langCode);
+    localStorage.setItem('preferredLanguage', langCode);  // Sync for translations.js
     applyTranslations(langCode);
     
     // Dispatch event for other components
@@ -35,24 +36,20 @@ function setLanguage(langCode) {
 
 // Apply translations to page
 function applyTranslations(langCode) {
-    if (typeof translations === 'undefined' || !translations[langCode]) {
-        console.warn('Translations not loaded for:', langCode);
-        return;
-    }
-    
-    const trans = translations[langCode];
-    
-    // Translate all elements with data-translate attribute
-    document.querySelectorAll('[data-translate]').forEach(element => {
-        const key = element.getAttribute('data-translate');
-        if (trans[key]) {
-            if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
-                element.placeholder = trans[key];
-            } else {
-                element.textContent = trans[key];
+    // Translate data-translate elements when translations.js is loaded
+    if (typeof translations !== 'undefined' && translations[langCode]) {
+        const trans = translations[langCode];
+        document.querySelectorAll('[data-translate]').forEach(element => {
+            const key = element.getAttribute('data-translate');
+            if (trans[key]) {
+                if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                    element.placeholder = trans[key];
+                } else {
+                    element.textContent = trans[key];
+                }
             }
-        }
-    });
+        });
+    }
     
     // Update page direction for RTL languages if needed
     document.documentElement.setAttribute('lang', langCode);
