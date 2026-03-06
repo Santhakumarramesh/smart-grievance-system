@@ -361,22 +361,21 @@
             btn.disabled = true;
 
             setTimeout(() => {
-                // Check demo users
+                // Check demo users - use DEMO_USERS from demo-system for correct IDs (citizen id:5)
                 let user = null;
-                if (window.grievanceSystem && window.grievanceSystem.DEMO_MODE) {
-                    const demoUsers = [
-                        { email: 'admin@grievance.gov', password: 'admin123', role: 'ADMIN', name: 'Admin User', id: 1, phone: '9999999999' },
-                        { email: 'electricity@grievance.gov', password: 'officer123', role: 'OFFICER', name: 'Electricity Officer', department: 'Electricity', id: 2, phone: '9876543210' },
-                        { email: 'water@grievance.gov', password: 'officer123', role: 'OFFICER', name: 'Water Officer', department: 'Water Supply', id: 3, phone: '9876543211' },
-                        { email: 'citizen@example.com', password: 'citizen123', role: 'CITIZEN', name: 'Demo Citizen', id: 4, phone: '9123456789' }
-                    ];
-                    user = demoUsers.find(u => u.email === email && u.password === password);
+                if (window.grievanceSystem && window.grievanceSystem.DEMO_USERS) {
+                    user = grievanceSystem.DEMO_USERS.find(u => u.email === email && u.password === password);
+                    // Alias: electricity@grievance.gov -> electricity.officer
+                    if (!user && email === 'electricity@grievance.gov') {
+                        const officer = grievanceSystem.DEMO_USERS.find(u => u.email === 'electricity.officer@grievance.gov' && u.password === password);
+                        if (officer) user = officer;
+                    }
                 }
 
-                // Check registered users
+                // Check registered users (allUsers)
                 if (!user) {
-                    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-                    user = registeredUsers.find(u => u.email === email && u.password === password);
+                    const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
+                    user = allUsers.find(u => u.email === email && u.password === password);
                 }
 
                 if (user) {
@@ -392,7 +391,7 @@
                     setTimeout(() => {
                         if (user.role === 'ADMIN') {
                             window.location.href = 'admin.html';
-                        } else if (user.role === 'OFFICER') {
+                        } else if (['OFFICER', 'DEPARTMENT_HEAD', 'FIELD_WORKER'].includes(user.role)) {
                             window.location.href = 'officer.html';
                         } else {
                             window.location.href = 'profile.html';
