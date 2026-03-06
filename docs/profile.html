@@ -252,6 +252,13 @@
     </style>
 </head>
 <body>
+    <noscript>
+        <div style="padding: 40px; text-align: center; font-family: sans-serif;">
+            <h2>JavaScript required</h2>
+            <p>Please enable JavaScript to use the citizen portal.</p>
+            <a href="login.html" style="color: #1e40af;">Go to Login</a>
+        </div>
+    </noscript>
     <header class="header">
         <div class="header-content">
             <h1>🇮🇳 My Profile</h1>
@@ -325,11 +332,6 @@
 
     <script src="demo-system.js"></script>
     <script>
-        // Check if logged in
-        if (!grievanceSystem.isLoggedIn()) {
-            window.location.href = 'login.html';
-        }
-
         function formatDate(dateString) {
             if (!dateString) return 'N/A';
             const date = new Date(dateString);
@@ -353,12 +355,17 @@
                 return;
             }
 
-            // Display user info
-            document.getElementById('userName').textContent = user.name || 'User';
-            document.getElementById('userRole').textContent = user.role || 'CITIZEN';
-            document.getElementById('userEmail').textContent = user.email || 'N/A';
-            document.getElementById('userPhone').textContent = user.phone || 'N/A';
-            document.getElementById('memberSince').textContent = formatDate(user.registeredAt) || 'Recently';
+            // Display user info (ensure elements exist)
+            const userNameEl = document.getElementById('userName');
+            if (userNameEl) userNameEl.textContent = user.name || 'User';
+            const roleEl = document.getElementById('userRole');
+            if (roleEl) roleEl.textContent = user.role || 'CITIZEN';
+            const emailEl = document.getElementById('userEmail');
+            if (emailEl) emailEl.textContent = user.email || 'N/A';
+            const phoneEl = document.getElementById('userPhone');
+            if (phoneEl) phoneEl.textContent = user.phone || 'N/A';
+            const memberEl = document.getElementById('memberSince');
+            if (memberEl) memberEl.textContent = formatDate(user.registeredAt) || 'Recently';
 
             // Load complaints
             const complaints = grievanceSystem.getUserGrievances();
@@ -368,12 +375,16 @@
             const pending = complaints.filter(c => !['Resolved', 'Closed'].includes(c.status)).length;
             const resolved = complaints.filter(c => c.status === 'Resolved' || c.status === 'Closed').length;
 
-            document.getElementById('totalCount').textContent = total;
-            document.getElementById('pendingCount').textContent = pending;
-            document.getElementById('resolvedCount').textContent = resolved;
+            const totalEl = document.getElementById('totalCount');
+            if (totalEl) totalEl.textContent = total;
+            const pendingEl = document.getElementById('pendingCount');
+            if (pendingEl) pendingEl.textContent = pending;
+            const resolvedEl = document.getElementById('resolvedCount');
+            if (resolvedEl) resolvedEl.textContent = resolved;
 
             // Display complaints
             const container = document.getElementById('complaintsContainer');
+            if (!container) return;
             
             if (complaints.length === 0) {
                 container.innerHTML = `
@@ -416,7 +427,22 @@
         }
 
         // Load profile on page load
-        window.addEventListener('DOMContentLoaded', loadProfile);
+        window.addEventListener('DOMContentLoaded', function() {
+            try {
+                if (typeof grievanceSystem === 'undefined') {
+                    document.getElementById('complaintsContainer').innerHTML = '<div class="empty-state"><p>Please <a href="login.html" style="color:#1e40af;">login</a> to view your profile.</p></div>';
+                    return;
+                }
+                if (!grievanceSystem.isLoggedIn()) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                loadProfile();
+            } catch (e) {
+                console.error('Profile load error:', e);
+                document.getElementById('complaintsContainer').innerHTML = '<div class="empty-state"><p>Error loading profile. <a href="login.html" style="color:#1e40af;">Try logging in again</a>.</p></div>';
+            }
+        });
     </script>
 </body>
 </html>
