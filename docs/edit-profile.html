@@ -236,7 +236,7 @@
         <div class="header-content">
             <h1>✏️ Edit Profile</h1>
             <div>
-                <a href="profile.html" class="btn btn-secondary" style="text-decoration: none;">Back to Profile</a>
+                <a href="#" id="backLink" class="btn btn-secondary" style="text-decoration: none;">Back</a>
             </div>
         </div>
     </header>
@@ -323,7 +323,7 @@
 
                 <div class="btn-actions">
                     <button type="submit" class="btn btn-primary">💾 Save Changes</button>
-                    <button type="button" class="btn btn-secondary" onclick="window.location.href='profile.html'">Cancel</button>
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
                 </div>
             </form>
         </div>
@@ -336,6 +336,17 @@
         }
 
         const user = grievanceSystem.getUser();
+        
+        function getProfileRedirect() {
+            if (['OFFICER', 'DEPARTMENT_HEAD', 'FIELD_WORKER'].includes(user.role)) return 'officer-profile.html';
+            if (user.role === 'ADMIN') return 'admin.html';
+            return 'profile.html';
+        }
+        
+        document.getElementById('backLink').href = getProfileRedirect();
+        document.getElementById('backLink').textContent = user.role === 'ADMIN' ? 'Back to Admin' : 
+            ['OFFICER', 'DEPARTMENT_HEAD', 'FIELD_WORKER'].includes(user.role) ? 'Back to Profile' : 'Back to Profile';
+        document.getElementById('cancelBtn').onclick = () => { window.location.href = getProfileRedirect(); };
         let pendingEmailChange = null;
         let pendingPhoneChange = null;
 
@@ -360,7 +371,7 @@
             if (user.role === 'ADMIN') {
                 document.getElementById('email').disabled = false;
                 document.getElementById('phone').disabled = false;
-                document.querySelector('.protected-badge').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.protected-badge').forEach(el => el.style.display = 'none');
             }
         }
 
@@ -447,7 +458,7 @@
                 if (result.success) {
                     showAlert('✅ Profile updated successfully!', 'success');
                     setTimeout(() => {
-                        window.location.href = 'profile.html';
+                        window.location.href = getProfileRedirect();
                     }, 2000);
                 } else if (result.requiresOTP) {
                     showAlert('⚠️ ' + result.message, 'warning');

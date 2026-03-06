@@ -435,7 +435,7 @@
                 showAlert('✅ Email verified successfully! Redirecting to login...', 'success');
                 
                 setTimeout(() => {
-                    window.location.href = '/login.html';
+                    window.location.href = 'login.html';
                 }, 2000);
                 
             } catch (error) {
@@ -505,7 +505,7 @@
             if (!userEmail) {
                 showAlert('❌ No email found. Redirecting to registration...', 'error');
                 setTimeout(() => {
-                    window.location.href = '/register.html';
+                    window.location.href = 'register.html';
                 }, 2000);
                 return;
             }

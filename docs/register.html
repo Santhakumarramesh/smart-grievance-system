@@ -398,6 +398,7 @@
         </div>
     </div>
 
+    <script src="demo-system.js"></script>
     <script>
         function showAlert(message, type) {
             const alertContainer = document.getElementById('alertContainer');
@@ -502,9 +503,10 @@
 
             // Simulate API delay
             setTimeout(() => {
-                // Check if email already exists
-                const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-                const emailExists = existingUsers.some(u => u.email === userData.email);
+                const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
+                const demoEmails = (window.grievanceSystem && window.grievanceSystem.DEMO_USERS) 
+                    ? window.grievanceSystem.DEMO_USERS.map(u => u.email) : [];
+                const emailExists = allUsers.some(u => u.email === userData.email) || demoEmails.includes(userData.email);
 
                 if (emailExists) {
                     showAlert('❌ Email already registered! Please login instead.', 'error');
@@ -514,9 +516,24 @@
                     return;
                 }
 
-                // Save to localStorage (demo mode)
-                existingUsers.push(userData);
-                localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
+                // Assign ID and save to allUsers (matches login check)
+                const maxId = Math.max(0, ...(window.grievanceSystem?.DEMO_USERS?.map(u => u.id) || [0]), ...allUsers.map(u => u.id || 0));
+                const newUser = {
+                    id: maxId + 1,
+                    name: `${userData.firstName} ${userData.lastName}`.trim(),
+                    email: userData.email,
+                    phone: userData.phone,
+                    password: userData.password,
+                    dob: userData.dob,
+                    gender: userData.gender,
+                    address: userData.aadhaar ? 'Registered' : '',
+                    aadhaar: userData.aadhaar || '',
+                    role: 'CITIZEN',
+                    hierarchyLevel: 4,
+                    registeredAt: userData.registeredAt
+                };
+                allUsers.push(newUser);
+                localStorage.setItem('allUsers', JSON.stringify(allUsers));
 
                 // Show success
                 showAlert('✅ Registration successful! Redirecting to login...', 'success');

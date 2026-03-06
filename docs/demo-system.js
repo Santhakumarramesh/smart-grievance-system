@@ -305,7 +305,7 @@ function updateUserProfile(userId, updates, requiresVerification = false) {
         }
     }
     
-    // Update user
+    // Update user in allUsers
     let users = JSON.parse(localStorage.getItem('allUsers') || '[]');
     const userIndex = users.findIndex(u => u.id === userId);
     
@@ -313,12 +313,19 @@ function updateUserProfile(userId, updates, requiresVerification = false) {
         users[userIndex] = { ...users[userIndex], ...updates };
         localStorage.setItem('allUsers', JSON.stringify(users));
         
-        // Update current user if editing self
         if (user.id === userId) {
             setUser(users[userIndex]);
         }
         
         return { success: true, user: users[userIndex] };
+    }
+    
+    // Demo user (not in allUsers) - update session only
+    if (user.id === userId) {
+        const currentUser = getUser();
+        const updated = { ...currentUser, ...updates };
+        setUser(updated);
+        return { success: true, user: updated };
     }
     
     throw new Error('User not found');
