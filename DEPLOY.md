@@ -105,12 +105,10 @@ The `docs/` folder is deployed to GitHub Pages for a **static demo** (no backend
 
 To enable GitHub Pages:
 1. Repo → Settings → Pages
-2. **Source: GitHub Actions** (not "Deploy from branch")
-3. The workflow `.github/workflows/jekyll-gh-pages.yml` deploys `docs/` on every push to main
+2. Source: Deploy from branch
+3. Branch: main, Folder: /docs
 
-If Pages shows README instead of the demo:
-- Ensure Source is set to **GitHub Actions**
-- Or: Source = Deploy from branch, Branch = main, Folder = **/docs**
+If Pages shows README instead of the demo, ensure the folder is set to **/docs**.
 
 ---
 

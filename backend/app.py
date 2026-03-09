@@ -8,8 +8,8 @@ load_dotenv()
 
 from backend.config import Config
 from backend.extensions import db
-from backend import models  # noqa: F401 - register all models including addons
-from backend.models_addons import AuditLog, GrievanceRating  # noqa: F401
+from backend import models
+from backend.models_addons import AuditLog, GrievanceRating
 from backend.routes.auth import auth_bp
 from backend.routes.grievances import grievances_bp
 from backend.routes.admin import admin_bp
@@ -40,21 +40,20 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(addons_bp, url_prefix='/api')
     
-    # Serve frontend files
     @app.route('/')
     def index():
         return send_from_directory(app.static_folder, 'index.html')
     
-    @app.route('/<path:path>')
-    def serve_static(path):
-        if os.path.exists(os.path.join(app.static_folder, path)):
-            return send_from_directory(app.static_folder, path)
-        return send_from_directory(app.static_folder, 'index.html')
-    
-    # Health check endpoint
     @app.route('/health')
     def health():
         return {'status': 'healthy', 'demo_mode': Config.DEMO_EMAIL_MODE, 'security': 'enabled'}, 200
+    
+    @app.route('/<path:path>')
+    def serve_static(path):
+        filepath = os.path.join(app.static_folder, path)
+        if os.path.exists(filepath):
+            return send_from_directory(app.static_folder, path)
+        return send_from_directory(app.static_folder, 'index.html')
     
     # Create tables and load ML model
     with app.app_context():
@@ -71,10 +70,8 @@ def create_app():
         print("   - SQL Injection Prevention: Active")
         print("   - IP Blocking: Active")
         
-        # Start background scheduler for comment escalation
         scheduler.start()
         
-        # In development, clear any IP blocks (e.g. from prior testing)
         if os.getenv('FLASK_ENV', 'development') == 'development':
             from backend.security.firewall import blocked_ips
             blocked_ips.difference_update(('127.0.0.1', 'localhost', '::1'))

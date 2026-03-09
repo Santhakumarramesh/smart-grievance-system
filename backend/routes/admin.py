@@ -5,6 +5,7 @@ from backend.models import User, Grievance, GrievanceUpdate, Notification
 from backend.extensions import db
 from backend.routes.auth import get_current_user_from_token
 from backend.services.email_service import EmailService
+from backend.services.model_retrain import retrain_model, get_retrain_status
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -417,6 +418,47 @@ def mark_notification_read(notification_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/retrain-model', methods=['POST'])
+def trigger_retrain():
+    """
+    Trigger ML model retraining (Admin only).
+    Retrains on data/indian_grievance_dataset.csv and reloads the classifier.
+    """
+    try:
+        user = get_current_user_from_token()
+        if not user or user.role != 'ADMIN':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        success, message = retrain_model()
+        if success:
+            status = get_retrain_status()
+            return jsonify({
+                'message': message,
+                'metadata': status
+            }), 200
+        return jsonify({'error': message}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@admin_bp.route('/model-status', methods=['GET'])
+def get_model_status():
+    """
+    Get current ML model training metadata (Admin only).
+    """
+    try:
+        user = get_current_user_from_token()
+        if not user or user.role != 'ADMIN':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        status = get_retrain_status()
+        if status:
+            return jsonify(status), 200
+        return jsonify({'message': 'No training metadata found. Run retrain first.'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 @admin_bp.route('/notifications/mark-all-read', methods=['PUT'])
 def mark_all_notifications_read():
