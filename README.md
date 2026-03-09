@@ -69,7 +69,7 @@ Open **http://localhost:8000**
 4. Start: `gunicorn "backend.app:create_app()" --bind 0.0.0.0:$PORT`
 5. Add env: `FLASK_ENV=production`, `SECRET_KEY`, `DEMO_EMAIL_MODE=true`
 
-See [DEPLOY.md](DEPLOY.md) for details.
+See [DEPLOY.md](DEPLOY.md) for details. For auto-deploy on push to Render, add `.github/workflows/deploy.yml` via the GitHub web UI and set `RENDER_DEPLOY_HOOK_URL` in repo Secrets.
 
 ### GitHub Pages (Static Demo)
 
