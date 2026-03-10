@@ -43,6 +43,7 @@ env/
 *.sqlite
 *.sqlite3
 instance/
+backups/
 
 # ML Models (optional - include in repo for easy deployment)
 # ml/artifacts/*.joblib
