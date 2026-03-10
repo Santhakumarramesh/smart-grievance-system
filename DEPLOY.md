@@ -99,16 +99,20 @@ Open **http://localhost:8000**
 
 ---
 
-## GitHub Pages (Static frontend only)
+## GitHub Pages (Static demo)
 
-The `docs/` folder is deployed to GitHub Pages for a **static demo** (no backend). The full app with login, database, and APIs requires Render, Railway, or similar.
+The `docs/` folder is a **static demo** (no backend). The full app requires Render or similar.
 
-To enable GitHub Pages:
-1. Repo → Settings → Pages
-2. Source: Deploy from branch
-3. Branch: main, Folder: /docs
+**Option A — GitHub Actions (recommended):**
+1. Repo → Add file → Create new file → name: `.github/workflows/gh-pages.yml`
+2. Copy content from the `gh-pages.yml` file in this repo
+3. Repo → Settings → Pages → Source: **GitHub Actions**
 
-If Pages shows README instead of the demo, ensure the folder is set to **/docs**.
+**Option B — Deploy from branch:**
+1. Repo → Settings → Pages → Source: Deploy from branch
+2. Branch: main, Folder: /docs
+
+**Note:** Workflow files require PAT with `workflow` scope to push. Add via GitHub web UI if needed.
 
 ---
 
