@@ -214,7 +214,7 @@
                     </div>
                     <div>
                         <div class="stat-label">Complaint Details</div>
-                        <p style="margin-top: 0.5rem; line-height: 1.6;">${grievance.complaint_text}</p>
+                        <p style="margin-top: 0.5rem; line-height: 1.6;">${escapeHtml(grievance.complaint_text)}</p>
                     </div>
                     
                     <!-- Complainant Information -->
@@ -225,19 +225,19 @@
                                 ${grievance.complainant_name ? `
                                     <div>
                                         <small style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Name</small>
-                                        <strong>${grievance.complainant_name}</strong>
+                                        <strong>${escapeHtml(grievance.complainant_name)}</strong>
                                     </div>
                                 ` : ''}
                                 ${grievance.complainant_phone ? `
                                     <div>
                                         <small style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Phone</small>
-                                        <strong>📞 ${grievance.complainant_phone}</strong>
+                                        <strong>📞 ${escapeHtml(grievance.complainant_phone)}</strong>
                                     </div>
                                 ` : ''}
                                 ${grievance.complainant_email ? `
                                     <div>
                                         <small style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Email</small>
-                                        <strong>📧 ${grievance.complainant_email}</strong>
+                                        <strong>📧 ${escapeHtml(grievance.complainant_email)}</strong>
                                     </div>
                                 ` : ''}
                             </div>
@@ -405,11 +405,13 @@
                     // Auto-translate officer comments if language is not English
                     const showTranslation = isOfficer && selectedLang !== 'en';
                     
+                    const safeText = escapeHtml(comment.comment_text);
+                    const attrEscaped = (comment.comment_text || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
                     return `
-                        <div class="comment-item" data-comment-id="${comment.id}" data-comment-index="${index}" data-original-text="${comment.comment_text.replace(/"/g, '&quot;')}" style="background: ${bgColor}; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid ${borderColor}; margin-bottom: 1rem;">
+                        <div class="comment-item" data-comment-id="${comment.id}" data-comment-index="${index}" data-comment-text="${attrEscaped}" style="background: ${bgColor}; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid ${borderColor}; margin-bottom: 1rem;">
                             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
                                 <div>
-                                    <strong style="color: var(--text-primary);">${comment.user_name}</strong>
+                                    <strong style="color: var(--text-primary);">${escapeHtml(comment.user_name)}</strong>
                                     <span class="badge" style="margin-left: 0.5rem; background: ${roleColor}; color: white; font-size: 0.75rem;">${comment.user_role}</span>
                                 </div>
                                 <span style="font-size: 0.875rem; color: var(--text-secondary);">${formatDate(comment.created_at)}</span>
@@ -422,7 +424,7 @@
                                         <div style="display: inline-block; background: #10B981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">
                                             📝 ${languageNames[selectedLang]}
                                         </div>
-                                        <select class="comment-lang-select-${index}" onchange="changeCommentLanguage(${index}, this.value, '${comment.comment_text.replace(/'/g, "\\'")}')}" style="
+                                        <select class="comment-lang-select-${index}" onchange="changeCommentLanguage(${index}, this.value, this.closest('.comment-item').getAttribute('data-comment-text'))" style="
                                             padding: 4px 8px;
                                             border: 1px solid #D1D5DB;
                                             border-radius: 4px;
@@ -461,7 +463,7 @@
                                         📄 View Original Text
                                     </summary>
                                     <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #E5E7EB; color: var(--text-primary); line-height: 1.6;">
-                                        ${comment.comment_text}
+                                        ${safeText}
                                     </div>
                                 </details>
                                 
@@ -471,11 +473,11 @@
                             ` : `
                                 <!-- Original Text (No Translation Needed) -->
                                 <div style="color: var(--text-primary); line-height: 1.6;">
-                                    ${comment.comment_text}
+                                    ${safeText}
                                 </div>
                                 ${isOfficer ? `
                                     <div style="margin-top: 0.75rem;">
-                                        <select class="comment-lang-select-${index}" onchange="changeCommentLanguage(${index}, this.value, '${comment.comment_text.replace(/'/g, "\\'")}')}" style="
+                                        <select class="comment-lang-select-${index}" onchange="changeCommentLanguage(${index}, this.value, this.closest('.comment-item').getAttribute('data-comment-text'))" style="
                                             padding: 6px 12px;
                                             border: 2px solid #3B82F6;
                                             border-radius: 6px;
@@ -524,7 +526,7 @@
                 }
             } catch (error) {
                 document.getElementById('commentsList').innerHTML = 
-                    `<p class="alert alert-error">${error.message}</p>`;
+                    `<p class="alert alert-error">${escapeHtml(error.message)}</p>`;
             }
         }
 

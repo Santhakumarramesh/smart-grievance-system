@@ -1,6 +1,13 @@
 // API Base URL
 const API_BASE = window.location.origin + '/api';
 
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Token management
 function getToken() {
     return localStorage.getItem('token');

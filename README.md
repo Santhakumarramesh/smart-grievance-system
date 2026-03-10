@@ -2,6 +2,8 @@
 
 A citizen-centric grievance management platform for filing, tracking, and resolving complaints. Built for government departments with AI-powered department classification, role-based access, and automated workflows.
 
+> **For security auditors:** The **full app** (Flask + `frontend/`) uses a server-side database, JWT auth, and server-side validation. The `docs/` folder is a **static demo only** (localStorage, no backend). See [SECURITY.md](SECURITY.md).
+
 ## Two Modes
 
 | Mode | Path | Description |

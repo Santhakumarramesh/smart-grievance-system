@@ -788,8 +788,8 @@
                             <span class="badge ${getStatusBadgeClass(g.status)}">${g.status || 'Received'}</span>
                         </div>
                         <div class="grievance-content">
-                            <strong>${g.assigned_department}</strong><br>
-                            ${g.complaint_text.substring(0, 150)}${g.complaint_text.length > 150 ? '...' : ''}
+                            <strong>${escapeHtml(g.assigned_department)}</strong><br>
+                            ${escapeHtml(g.complaint_text.substring(0, 150))}${g.complaint_text.length > 150 ? '...' : ''}
                         </div>
                         <div class="grievance-footer">
                             <div style="display: flex; align-items: center; gap: 1rem;">
