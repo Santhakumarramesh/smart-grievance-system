@@ -442,6 +442,26 @@ def trigger_retrain():
         return jsonify({'error': str(e)}), 500
 
 
+@admin_bp.route('/reset-lockout/<email>', methods=['POST'])
+def reset_login_lockout(email):
+    """Reset login lockout for an email (Admin only)."""
+    try:
+        user = get_current_user_from_token()
+        if not user or user.role != 'ADMIN':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        from backend.models import FailedLoginAttempt
+        attempt = FailedLoginAttempt.query.filter_by(identifier=email).first()
+        if attempt:
+            attempt.attempt_count = 0
+            attempt.lockout_until = None
+            db.session.commit()
+        
+        return jsonify({'message': f'Lockout reset for {email}'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @admin_bp.route('/model-status', methods=['GET'])
 def get_model_status():
     """

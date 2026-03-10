@@ -98,6 +98,17 @@ class User(db.Model):
         }
 
 
+class FailedLoginAttempt(db.Model):
+    __tablename__ = 'failed_login_attempts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    identifier = db.Column(db.String(120), nullable=False, index=True)
+    attempt_count = db.Column(db.Integer, default=0)
+    lockout_until = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class OTPRequest(db.Model):
     __tablename__ = 'otp_requests'
     

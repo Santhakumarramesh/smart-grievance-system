@@ -2,9 +2,16 @@
 
 A citizen-centric grievance management platform for filing, tracking, and resolving complaints. Built for government departments with AI-powered department classification, role-based access, and automated workflows.
 
+## Two Modes
+
+| Mode | Path | Description |
+|------|------|--------------|
+| **Full app** | `frontend/` + Flask backend | Real database, JWT auth, ML classification. Run with `python run.py`. |
+| **Static demo** | `docs/` | localStorage-only demo for GitHub Pages. No backend, no real auth. |
+
 ## Features
 
-- **AI Department Classification** — ML model routes complaints to the right department (Water, Electricity, Roads, Sanitation, etc.)
+- **AI Department Classification** — ML model (~74% accuracy) routes complaints to the right department (Water, Electricity, Roads, Sanitation, etc.)
 - **Role-Based Access** — Citizens, Officers, and Admins with appropriate permissions
 - **Fraud Detection** — Content moderation, spam blocking, duplicate detection
 - **Comment & Escalation** — Officer-citizen communication with automatic escalation
@@ -73,13 +80,20 @@ See [DEPLOY.md](DEPLOY.md) for details. For auto-deploy on push to Render, add `
 
 ### GitHub Pages (Static Demo)
 
-The `docs/` folder provides a static demo. Enable in repo Settings → Pages → Source: branch `main`, folder `/docs`.
+The `docs/` folder is a **static demo only** — it uses localStorage, has no backend, and does not reflect the production app. Enable in repo Settings → Pages → Source: branch `main`, folder `/docs`.
 
 ## Tech Stack
 
 - **Backend:** Flask, SQLAlchemy, JWT
 - **ML:** scikit-learn, TF-IDF, Logistic Regression
 - **Frontend:** Vanilla JS, HTML5, CSS3
+
+## Security
+
+- **Auth:** JWT in Authorization header (CSRF-resistant; no cookies)
+- **Lockout:** 3 failed logins = 24-hour server-side lockout per email
+- **Rate limiting:** IP-based limits on login, registration, grievance submission
+- **Validation:** Server-side for all inputs; bleach sanitization for XSS
 
 ## License
 

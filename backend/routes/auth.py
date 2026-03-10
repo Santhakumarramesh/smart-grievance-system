@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from datetime import datetime, timedelta
 import jwt
 import hashlib
-from backend.models import User, OTPRequest
+from backend.models import User, OTPRequest, FailedLoginAttempt
 from backend.extensions import db
 from backend.config import Config
 from backend.services.otp_service import OTPService
@@ -208,12 +208,17 @@ def verify_otp():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+LOGIN_MAX_ATTEMPTS = 3
+LOGIN_LOCKOUT_HOURS = 24
+
+
 @auth_bp.route('/login', methods=['POST'])
-@require_firewall(max_requests=10, window_minutes=5)  # Max 10 login attempts per 5 minutes
+@require_firewall(max_requests=10, window_minutes=5)
 def login():
     """
     Login user
     Required: email, password
+    Server-side lockout: 3 failed attempts = 24-hour lockout per email
     """
     try:
         data = request.get_json()
@@ -223,18 +228,38 @@ def login():
         if not email or not password:
             return jsonify({'error': 'Email and password are required'}), 400
         
-        # Validate email
         is_valid_email, normalized_email, email_error = SecurityFirewall.validate_email_address(email)
         if not is_valid_email:
             SecurityLogger.log_authentication_failure(request.remote_addr, email)
             return jsonify({'error': 'Invalid email format'}), 400
         
-        # Find user
+        attempt = FailedLoginAttempt.query.filter_by(identifier=normalized_email).first()
+        if attempt and attempt.lockout_until and datetime.utcnow() < attempt.lockout_until:
+            remaining = (attempt.lockout_until - datetime.utcnow()).total_seconds()
+            return jsonify({
+                'error': 'Account temporarily locked',
+                'message': f'Too many failed attempts. Try again in {int(remaining // 3600)} hours.',
+                'lockout_until': attempt.lockout_until.isoformat()
+            }), 429
+        
         user = User.query.filter_by(email=normalized_email).first()
         
         if not user or not user.check_password(password):
+            if not attempt:
+                attempt = FailedLoginAttempt(identifier=normalized_email, attempt_count=0)
+                db.session.add(attempt)
+            attempt.attempt_count += 1
+            if attempt.attempt_count >= LOGIN_MAX_ATTEMPTS:
+                attempt.lockout_until = datetime.utcnow() + timedelta(hours=LOGIN_LOCKOUT_HOURS)
+            attempt.updated_at = datetime.utcnow()
+            db.session.commit()
             SecurityLogger.log_authentication_failure(request.remote_addr, normalized_email)
             return jsonify({'error': 'Invalid email or password'}), 401
+        
+        if attempt:
+            attempt.attempt_count = 0
+            attempt.lockout_until = None
+            db.session.commit()
         
         # Check if account is suspended
         if user.account_suspended:

@@ -61,7 +61,8 @@ async function apiCall(endpoint, options = {}) {
     }
 
     if (!response.ok) {
-        throw new Error(data.error || 'Something went wrong');
+        const msg = data.message || data.error || 'Something went wrong';
+        throw new Error(msg);
     }
 
     return data;
