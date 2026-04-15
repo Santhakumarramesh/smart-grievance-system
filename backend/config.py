@@ -46,6 +46,7 @@ class Config:
     MODEL_METADATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ml', 'artifacts', 'train_metadata.json')
     ENABLE_STARTUP_MODEL_LOAD = os.environ.get('ENABLE_STARTUP_MODEL_LOAD', 'true').lower() == 'true'
     ENABLE_SCHEDULER = os.environ.get('ENABLE_SCHEDULER', 'true').lower() == 'true'
+    SCHEDULER_AUTOSTART = os.environ.get('SCHEDULER_AUTOSTART', 'false').lower() == 'true'
     ENABLE_SCHEDULED_RETRAIN = os.environ.get('ENABLE_SCHEDULED_RETRAIN', 'true').lower() == 'true'
     ML_AUTO_ASSIGN_CONFIDENCE_THRESHOLD = float(os.environ.get('ML_AUTO_ASSIGN_CONFIDENCE_THRESHOLD', '0.65'))
     ML_MANUAL_REVIEW_DEPARTMENT = os.environ.get('ML_MANUAL_REVIEW_DEPARTMENT', 'Manual Review Queue')

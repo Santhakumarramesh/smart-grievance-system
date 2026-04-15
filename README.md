@@ -21,6 +21,7 @@ A citizen-centric grievance management platform for filing, tracking, and resolv
 - **Multi-Language Support** — Indian language stop words for better classification
 - **Scheduled Retraining** — Model retrains weekly (configurable), supports manual retrain, and avoids overlapping retrain jobs
 - **Public Transparency Feed** — Anonymized recently resolved cases exposed via backend API
+- **Centralized Notifications** — Standardized email templates and in-app notification helpers for comments, escalations, fraud review, and suspension flows
 
 ## Role Model and Permissions
 
@@ -139,6 +140,15 @@ python manage.py seed
 - `ENABLE_SCHEDULED_RETRAIN` toggles scheduler-based retraining without disabling comment escalation.
 
 When model confidence is below threshold, grievances are queued for manual triage and department corrections are logged for future retraining analysis.
+
+## Background Jobs Strategy
+
+- Background jobs (comment escalation + optional scheduled retraining) are implemented in `backend/services/scheduler.py`.
+- Scheduler autostart is **disabled by default** to avoid duplicate jobs across multiple web workers.
+- Enable scheduler on exactly one instance using:
+  - `ENABLE_SCHEDULER=true`
+  - `SCHEDULER_AUTOSTART=true`
+- For all other app instances, keep `SCHEDULER_AUTOSTART=false`.
 
 ## Deployment
 

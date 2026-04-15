@@ -59,6 +59,13 @@ Add in Render Dashboard → Environment:
 | `ML_AUTO_ASSIGN_CONFIDENCE_THRESHOLD` | 0.65 |
 | `ML_MANUAL_REVIEW_DEPARTMENT` | Manual Review Queue |
 | `ENABLE_SCHEDULED_RETRAIN` | true |
+| `ENABLE_SCHEDULER` | true |
+| `SCHEDULER_AUTOSTART` | false (set true on exactly one worker only) |
+
+### Background-job safety
+
+- Keep `SCHEDULER_AUTOSTART=false` on normal web instances.
+- Enable `SCHEDULER_AUTOSTART=true` only on a single dedicated process/instance so escalations and retraining do not run multiple times in parallel.
 
 ### Step 4: Deploy
 Click **Create Web Service**. Render will build and deploy. Your app will be live at:

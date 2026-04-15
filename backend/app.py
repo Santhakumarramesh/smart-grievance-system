@@ -82,11 +82,14 @@ def create_app():
         
         should_start_scheduler = (
             app.config['ENABLE_SCHEDULER']
+            and app.config.get('SCHEDULER_AUTOSTART', False)
             and not _is_flask_db_command()
             and not app.testing
         )
         if should_start_scheduler:
             scheduler.start()
+        elif app.config['ENABLE_SCHEDULER'] and not app.testing:
+            print("⏸ Scheduler autostart is disabled. Set SCHEDULER_AUTOSTART=true on exactly one process to run background jobs.")
         
         if os.getenv('FLASK_ENV', 'development') == 'development':
             from backend.security.firewall import blocked_ips

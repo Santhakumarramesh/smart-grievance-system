@@ -1,12 +1,13 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime, timedelta
 import json
-from backend.models import Grievance, GrievanceUpdate, GrievanceComment, User, FraudReport, Notification
+from backend.models import Grievance, GrievanceUpdate, GrievanceComment, User, FraudReport
 from backend.extensions import db
 from backend.config import Config
 from backend.routes.auth import get_current_user_from_token
 from backend.services.classifier import classifier
 from backend.services.email_service import EmailService
+from backend.services.notification_service import NotificationService
 from backend.services.ai_image_detector import AIImageDetector
 from backend.services.comment_escalation import check_and_escalate_comments, escalate_comment_manually
 from backend.services.audit_service import log_audit
@@ -249,7 +250,7 @@ def submit_grievance():
         if requires_manual_triage:
             admins = User.query.filter(User.role.in_(ADMIN_ROLE_VALUES)).all()
             for admin in admins:
-                triage_notification = Notification(
+                NotificationService.queue_notification(
                     user_id=admin.id,
                     title=f'Manual ML Triage Needed - Grievance #{grievance.id}',
                     message=(
@@ -259,9 +260,8 @@ def submit_grievance():
                     ),
                     notification_type='triage_review',
                     related_grievance_id=grievance.id,
-                    is_read=False
+                    is_read=False,
                 )
-                db.session.add(triage_notification)
         
         db.session.commit()
         
@@ -545,8 +545,7 @@ def add_comment(grievance_id):
         )
         
         db.session.add(comment)
-        tracking_url = EmailService.tracking_url(grievance_id)
-        pending_emails = []
+        pending_email_jobs = []
         
         # Prepare notification recipients and escalation metadata before commit.
         if is_role(user, 'CITIZEN'):
@@ -560,34 +559,25 @@ def add_comment(grievance_id):
                     comment.notification_sent_at = datetime.utcnow()
                     comment.response_deadline = datetime.utcnow() + timedelta(hours=24)  # 24 hours to respond
 
-                    pending_emails.append((
-                        assigned_officer.email,
-                        f'🔔 New Comment on Grievance #{grievance_id} - Response Required',
-                        f"""
-Dear {assigned_officer.name},
-
-A citizen has added a new comment on Grievance #{grievance_id} assigned to you:
-
-"{comment_text}"
-
-⚠️ Please respond within 24 hours to avoid escalation to your superior.
-
-View and respond at: {tracking_url}
-
-Best regards,
-Smart Grievance System
-                        """
+                    pending_email_jobs.append((
+                        EmailService.send_citizen_comment_alert,
+                        {
+                            'officer_email': assigned_officer.email,
+                            'officer_name': assigned_officer.name,
+                            'grievance_id': grievance_id,
+                            'comment_text': comment_text,
+                            'response_hours': 24,
+                        }
                     ))
                     
                     # Create in-app notification
-                    notification = Notification(
+                    NotificationService.queue_notification(
                         user_id=assigned_officer.id,
                         title=f'New Comment on Grievance #{grievance_id}',
                         message=f'Citizen has commented: "{comment_text[:100]}..." - Response required within 24 hours.',
                         notification_type='comment',
-                        related_grievance_id=grievance_id
+                        related_grievance_id=grievance_id,
                     )
-                    db.session.add(notification)
             else:
                 # If no specific officer assigned, notify department head
                 dept_head = User.query.filter(
@@ -600,48 +590,44 @@ Smart Grievance System
                     comment.notification_sent_at = datetime.utcnow()
                     comment.response_deadline = datetime.utcnow() + timedelta(hours=24)
 
-                    pending_emails.append((
-                        dept_head.email,
-                        f'New Comment on Grievance #{grievance_id}',
-                        f"""
-Dear {dept_head.name},
-
-A citizen has added a comment on an unassigned grievance #{grievance_id}:
-
-"{comment_text}"
-
-View at: {tracking_url}
-
-Best regards,
-Smart Grievance System
-                        """
+                    pending_email_jobs.append((
+                        EmailService.send_citizen_comment_alert,
+                        {
+                            'officer_email': dept_head.email,
+                            'officer_name': dept_head.name,
+                            'grievance_id': grievance_id,
+                            'comment_text': comment_text,
+                            'response_hours': 24,
+                        }
                     ))
+                    NotificationService.queue_notification(
+                        user_id=dept_head.id,
+                        title=f'New Comment on Grievance #{grievance_id}',
+                        message=f'Citizen has commented: "{comment_text[:100]}..." - Response required within 24 hours.',
+                        notification_type='comment',
+                        related_grievance_id=grievance_id,
+                    )
         else:
             # Notify citizen
             citizen = User.query.get(grievance.user_id)
             if citizen:
-                pending_emails.append((
-                    citizen.email,
-                    f'New Response on Your Grievance #{grievance_id}',
-                    f"""
-Dear {citizen.name},
-
-{user.name} from {grievance.assigned_department} department has responded to your grievance:
-
-"{comment_text}"
-
-View and respond at: {tracking_url}
-
-Best regards,
-Smart Grievance System
-                    """
+                pending_email_jobs.append((
+                    EmailService.send_officer_reply_alert,
+                    {
+                        'citizen_email': citizen.email,
+                        'citizen_name': citizen.name,
+                        'grievance_id': grievance_id,
+                        'officer_name': user.name,
+                        'department': grievance.assigned_department,
+                        'comment_text': comment_text,
+                    }
                 ))
 
         db.session.commit()
 
-        for to_email, subject, body in pending_emails:
+        for email_fn, kwargs in pending_email_jobs:
             try:
-                EmailService.send_email(to_email, subject, body)
+                email_fn(**kwargs)
             except Exception as email_error:
                 print(f"Failed to send comment notification email: {email_error}")
         
@@ -716,6 +702,7 @@ def report_fraud(grievance_id):
             status='Pending'
         )
         db.session.add(fraud_report)
+        pending_email_jobs = []
         
         # Update grievance status
         grievance.status = 'Under Investigation - Fraud Reported'
@@ -734,30 +721,58 @@ def report_fraud(grievance_id):
         # Notify admin
         admins = User.query.filter(User.role.in_(ADMIN_ROLE_VALUES)).all()
         for admin in admins:
-            admin_notification = Notification(
+            NotificationService.queue_notification(
                 user_id=admin.id,
                 title=f'Fraud Report - Grievance #{grievance_id}',
                 message=f'Officer {user.name} reported grievance #{grievance_id} as {fraud_type.replace("_", " ")}. Immediate review required.',
                 notification_type='fraud_report',
                 related_grievance_id=grievance_id,
-                is_read=False
+                is_read=False,
             )
-            db.session.add(admin_notification)
+            pending_email_jobs.append((
+                EmailService.send_fraud_report_alert,
+                {
+                    'admin_email': admin.email,
+                    'admin_name': admin.name,
+                    'grievance_id': grievance_id,
+                    'officer_name': user.name,
+                    'fraud_type': fraud_type.replace('_', ' '),
+                    'description': description,
+                }
+            ))
         
         # Notify complainant (warning)
         complainant = User.query.get(grievance.user_id)
         if complainant:
-            complainant_notification = Notification(
+            NotificationService.queue_notification(
                 user_id=complainant.id,
                 title=f'Complaint Under Review - Grievance #{grievance_id}',
                 message=f'Your complaint is under investigation for verification. An officer visited the site and raised concerns. Admin will review and contact you if needed.',
                 notification_type='fraud_warning',
                 related_grievance_id=grievance_id,
-                is_read=False
+                is_read=False,
             )
-            db.session.add(complainant_notification)
+            pending_email_jobs.append((
+                EmailService.send_fraud_review_notice,
+                {
+                    'citizen_email': complainant.email,
+                    'citizen_name': complainant.name,
+                    'grievance_id': grievance_id,
+                    'stage': 'under_review',
+                    'details': (
+                        f'Officer {user.name} submitted a fraud review request for your complaint. '
+                        'Admin verification is in progress.'
+                    ),
+                }
+            ))
         
         db.session.commit()
+
+        for email_fn, kwargs in pending_email_jobs:
+            try:
+                email_fn(**kwargs)
+            except Exception as email_error:
+                print(f"Failed to send fraud-report notification email: {email_error}")
         
         return jsonify({
             'message': 'Fraud report submitted successfully. Admin will review.',
@@ -838,24 +853,37 @@ def take_fraud_action(report_id):
         if not complainant:
             return jsonify({'error': 'Complainant not found'}), 404
         
-        if action == 'verify':
+        pending_email_jobs = []
+        
+        normalized_action = 'verify' if action == 'warn' else action
+
+        if normalized_action == 'verify':
             # Fraud verified - issue warning
             report.status = 'Verified'
             report.action_taken = 'Warning Issued'
             complainant.fraud_warnings += 1
             
             # Notify complainant
-            notification = Notification(
+            NotificationService.queue_notification(
                 user_id=complainant.id,
                 title='Warning: Fraudulent Complaint Verified',
                 message=f'Your complaint (Grievance #{report.grievance_id}) has been verified as fraudulent. This is warning #{complainant.fraud_warnings}. Repeated fraudulent complaints will result in account suspension.',
                 notification_type='fraud_verified',
                 related_grievance_id=report.grievance_id,
-                is_read=False
+                is_read=False,
             )
-            db.session.add(notification)
+            pending_email_jobs.append((
+                EmailService.send_account_warning_email,
+                {
+                    'citizen_email': complainant.email,
+                    'citizen_name': complainant.name,
+                    'grievance_id': report.grievance_id,
+                    'warning_count': complainant.fraud_warnings,
+                    'reason': admin_notes or report.description,
+                }
+            ))
             
-        elif action == 'suspend':
+        elif normalized_action == 'suspend':
             # Suspend account
             report.status = 'Verified'
             report.action_taken = 'Account Suspended'
@@ -864,20 +892,46 @@ def take_fraud_action(report_id):
             complainant.suspension_reason = f'Multiple fraudulent complaints. Latest: Grievance #{report.grievance_id}'
             
             # Notify complainant
-            notification = Notification(
+            NotificationService.queue_notification(
                 user_id=complainant.id,
                 title='Account Suspended - Fraudulent Activity',
                 message=f'Your account has been suspended due to repeated fraudulent complaints. Contact admin for appeal.',
                 notification_type='account_suspended',
                 related_grievance_id=report.grievance_id,
-                is_read=False
+                is_read=False,
             )
-            db.session.add(notification)
+            pending_email_jobs.append((
+                EmailService.send_account_suspension_email,
+                {
+                    'citizen_email': complainant.email,
+                    'citizen_name': complainant.name,
+                    'reason': complainant.suspension_reason,
+                    'grievance_id': report.grievance_id,
+                }
+            ))
             
-        elif action == 'dismiss':
+        elif normalized_action == 'dismiss':
             # Fraud report dismissed - complaint was genuine
             report.status = 'Dismissed'
             report.action_taken = 'Report Dismissed - Complaint Genuine'
+            NotificationService.queue_notification(
+                user_id=complainant.id,
+                title='Fraud Review Closed - Complaint Validated',
+                message=f'Fraud report for Grievance #{report.grievance_id} has been dismissed. Your complaint remains active.',
+                notification_type='fraud_review_closed',
+                related_grievance_id=report.grievance_id,
+                is_read=False,
+            )
+            pending_email_jobs.append((
+                EmailService.send_fraud_review_notice,
+                {
+                    'citizen_email': complainant.email,
+                    'citizen_name': complainant.name,
+                    'grievance_id': report.grievance_id,
+                    'stage': 'dismissed',
+                    'details': 'Fraud report was dismissed by admin. Your complaint remains valid and in normal workflow.',
+                }
+            ))
             
         else:
             return jsonify({'error': 'Invalid action'}), 400
@@ -886,9 +940,15 @@ def take_fraud_action(report_id):
         report.reviewed_at = datetime.utcnow()
         
         db.session.commit()
+
+        for email_fn, kwargs in pending_email_jobs:
+            try:
+                email_fn(**kwargs)
+            except Exception as email_error:
+                print(f"Failed to send fraud-action notification email: {email_error}")
         
         return jsonify({
-            'message': f'Action taken successfully: {action}',
+            'message': f'Action taken successfully: {normalized_action}',
             'complainant_warnings': complainant.fraud_warnings,
             'account_suspended': complainant.account_suspended
         }), 200

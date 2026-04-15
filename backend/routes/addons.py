@@ -9,6 +9,7 @@ from backend.models import Grievance, User
 from backend.models_addons import AuditLog, GrievanceRating
 from backend.extensions import db
 from backend.services.audit_service import log_audit
+from backend.services.email_service import EmailService
 from backend.routes.auth import get_current_user_from_token
 from backend.utils.roles import canonical_role
 
@@ -187,8 +188,7 @@ def get_qr_code(grievance_id):
         if not grievance:
             return jsonify({'error': 'Not found'}), 404
         
-        base_url = request.host_url.rstrip('/')
-        track_url = f"{base_url}/track.html?id={grievance_id}"
+        track_url = EmailService.tracking_url(grievance_id)
         
         qr = qrcode.QRCode(version=1, box_size=10, border=4)
         qr.add_data(track_url)

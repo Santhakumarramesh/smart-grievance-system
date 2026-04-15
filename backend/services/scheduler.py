@@ -36,7 +36,12 @@ class BackgroundScheduler:
         self.running = True
         self.thread = threading.Thread(target=self._run_scheduler, daemon=True)
         self.thread.start()
-        print("✓ Background scheduler started - Comment escalations every hour, model retrain every 7 days")
+        retrain_status = "enabled" if Config.ENABLE_SCHEDULED_RETRAIN else "disabled"
+        print(
+            "✓ Background scheduler started - "
+            "comment escalations every hour, "
+            f"scheduled retrain {retrain_status} (interval={RETRAIN_INTERVAL_HOURS}h)"
+        )
     
     def stop(self):
         """Stop the background scheduler"""

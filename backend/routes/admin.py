@@ -7,6 +7,7 @@ from backend.extensions import db
 from backend.config import Config
 from backend.routes.auth import get_current_user_from_token
 from backend.services.email_service import EmailService
+from backend.services.notification_service import NotificationService
 from backend.services.model_retrain import retrain_model, get_retrain_status
 from backend.security import SecurityFirewall
 from backend.utils.validation import ValidationError, normalize_phone, validate_name
@@ -384,26 +385,24 @@ def assign_officer():
             db.session.add(correction_log)
         
         # Create in-app notification for officer
-        officer_notification = Notification(
+        NotificationService.queue_notification(
             user_id=officer_id,
             title=f'🚨 New Case Assigned - Grievance #{grievance.id}',
             message=f'You have been assigned a new case in {grievance.assigned_department} department. Complainant: {citizen.name}. Please review and take action.',
             notification_type='assignment',
             related_grievance_id=grievance.id,
-            is_read=False
+            is_read=False,
         )
-        db.session.add(officer_notification)
         
         # Create in-app notification for citizen
-        citizen_notification = Notification(
+        NotificationService.queue_notification(
             user_id=citizen.id,
             title=f'Officer Assigned - Grievance #{grievance.id}',
             message=f'Your complaint has been assigned to {officer.name} ({officer.designation or "Officer"}) for resolution.',
             notification_type='assignment',
             related_grievance_id=grievance.id,
-            is_read=False
+            is_read=False,
         )
-        db.session.add(citizen_notification)
         
         db.session.commit()
 
