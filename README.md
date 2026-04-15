@@ -1,4 +1,5 @@
 # Smart Grievance Redressal System
+[![CI](https://github.com/Santhakumarramesh/smart-grievance-system/actions/workflows/ci.yml/badge.svg)](https://github.com/Santhakumarramesh/smart-grievance-system/actions/workflows/ci.yml)
 
 A citizen-centric grievance management platform for filing, tracking, and resolving complaints. Built for government departments with AI-powered department classification, role-based access, and automated workflows.
 
@@ -117,6 +118,23 @@ python -m flask --app backend.app:create_app db upgrade
 ```bash
 # Applies pending migrations and seeds demo users
 python manage.py seed
+```
+
+## Quality Gates
+
+CI enforces:
+- `ruff` lint checks for critical Python errors
+- `pytest` for backend regression tests
+- coverage gate with minimum backend coverage of **50%**
+- optional `bandit` security scan (non-blocking)
+
+Run locally:
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+ruff check backend tests
+python -m pytest --cov=backend --cov-report=term-missing
+bandit -q -r backend -x backend/seed.py || true
 ```
 
 ## API Overview

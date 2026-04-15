@@ -28,6 +28,18 @@ git push -u origin main
 
 ---
 
+## CI and Quality Checks
+
+This repo includes `.github/workflows/ci.yml` with:
+- lint gate (`ruff check backend tests`)
+- backend tests (`pytest`) with coverage output
+- minimum coverage gate (`fail_under = 50`)
+- optional Bandit scan (`continue-on-error: true`)
+
+The CI workflow fails the pull request/build when lint or tests fail.
+
+---
+
 ## Option 2: Deploy on Render.com (Free)
 
 Render hosts the full Flask app with backend. **Free tier** includes 750 hours/month.
