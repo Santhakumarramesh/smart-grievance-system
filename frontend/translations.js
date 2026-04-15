@@ -499,20 +499,26 @@ function applyTranslations() {
 // Language switcher component
 function createLanguageSwitcher() {
     const currentLang = localStorage.getItem('preferredLanguage') || 'en';
-    const languages = [
-        { code: 'en', name: 'English', flag: '🇬🇧' },
-        { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
-        { code: 'bn', name: 'বাংলা', flag: '🇮🇳' },
-        { code: 'ta', name: 'தமிழ்', flag: '🇮🇳' },
-        { code: 'te', name: 'తెలుగు', flag: '🇮🇳' },
-        { code: 'mr', name: 'मराठी', flag: '🇮🇳' },
-        { code: 'gu', name: 'ગુજરાતી', flag: '🇮🇳' },
-        { code: 'kn', name: 'ಕನ್ನಡ', flag: '🇮🇳' },
-        { code: 'ml', name: 'മലയാളം', flag: '🇮🇳' },
-        { code: 'pa', name: 'ਪੰਜਾਬੀ', flag: '🇮🇳' },
-        { code: 'or', name: 'ଓଡ଼ିଆ', flag: '🇮🇳' },
-        { code: 'ur', name: 'اردو', flag: '🇮🇳' }
-    ];
+    const languages = (typeof getPortalLanguages === 'function')
+        ? getPortalLanguages().map((lang) => ({
+            code: lang.code,
+            name: lang.nativeName,
+            flag: lang.flag || '🌐'
+        }))
+        : [
+            { code: 'en', name: 'English', flag: '🇬🇧' },
+            { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
+            { code: 'bn', name: 'বাংলা', flag: '🇮🇳' },
+            { code: 'ta', name: 'தமிழ்', flag: '🇮🇳' },
+            { code: 'te', name: 'తెలుగు', flag: '🇮🇳' },
+            { code: 'mr', name: 'मराठी', flag: '🇮🇳' },
+            { code: 'gu', name: 'ગુજરાતી', flag: '🇮🇳' },
+            { code: 'kn', name: 'ಕನ್ನಡ', flag: '🇮🇳' },
+            { code: 'ml', name: 'മലയാളം', flag: '🇮🇳' },
+            { code: 'pa', name: 'ਪੰਜਾਬੀ', flag: '🇮🇳' },
+            { code: 'or', name: 'ଓଡ଼ିଆ', flag: '🇮🇳' },
+            { code: 'ur', name: 'اردو', flag: '🇮🇳' }
+        ];
     
     const currentLangObj = languages.find(l => l.code === currentLang) || languages[0];
     

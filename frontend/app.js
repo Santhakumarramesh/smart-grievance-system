@@ -166,22 +166,50 @@ function formatDate(dateString) {
     });
 }
 
-// Get status badge class
+const WORKFLOW_STATUS_META = {
+    received: { badgeClass: 'badge-received', label: 'Received' },
+    assigned: { badgeClass: 'badge-assigned', label: 'Assigned to Department' },
+    progress: { badgeClass: 'badge-progress', label: 'Under Progress' },
+    investigation: { badgeClass: 'badge-investigation', label: 'Investigation' },
+    reviewed: { badgeClass: 'badge-reviewed', label: 'Reviewed' },
+    resolved: { badgeClass: 'badge-resolved', label: 'Resolved' },
+    closed: { badgeClass: 'badge-closed', label: 'Closed' },
+};
+
+function normalizeWorkflowStatus(status) {
+    if (!status) return 'received';
+    const raw = String(status).trim().toLowerCase();
+
+    if (raw === 'received') return 'received';
+    if (raw === 'assigned' || raw === 'assigned to department') return 'assigned';
+    if (raw === 'in progress' || raw === 'under progress') return 'progress';
+    if (raw.includes('investigation')) return 'investigation';
+    if (raw === 'reviewed') return 'reviewed';
+    if (raw === 'resolved') return 'resolved';
+    if (raw === 'closed' || raw === 'rejected') return 'closed';
+    return 'received';
+}
+
 function getStatusBadgeClass(status) {
-    if (!status) return 'badge-received';
-    const statusMap = {
-        'Received': 'badge-received',
-        'Assigned to Department': 'badge-assigned',
-        'Assigned': 'badge-assigned',
-        'Under Progress': 'badge-progress',
-        'In Progress': 'badge-progress',
-        'Investigation': 'badge-investigation',
-        'Reviewed': 'badge-reviewed',
-        'Resolved': 'badge-resolved',
-        'Closed': 'badge-closed',
-        'Rejected': 'badge-closed'
-    };
-    return statusMap[status] || 'badge-received';
+    const key = normalizeWorkflowStatus(status);
+    return WORKFLOW_STATUS_META[key].badgeClass;
+}
+
+function getStatusDisplayLabel(status) {
+    if (!status) return WORKFLOW_STATUS_META.received.label;
+    const key = normalizeWorkflowStatus(status);
+    if (
+        typeof status === 'string'
+        && status.toLowerCase().includes('fraud')
+    ) {
+        return status;
+    }
+    return WORKFLOW_STATUS_META[key].label;
+}
+
+function renderStatusBadge(status) {
+    const safeLabel = escapeHtml(getStatusDisplayLabel(status));
+    return `<span class="badge ${getStatusBadgeClass(status)}">${safeLabel}</span>`;
 }
 
 // Get home URL based on user role

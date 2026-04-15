@@ -81,6 +81,7 @@
     </div>
 
     <script src="app.js"></script>
+    <script src="language-config.js"></script>
     <script src="translations.js"></script>
     <script>
         if (!checkAuth()) {
@@ -139,7 +140,7 @@
                                             </button>
                                         </td>
                                         <td>${g.location || '-'}</td>
-                                        <td><span class="badge ${getStatusBadgeClass(g.status)}">${g.status}</span></td>
+                                        <td>${renderStatusBadge(g.status)}</td>
                                         <td>${formatDate(g.created_at)}</td>
                                         <td>
                                             <button onclick="openUpdateModal(${g.id})" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">Update</button>

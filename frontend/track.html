@@ -99,7 +99,7 @@
                                 <option value="ml">മലയാളം (Malayalam)</option>
                                 <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
                                 <option value="or">ଓଡ଼ିଆ (Odia)</option>
-                                <option value="as">অসমীয়া (Assamese)</option>
+                                <option value="ur">اردو (Urdu)</option>
                             </select>
                         </div>
                     </div>
@@ -151,6 +151,7 @@
     </div>
 
     <script src="app.js"></script>
+    <script src="language-config.js"></script>
     <script src="translations.js"></script>
     <script>
         if (!checkAuth()) {
@@ -201,7 +202,7 @@
                         </div>
                         <div>
                             <div class="stat-label">Current Status</div>
-                            <div><span class="badge ${getStatusBadgeClass(grievance.status || 'Received')}">${grievance.status || 'Received'}</span></div>
+                            <div>${renderStatusBadge(grievance.status || 'Received')}</div>
                         </div>
                         <div>
                             <div class="stat-label">Submitted On</div>
@@ -287,7 +288,7 @@
                     'ml': 'മലയാളം',
                     'pa': 'ਪੰਜਾਬੀ',
                     'or': 'ଓଡ଼ିଆ',
-                    'as': 'অসমীয়া'
+                    'ur': 'اردو'
                 };
                 
                 if (grievance.updates && grievance.updates.length > 0) {
@@ -393,7 +394,7 @@
                     'ml': 'മലയാളം',
                     'pa': 'ਪੰਜਾਬੀ',
                     'or': 'ଓଡ଼ିଆ',
-                    'as': 'অসমীয়া'
+                    'ur': 'اردو'
                 };
                 
                 const commentsHtml = data.comments.map((comment, index) => {
@@ -446,7 +447,7 @@
                                             <option value="ml">മലയാളം</option>
                                             <option value="pa">ਪੰਜਾਬੀ</option>
                                             <option value="or">ଓଡ଼ିଆ</option>
-                                            <option value="as">অসমীয়া</option>
+                                            <option value="ur">اردو</option>
                                         </select>
                                     </div>
                                     <div class="translated-text-${index}" style="color: var(--text-primary); line-height: 1.8; font-weight: 600; font-size: 1.05em;">
@@ -498,7 +499,7 @@
                                             <option value="ml">മലയാളം (Malayalam)</option>
                                             <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
                                             <option value="or">ଓଡ଼ିଆ (Odia)</option>
-                                            <option value="as">অসমীয়া (Assamese)</option>
+                                            <option value="ur">اردو (Urdu)</option>
                                         </select>
                                     </div>
                                 ` : ''}
@@ -629,7 +630,7 @@
             'ml': { 'Received': 'ലഭിച്ചു', 'Assigned': 'നിയോഗിച്ചു', 'In Progress': 'പുരോഗതിയിൽ', 'Resolved': 'പരിഹരിച്ചു', 'Closed': 'അടച്ചു', 'Rejected': 'നിരസിച്ചു', 'Your complaint': 'നിങ്ങളുടെ പരാതി', 'has been': 'ആണ്', 'processed': 'പ്രോസസ്സ് ചെയ്തു', 'received': 'ലഭിച്ചു', 'assigned': 'നിയോഗിച്ചു', 'Updated by': 'അപ്ഡേറ്റ് ചെയ്തത്', 'SYSTEM': 'സിസ്റ്റം', 'department': 'വകുപ്പ്', 'to': 'ലേക്ക്', 'for': 'വേണ്ടി', 'investigation': 'അന്വേഷണം', 'Supply': 'വിതരണം', 'Water': 'വെള്ളം', 'Electricity': 'വൈദ്യുതി', 'Road': 'റോഡ്', 'Health': 'ആരോഗ്യം', 'Education': 'വിദ്യാഭ്യാസം', 'Transport': 'ഗതാഗതം', 'issue': 'പ്രശ്നം', 'problem': 'പ്രശ്നം', 'complaint': 'പരാതി', 'officer': 'ഉദ്യോഗസ്ഥൻ', 'verified': 'പരിശോധിച്ചു', 'under review': 'അവലോകനത്തിൽ', 'action taken': 'നടപടി എടുത്തു' },
             'pa': { 'Received': 'ਪ੍ਰਾਪਤ', 'Assigned': 'ਨਿਯੁਕਤ', 'In Progress': 'ਪ੍ਰਗਤੀ ਵਿੱਚ', 'Resolved': 'ਹੱਲ ਹੋਇਆ', 'Closed': 'ਬੰਦ', 'Rejected': 'ਰੱਦ', 'Your complaint': 'ਤੁਹਾਡੀ ਸ਼ਿਕਾਇਤ', 'has been': 'ਹੈ', 'processed': 'ਪ੍ਰਕਿਰਿਆ ਕੀਤੀ', 'received': 'ਪ੍ਰਾਪਤ ਹੋਈ', 'assigned': 'ਨਿਯੁਕਤ ਕੀਤੀ', 'Updated by': 'ਦੁਆਰਾ ਅੱਪਡੇਟ', 'SYSTEM': 'ਸਿਸਟਮ', 'department': 'ਵਿਭਾਗ', 'to': 'ਨੂੰ', 'for': 'ਲਈ', 'investigation': 'ਜਾਂਚ', 'Supply': 'ਸਪਲਾਈ', 'Water': 'ਪਾਣੀ', 'Electricity': 'ਬਿਜਲੀ', 'Road': 'ਸੜਕ', 'Health': 'ਸਿਹਤ', 'Education': 'ਸਿੱਖਿਆ', 'Transport': 'ਆਵਾਜਾਈ', 'issue': 'ਮੁੱਦਾ', 'problem': 'ਸਮੱਸਿਆ', 'complaint': 'ਸ਼ਿਕਾਇਤ', 'officer': 'ਅਧਿਕਾਰੀ', 'verified': 'ਤਸਦੀਕ ਕੀਤੀ', 'under review': 'ਸਮੀਖਿਆ ਅਧੀਨ', 'action taken': 'ਕਾਰਵਾਈ ਕੀਤੀ' },
             'or': { 'Received': 'ଗ୍ରହଣ କରାଯାଇଛି', 'Assigned': 'ନିଯୁକ୍ତ', 'In Progress': 'ପ୍ରଗତିରେ', 'Resolved': 'ସମାଧାନ ହୋଇଛି', 'Closed': 'ବନ୍ଦ', 'Rejected': 'ପ୍ରତ୍ୟାଖ୍ୟାନ', 'Your complaint': 'ଆପଣଙ୍କର ଅଭିଯୋଗ', 'has been': 'ହୋଇଛି', 'processed': 'ପ୍ରକ୍ରିୟା କରାଯାଇଛି', 'received': 'ଗ୍ରହଣ କରାଯାଇଛି', 'assigned': 'ନିଯୁକ୍ତ କରାଯାଇଛି', 'Updated by': 'ଦ୍ୱାରା ଅପଡେଟ୍', 'SYSTEM': 'ସିଷ୍ଟମ୍', 'department': 'ବିଭାଗ', 'to': 'କୁ', 'for': 'ପାଇଁ', 'investigation': 'ଅନୁସନ୍ଧାନ', 'Supply': 'ଯୋଗାଣ', 'Water': 'ଜଳ', 'Electricity': 'ବିଦ୍ୟୁତ୍', 'Road': 'ରାସ୍ତା', 'Health': 'ସ୍ୱାସ୍ଥ୍ୟ', 'Education': 'ଶିକ୍ଷା', 'Transport': 'ପରିବହନ', 'issue': 'ସମସ୍ୟା', 'problem': 'ସମସ୍ୟା', 'complaint': 'ଅଭିଯୋଗ', 'officer': 'ଅଧିକାରୀ', 'verified': 'ଯାଞ୍ଚ କରାଯାଇଛି', 'under review': 'ସମୀକ୍ଷାଧୀନ', 'action taken': 'କାର୍ଯ୍ୟାନୁଷ୍ଠାନ ନିଆଯାଇଛି' },
-            'as': { 'Received': 'প্ৰাপ্ত', 'Assigned': 'নিযুক্ত', 'In Progress': 'প্ৰগতিত', 'Resolved': 'সমাধান', 'Closed': 'বন্ধ', 'Rejected': 'প্ৰত্যাখ্যান', 'Your complaint': 'আপোনাৰ অভিযোগ', 'has been': 'হৈছে', 'processed': 'প্ৰক্ৰিয়া কৰা', 'received': 'প্ৰাপ্ত হৈছে', 'assigned': 'নিযুক্ত কৰা', 'Updated by': 'দ্বাৰা আপডেট', 'SYSTEM': 'ব্যৱস্থা', 'department': 'বিভাগ', 'to': 'লৈ', 'for': 'বাবে', 'investigation': 'তদন্ত', 'Supply': 'যোগান', 'Water': 'পানী', 'Electricity': 'বিদ্যুৎ', 'Road': 'পথ', 'Health': 'স্বাস্থ্য', 'Education': 'শিক্ষা', 'Transport': 'পৰিবহণ', 'issue': 'সমস্যা', 'problem': 'সমস্যা', 'complaint': 'অভিযোগ', 'officer': 'বিষয়া', 'verified': 'সত্যাপিত', 'under review': 'পৰ্যালোচনাধীন', 'action taken': 'পদক্ষেপ লোৱা হৈছে' }
+            'ur': { 'Received': 'وصول ہوا', 'Assigned': 'تفویض کیا گیا', 'In Progress': 'جاری ہے', 'Resolved': 'حل ہو گیا', 'Closed': 'بند', 'Rejected': 'مسترد', 'Your complaint': 'آپ کی شکایت', 'has been': 'ہے', 'processed': 'پر کارروائی کی گئی', 'received': 'موصول', 'assigned': 'تفویض', 'Updated by': 'اپ ڈیٹ از', 'SYSTEM': 'سسٹم', 'department': 'محکمہ', 'to': 'کو', 'for': 'کے لیے', 'investigation': 'تحقیق', 'Supply': 'سپلائی', 'Water': 'پانی', 'Electricity': 'بجلی', 'Road': 'سڑک', 'Health': 'صحت', 'Education': 'تعلیم', 'Transport': 'ٹرانسپورٹ', 'issue': 'مسئلہ', 'problem': 'مسئلہ', 'complaint': 'شکایت', 'officer': 'افسر', 'verified': 'تصدیق شدہ', 'under review': 'زیر جائزہ', 'action taken': 'کارروائی کی گئی' }
         };
 
         // Simple translation function
@@ -697,7 +698,7 @@
                 'ml': 'മലയാളം',
                 'pa': 'ਪੰਜਾਬੀ',
                 'or': 'ଓଡ଼ିଆ',
-                'as': 'অসমীয়া'
+                'ur': 'اردو'
             };
             
             // Show alert

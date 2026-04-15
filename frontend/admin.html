@@ -152,6 +152,7 @@
     </div>
 
     <script src="app.js"></script>
+    <script src="language-config.js"></script>
     <script src="translations.js"></script>
     <script>
         if (!checkAuth()) {
@@ -438,7 +439,7 @@
                                                 <small style="color: #6B7280;">${g.assigned_officer.designation || 'Officer'}</small>
                                             ` : '<span style="color: #9CA3AF;">Not Assigned</span>'}
                                         </td>
-                                        <td><span class="badge ${getStatusBadgeClass(g.status)}">${g.status}</span></td>
+                                        <td>${renderStatusBadge(g.status)}</td>
                                         <td><small>${formatDate(g.created_at)}</small></td>
                                         <td>
                                             <button onclick="showGrievanceDetails(${g.id})" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; margin-right: 0.5rem;">

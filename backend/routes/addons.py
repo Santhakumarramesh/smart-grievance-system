@@ -15,6 +15,33 @@ from backend.utils.roles import canonical_role
 addons_bp = Blueprint('addons', __name__)
 
 
+def _anonymize_public_location(raw_location):
+    """Return a coarse, privacy-safe location label for public cards."""
+    if not raw_location:
+        return "Location withheld"
+
+    location = raw_location.strip()
+    if not location:
+        return "Location withheld"
+
+    if "lat:" in location.lower() or "long:" in location.lower():
+        return "GPS area"
+
+    parts = [part.strip() for part in location.split(",") if part.strip()]
+    if len(parts) >= 2:
+        return ", ".join(parts[-2:])
+    return parts[0]
+
+
+def _summarize_complaint_for_public(text, max_len=160):
+    if not text:
+        return "A grievance was resolved by the department."
+    clean_text = " ".join(text.split())
+    if len(clean_text) <= max_len:
+        return clean_text
+    return f"{clean_text[:max_len - 3].rstrip()}..."
+
+
 @addons_bp.route('/public/stats', methods=['GET'])
 def public_stats():
     """Public dashboard - aggregated stats (no auth required)"""
@@ -43,6 +70,45 @@ def public_stats():
             'resolution_rate': round(resolved / total * 100, 1) if total else 0,
             'avg_resolution_days': avg_resolution_days,
             'by_department': {d: c for d, c in dept_counts},
+            'updated_at': datetime.utcnow().isoformat()
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@addons_bp.route('/public/resolved-cases', methods=['GET'])
+def public_resolved_cases():
+    """Public anonymized feed of recently resolved grievances."""
+    try:
+        try:
+            limit = int(request.args.get('limit', 6))
+        except (TypeError, ValueError):
+            limit = 6
+        limit = max(1, min(limit, 12))
+
+        grievances = Grievance.query.filter(
+            Grievance.status.in_(['Resolved', 'Closed'])
+        ).order_by(
+            Grievance.updated_at.desc(),
+            Grievance.id.desc()
+        ).limit(limit).all()
+
+        cases = []
+        for grievance in grievances:
+            department = grievance.assigned_department or 'General'
+            cases.append({
+                'id': grievance.id,
+                'title': f'{department} grievance resolved',
+                'description': _summarize_complaint_for_public(grievance.complaint_text),
+                'department': department,
+                'location': _anonymize_public_location(grievance.location),
+                'status': grievance.status,
+                'resolved_at': grievance.updated_at.isoformat() if grievance.updated_at else None,
+            })
+
+        return jsonify({
+            'cases': cases,
+            'count': len(cases),
             'updated_at': datetime.utcnow().isoformat()
         }), 200
     except Exception as e:

@@ -3,21 +3,23 @@
  * Works on all pages of the portal
  */
 
-// Available languages
-const availableLanguages = [
-    { code: 'en', name: 'English', nativeName: 'English' },
-    { code: 'hi', name: 'Hindi', nativeName: 'हिंदी' },
-    { code: 'bn', name: 'Bengali', nativeName: 'বাংলা' },
-    { code: 'te', name: 'Telugu', nativeName: 'తెలుగు' },
-    { code: 'mr', name: 'Marathi', nativeName: 'मराठी' },
-    { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்' },
-    { code: 'gu', name: 'Gujarati', nativeName: 'ગુજરાતી' },
-    { code: 'kn', name: 'Kannada', nativeName: 'ಕನ್ನಡ' },
-    { code: 'ml', name: 'Malayalam', nativeName: 'മലയാളം' },
-    { code: 'pa', name: 'Punjabi', nativeName: 'ਪੰਜਾਬੀ' },
-    { code: 'or', name: 'Odia', nativeName: 'ଓଡ଼ିଆ' },
-    { code: 'as', name: 'Assamese', nativeName: 'অসমীয়া' }
-];
+// Available languages (single canonical source: language-config.js).
+const availableLanguages = (typeof getPortalLanguages === 'function')
+    ? getPortalLanguages()
+    : [
+        { code: 'en', name: 'English', nativeName: 'English' },
+        { code: 'hi', name: 'Hindi', nativeName: 'हिंदी' },
+        { code: 'bn', name: 'Bengali', nativeName: 'বাংলা' },
+        { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்' },
+        { code: 'te', name: 'Telugu', nativeName: 'తెలుగు' },
+        { code: 'mr', name: 'Marathi', nativeName: 'मराठी' },
+        { code: 'gu', name: 'Gujarati', nativeName: 'ગુજરાતી' },
+        { code: 'kn', name: 'Kannada', nativeName: 'ಕನ್ನಡ' },
+        { code: 'ml', name: 'Malayalam', nativeName: 'മലയാളം' },
+        { code: 'pa', name: 'Punjabi', nativeName: 'ਪੰਜਾਬੀ' },
+        { code: 'or', name: 'Odia', nativeName: 'ଓଡ଼ିଆ' },
+        { code: 'ur', name: 'Urdu', nativeName: 'اردو' },
+    ];
 
 // Get current language from localStorage or default to English
 function getCurrentLanguage() {
@@ -28,14 +30,14 @@ function getCurrentLanguage() {
 function setLanguage(langCode) {
     localStorage.setItem('selectedLanguage', langCode);
     localStorage.setItem('preferredLanguage', langCode);  // Sync for translations.js
-    applyTranslations(langCode);
+    applyWidgetTranslations(langCode);
     
     // Dispatch event for other components
     window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: langCode } }));
 }
 
 // Apply translations to page
-function applyTranslations(langCode) {
+function applyWidgetTranslations(langCode) {
     // Translate data-translate elements when translations.js is loaded
     if (typeof translations !== 'undefined' && translations[langCode]) {
         const trans = translations[langCode];
@@ -282,7 +284,7 @@ function initLanguageSelector() {
     document.body.appendChild(widget);
     
     // Apply current language
-    applyTranslations(getCurrentLanguage());
+    applyWidgetTranslations(getCurrentLanguage());
     
     // Toggle dropdown
     const btn = document.getElementById('langSelectorBtn');
@@ -345,7 +347,7 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         getCurrentLanguage,
         setLanguage,
-        applyTranslations,
+        applyTranslations: applyWidgetTranslations,
         availableLanguages
     };
 }

@@ -19,6 +19,7 @@ A citizen-centric grievance management platform for filing, tracking, and resolv
 - **Comment & Escalation** — Officer-citizen communication with automatic escalation
 - **Multi-Language Support** — Indian language stop words for better classification
 - **Scheduled Retraining** — Model retrains weekly; admins can trigger manually
+- **Public Transparency Feed** — Anonymized recently resolved cases exposed via backend API
 
 ## Role Model and Permissions
 
@@ -82,6 +83,9 @@ Open **http://localhost:8000**
 │   └── models.py      # Database models
 ├── migrations/        # Alembic revisions (Flask-Migrate)
 ├── frontend/          # Web UI (served by Flask)
+│   ├── js/pages/      # Page-specific logic modules
+│   ├── css/           # Page-level stylesheets
+│   └── app.js         # Shared API/session helpers
 ├── ml/                # Training pipeline
 │   ├── train.py       # Train classifier
 │   └── artifacts/     # Saved model & vectorizer
@@ -122,6 +126,7 @@ python manage.py seed
 | `/api/auth/register` | POST | Register citizen |
 | `/api/grievances/submit` | POST | Submit complaint |
 | `/api/grievances/predict-department` | POST | AI department prediction |
+| `/api/public/resolved-cases` | GET | Anonymized recent resolved grievances for homepage cards |
 | `/api/admin/retrain-model` | POST | Trigger model retraining (Admin) |
 | `/api/admin/model-status` | GET | Model metadata (Admin) |
 | `/health` | GET | Health check |
