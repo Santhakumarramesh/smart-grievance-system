@@ -243,17 +243,16 @@
                             <option value="">-- Select Gender --</option>
                             <option value="Male">Male / पुरुष</option>
                             <option value="Female">Female / महिला</option>
-                            <option value="Transgender">Transgender / ट्रांसजेंडर</option>
-                            <option value="Non-Binary">Non-Binary / गैर-बाइनरी</option>
-                            <option value="Prefer not to say">Prefer not to say / नहीं बताना चाहते</option>
                             <option value="Other">Other / अन्य</option>
+                            <option value="Prefer not to say">Prefer not to say / नहीं बताना चाहते</option>
                         </select>
-                        <small style="color: var(--text-secondary);">As per Government of India norms</small>
+                        <small style="color: var(--text-secondary);">Accepted values: Male, Female, Other, Prefer not to say</small>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" for="password">Password <span style="color: #ef4444;">*</span></label>
-                        <input type="password" id="password" class="form-input" placeholder="Create a strong password" required minlength="6">
+                        <input type="password" id="password" class="form-input" placeholder="Create a strong password" required minlength="8">
+                        <small style="color: var(--text-secondary);">Minimum 8 chars with uppercase, lowercase, and number</small>
                     </div>
 
                     <div class="form-group">
@@ -308,8 +307,16 @@
                 return;
             }
 
-            if (password.length < 6) {
-                showAlert('❌ Password must be at least 6 characters', 'error');
+            if (password.length < 8) {
+                showAlert('❌ Password must be at least 8 characters', 'error');
+                return;
+            }
+
+            const hasUpper = /[A-Z]/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasDigit = /\d/.test(password);
+            if (!(hasUpper && hasLower && hasDigit)) {
+                showAlert('❌ Password must include uppercase, lowercase, and a number', 'error');
                 return;
             }
 
@@ -353,7 +360,7 @@
 
             const firstName = document.getElementById('firstName').value.trim();
             const lastName = document.getElementById('lastName').value.trim();
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             
             // Validate names
             if (!firstName) {

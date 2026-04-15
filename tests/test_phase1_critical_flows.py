@@ -40,6 +40,29 @@ def create_grievance(user_id, department, status="Received", assigned_officer_id
     return grievance
 
 
+def test_register_then_login_succeeds(client):
+    register_payload = {
+        "name": "Fresh Citizen",
+        "email": "fresh.citizen@example.com",
+        "phone": "9876500999",
+        "password": "FreshPass123",
+        "date_of_birth": "1992-05-14",
+        "gender": "Other",
+    }
+    register_response = client.post("/api/auth/register", json=register_payload)
+    assert register_response.status_code == 201
+
+    login_response = client.post(
+        "/api/auth/login",
+        json={"email": register_payload["email"], "password": register_payload["password"]},
+    )
+    assert login_response.status_code == 200
+    payload = login_response.get_json()
+    assert payload["token"]
+    assert payload["user"]["email"] == register_payload["email"]
+    assert payload["user"]["role"] == "CITIZEN"
+
+
 def test_password_reset_flow(client, app, monkeypatch):
     with app.app_context():
         user = create_user("Citizen One", "citizen1@example.com", "9876500001")

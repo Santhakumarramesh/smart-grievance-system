@@ -364,12 +364,10 @@
                             <option value="">-- Select Gender --</option>
                             <option value="Male">Male / पुरुष</option>
                             <option value="Female">Female / महिला</option>
-                            <option value="Transgender">Transgender / ट्रांसजेंडर</option>
-                            <option value="Non-Binary">Non-Binary / गैर-बाइनरी</option>
-                            <option value="Prefer not to say">Prefer not to say / नहीं बताना चाहते</option>
                             <option value="Other">Other / अन्य</option>
+                            <option value="Prefer not to say">Prefer not to say / नहीं बताना चाहते</option>
                         </select>
-                        <small style="color: #6B7280; display: block; margin-top: 0.25rem;">As per Government of India norms</small>
+                        <small style="color: #6B7280; display: block; margin-top: 0.25rem;">Accepted values: Male, Female, Other, Prefer not to say</small>
                     </div>
                 </div>
                 <div class="info-item">
@@ -725,7 +723,7 @@
                             This information is required for submitting grievances.
                         </p>
                     </div>
-                    <button onclick="enterEditMode()" style="
+                    <button onclick="toggleEditMode()" style="
                         background: #F59E0B;
                         color: white;
                         border: none;
