@@ -27,7 +27,8 @@ git clone https://github.com/YOUR_USERNAME/smart-grievance-system.git
 cd smart-grievance-system
 
 pip install -r requirements.txt
-python -m backend.seed
+python -m flask --app backend.app:create_app db upgrade
+python manage.py seed
 python run.py
 ```
 
@@ -48,12 +49,37 @@ Open **http://localhost:8000**
 │   ├── routes/        # Auth, grievances, admin
 │   ├── services/      # Classifier, email, scheduler
 │   └── models.py      # Database models
+├── migrations/        # Alembic revisions (Flask-Migrate)
 ├── frontend/          # Web UI (served by Flask)
 ├── ml/                # Training pipeline
 │   ├── train.py       # Train classifier
 │   └── artifacts/     # Saved model & vectorizer
 ├── data/              # Training dataset
+├── manage.py          # Project CLI (seed command)
 └── docs/              # Static demo (GitHub Pages)
+```
+
+## Database Setup (Local/Dev/Prod)
+
+- **Dev default:** SQLite via `DATABASE_URL=sqlite:///grievance.db`
+- **Prod:** PostgreSQL via `DATABASE_URL=postgresql://...`
+- **Schema changes:** Managed through Flask-Migrate revisions in `migrations/`
+
+### Migration workflow
+
+```bash
+# Create a new migration after model changes
+python -m flask --app backend.app:create_app db migrate -m "describe change"
+
+# Apply migrations
+python -m flask --app backend.app:create_app db upgrade
+```
+
+### Seed workflow
+
+```bash
+# Applies pending migrations and seeds demo users
+python manage.py seed
 ```
 
 ## API Overview
@@ -77,7 +103,8 @@ Open **http://localhost:8000**
 2. New Web Service → Python
 3. Build: `pip install -r requirements.txt`
 4. Start: `gunicorn "backend.app:create_app()" --bind 0.0.0.0:$PORT`
-5. Add env: `FLASK_ENV=production`, `SECRET_KEY`, `DEMO_EMAIL_MODE=true`
+5. Add env: `FLASK_ENV=production`, `SECRET_KEY`, `DATABASE_URL`, `DEMO_EMAIL_MODE=true`
+6. Run migrations: `python -m flask --app backend.app:create_app db upgrade`
 
 See [DEPLOY.md](DEPLOY.md) for details. For auto-deploy on push to Render, add `.github/workflows/deploy.yml` via the GitHub web UI and set `RENDER_DEPLOY_HOOK_URL` in repo Secrets.
 

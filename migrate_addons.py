@@ -1,8 +1,13 @@
-"""Migration for add-on tables: audit_logs, grievance_ratings"""
-from backend.app import create_app
-from backend.extensions import db
+#!/usr/bin/env python3
+"""Legacy shim: add-on tables are managed through normal Alembic revisions."""
 
-app = create_app()
-with app.app_context():
-    db.create_all()
-    print("✓ Add-on tables created (audit_logs, grievance_ratings)")
+from backend.app import create_app
+from backend.database import upgrade_database
+
+
+if __name__ == "__main__":
+    app = create_app()
+    with app.app_context():
+        print("🔄 Applying migrations for add-on tables...")
+        upgrade_database()
+        print("✅ Done")

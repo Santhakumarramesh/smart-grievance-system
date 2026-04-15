@@ -1,13 +1,14 @@
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 import os
+import sys
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
 
 from backend.config import Config
-from backend.extensions import db
+from backend.extensions import db, migrate
 from backend import models
 from backend.models_addons import AuditLog, GrievanceRating
 from backend.routes.auth import auth_bp
@@ -17,6 +18,12 @@ from backend.routes.addons import addons_bp
 from backend.services.classifier import classifier
 from backend.services.scheduler import scheduler
 from backend.security import SecurityHeaders, configure_cors_security
+
+def _is_flask_db_command():
+    """Detect Flask-Migrate CLI context to avoid runtime side effects."""
+    argv = [arg.lower() for arg in sys.argv]
+    return 'flask' in (argv[0] if argv else '') and 'db' in argv
+
 
 def create_app():
     app = Flask(__name__, static_folder='../frontend')
@@ -30,6 +37,7 @@ def create_app():
     
     # Initialize extensions
     db.init_app(app)
+    migrate.init_app(app, db, compare_type=True)
     
     # Initialize scheduler
     scheduler.init_app(app)
@@ -55,13 +63,15 @@ def create_app():
             return send_from_directory(app.static_folder, path)
         return send_from_directory(app.static_folder, 'index.html')
     
-    # Create tables and load ML model
+    # Runtime startup tasks (schema bootstrap via migrations, not create_all).
     with app.app_context():
-        db.create_all()
-        print("✓ Database tables created")
+        if app.config['AUTO_CREATE_TABLES']:
+            db.create_all()
+            print("⚠ AUTO_CREATE_TABLES enabled: created tables without migrations")
         
         # Load ML classifier
-        classifier.load_model()
+        if app.config['ENABLE_STARTUP_MODEL_LOAD']:
+            classifier.load_model()
         
         print("🔒 Security Firewall: ENABLED")
         print("   - Rate Limiting: Active")
@@ -70,7 +80,13 @@ def create_app():
         print("   - SQL Injection Prevention: Active")
         print("   - IP Blocking: Active")
         
-        scheduler.start()
+        should_start_scheduler = (
+            app.config['ENABLE_SCHEDULER']
+            and not _is_flask_db_command()
+            and not app.testing
+        )
+        if should_start_scheduler:
+            scheduler.start()
         
         if os.getenv('FLASK_ENV', 'development') == 'development':
             from backend.security.firewall import blocked_ips

@@ -53,6 +53,7 @@ Add in Render Dashboard → Environment:
 |-----|-------|
 | `FLASK_ENV` | production |
 | `SECRET_KEY` | (generate a random 32-char string) |
+| `DATABASE_URL` | (Render Postgres URL, recommended) |
 | `DEMO_EMAIL_MODE` | true |
 
 ### Step 4: Deploy
@@ -62,11 +63,13 @@ https://smart-grievance-system-xxxx.onrender.com
 ```
 
 ### Step 5: Seed the database (first time)
-After first deploy, run the seed script locally against your deployed URL, or add a one-time setup. For demo, you can register a new user and create an admin via the database.
+After first deploy, run database migrations, then seed (optional for demo users).
 
 **Quick seed via Render Shell:**
 1. In Render Dashboard → Your Service → **Shell**
-2. Run: `python -m backend.seed`
+2. Run:
+   - `python -m flask --app backend.app:create_app db upgrade`
+   - `python manage.py seed`
 
 ---
 
@@ -86,7 +89,8 @@ If you have `render.yaml` in your repo:
 ```bash
 cd "/Users/santhakumar/Desktop/smart greviance system"
 pip install -r requirements.txt
-python -m backend.seed   # Create admin/officer accounts
+python -m flask --app backend.app:create_app db upgrade
+python manage.py seed   # Applies migrations + creates demo users
 python run.py
 ```
 

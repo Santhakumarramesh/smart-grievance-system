@@ -11,6 +11,7 @@ class Config:
         _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
     SQLALCHEMY_DATABASE_URI = _db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    AUTO_CREATE_TABLES = os.environ.get('AUTO_CREATE_TABLES', 'false').lower() == 'true'
     
     # JWT
     JWT_SECRET_KEY = SECRET_KEY
@@ -42,6 +43,8 @@ class Config:
     # ML Model paths
     MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ml', 'artifacts', 'model.joblib')
     VECTORIZER_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ml', 'artifacts', 'vectorizer.joblib')
+    ENABLE_STARTUP_MODEL_LOAD = os.environ.get('ENABLE_STARTUP_MODEL_LOAD', 'true').lower() == 'true'
+    ENABLE_SCHEDULER = os.environ.get('ENABLE_SCHEDULER', 'true').lower() == 'true'
     
     # App settings (8000 for local dev, use PORT env for production)
     PORT = int(os.environ.get('PORT', 8000))

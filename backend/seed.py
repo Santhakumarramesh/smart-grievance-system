@@ -10,14 +10,20 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.app import create_app
+from backend.database import upgrade_database
 from backend.models import User
 from backend.extensions import db
 
-def seed_database():
+def seed_database(run_migrations=True):
     """Create initial admin and sample officers"""
     app = create_app()
     
     with app.app_context():
+        if run_migrations:
+            print("🔄 Running pending DB migrations before seeding...")
+            upgrade_database()
+            print("✓ Migrations applied")
+
         print("="*60)
         print("Seeding Database")
         print("="*60)
@@ -98,6 +104,8 @@ def seed_database():
                     officer.office_building = f"Block {chr(65 + departments.index(dept))}"
                     officer.designation = f"Senior {dept} Officer"
                     print(f"✓ Updated office details for {dept}")
+                # Keep seeded demo credentials consistent with documentation.
+                officer.set_password('officer123')
             else:
                 officer = User(
                     name=f"{dept} Officer",
@@ -113,11 +121,11 @@ def seed_database():
                     email_verified=True,
                     phone_verified=True
                 )
-                officer.set_password('Officer@123')
+                officer.set_password('officer123')
                 db.session.add(officer)
                 print(f"✓ Created officer for {dept}")
                 print(f"  Email: {email}")
-                print(f"  Password: Officer@123")
+                print(f"  Password: officer123")
                 print(f"  Office: {officer.office_number}")
         
         # Create a sample citizen
