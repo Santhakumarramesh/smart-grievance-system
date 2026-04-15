@@ -22,16 +22,39 @@ class SecurityFirewall:
     Comprehensive security firewall for the application
     """
     
-    # Blocked patterns (SQL injection, XSS, etc.)
-    BLOCKED_PATTERNS = [
-        r'(\bSELECT\b|\bUNION\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b|\bDROP\b|\bCREATE\b|\bALTER\b)',  # SQL
+    # Blocked patterns for non-SQL payload classes.
+    GENERIC_BLOCKED_PATTERNS = [
         r'(<script|<iframe|<object|<embed|javascript:)',  # XSS
         r'(\.\.\/|\.\.\\)',  # Path traversal
-        r'(\bexec\b|\beval\b|\bsystem\b|\bshell_exec\b)',  # Code injection
+        r'(\b(?:exec|eval|system|shell_exec)\s*\()',  # Code injection function calls
+    ]
+
+    # SQLi patterns focus on statement/operator context to avoid false positives
+    # for ordinary user text (e.g. "please provide an update").
+    SQL_INJECTION_PATTERNS = [
+        r'\bunion(?:\s+all)?\s+select\b',
+        r'\bselect\s+[\w\*,\s]+\s+from\b',
+        r'\binsert\s+into\b',
+        r'\bdelete\s+from\b',
+        r'\bdrop\s+table\b',
+        r'\balter\s+table\b',
+        r'\bcreate\s+table\b',
+        r'\bupdate\s+[a-zA-Z_][a-zA-Z0-9_]*\s+set\b',
+        r'(?:\'|"|`)\s*(?:or|and)\s+(?:\'[^\']*\'|"[^"]*"|`[^`]*`|\d+)\s*=\s*(?:\'[^\']*\'|"[^"]*"|`[^`]*`|\d+)',
+        r';\s*(?:select|insert|update|delete|drop|alter|create|union)\b',
+        r'\b(?:information_schema|xp_cmdshell|pg_sleep|sleep\s*\(|benchmark\s*\(|waitfor\s+delay|load_file\s*\(|into\s+outfile)\b',
     ]
     
     # Allowed HTML tags for sanitization
     ALLOWED_TAGS = ['b', 'i', 'u', 'strong', 'em', 'p', 'br']
+
+    @staticmethod
+    def _contains_sql_injection(text):
+        """Detect SQLi-style payloads without blocking normal conversational text."""
+        for pattern in SecurityFirewall.SQL_INJECTION_PATTERNS:
+            if re.search(pattern, text, re.IGNORECASE):
+                return True
+        return False
     
     @staticmethod
     def check_ip_blocked(ip_address):
@@ -81,10 +104,13 @@ class SecurityFirewall:
         if not text:
             return True, "", None
         
-        # Check for blocked patterns
-        for pattern in SecurityFirewall.BLOCKED_PATTERNS:
+        # Check for blocked non-SQL patterns.
+        for pattern in SecurityFirewall.GENERIC_BLOCKED_PATTERNS:
             if re.search(pattern, text, re.IGNORECASE):
                 return False, None, f"Invalid {field_name}: Contains prohibited content"
+
+        if SecurityFirewall._contains_sql_injection(text):
+            return False, None, f"Invalid {field_name}: Contains prohibited content"
         
         # Sanitize HTML
         sanitized = bleach.clean(
