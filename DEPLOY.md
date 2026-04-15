@@ -6,6 +6,11 @@ This project supports three runtime profiles:
 - Public demo deployment (`PostgreSQL`, demo email mode)
 - Production deployment (`PostgreSQL`, real SMTP email mode)
 
+Related docs:
+- Local setup: [SETUP.md](SETUP.md)
+- API map: [API_SUMMARY.md](API_SUMMARY.md)
+- Architecture: [ARCHITECTURE.md](ARCHITECTURE.md)
+
 ## 1. Required Runtime Configuration
 
 Set these variables in your hosting environment.
