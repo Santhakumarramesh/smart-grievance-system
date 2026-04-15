@@ -53,8 +53,12 @@ Add in Render Dashboard → Environment:
 |-----|-------|
 | `FLASK_ENV` | production |
 | `SECRET_KEY` | (generate a random 32-char string) |
+| `APP_BASE_URL` | https://your-render-domain.onrender.com |
 | `DATABASE_URL` | (Render Postgres URL, recommended) |
 | `DEMO_EMAIL_MODE` | true |
+| `ML_AUTO_ASSIGN_CONFIDENCE_THRESHOLD` | 0.65 |
+| `ML_MANUAL_REVIEW_DEPARTMENT` | Manual Review Queue |
+| `ENABLE_SCHEDULED_RETRAIN` | true |
 
 ### Step 4: Deploy
 Click **Create Web Service**. Render will build and deploy. Your app will be live at:

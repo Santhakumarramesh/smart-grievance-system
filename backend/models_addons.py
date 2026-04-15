@@ -56,3 +56,34 @@ class GrievanceRating(db.Model):
             'officer_helpfulness': self.officer_helpfulness,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
+
+
+class DepartmentCorrectionLog(db.Model):
+    """Track manual corrections to ML department predictions."""
+    __tablename__ = 'department_correction_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    grievance_id = db.Column(db.Integer, db.ForeignKey('grievances.id'), nullable=False)
+    predicted_department = db.Column(db.String(100), nullable=False)
+    corrected_department = db.Column(db.String(100), nullable=False)
+    prediction_confidence = db.Column(db.Float, nullable=True)
+    corrected_by_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    assigned_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    reason = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    corrected_by_user = db.relationship('User', foreign_keys=[corrected_by_user_id])
+    assigned_officer = db.relationship('User', foreign_keys=[assigned_officer_id])
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'grievance_id': self.grievance_id,
+            'predicted_department': self.predicted_department,
+            'corrected_department': self.corrected_department,
+            'prediction_confidence': self.prediction_confidence,
+            'corrected_by_user_id': self.corrected_by_user_id,
+            'assigned_officer_id': self.assigned_officer_id,
+            'reason': self.reason,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }

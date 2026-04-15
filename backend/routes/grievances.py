@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import json
 from backend.models import Grievance, GrievanceUpdate, GrievanceComment, User, FraudReport, Notification
 from backend.extensions import db
+from backend.config import Config
 from backend.routes.auth import get_current_user_from_token
 from backend.services.classifier import classifier
 from backend.services.email_service import EmailService
@@ -61,15 +62,27 @@ def predict_department():
         if not is_valid:
             return jsonify({'error': error or 'Invalid complaint text'}), 400
         
-        # Predict department
-        predicted_department = classifier.predict(sanitized_text)
+        # Predict department with confidence metadata
+        prediction = classifier.predict_with_confidence(sanitized_text)
+        predicted_department = prediction['department']
+        prediction_confidence = float(prediction.get('confidence') or 0.0)
         
         # Check if images are required
         images_required = does_department_require_images(predicted_department)
+        requires_manual_review = (
+            (not prediction.get('model_loaded'))
+            or (prediction_confidence < Config.ML_AUTO_ASSIGN_CONFIDENCE_THRESHOLD)
+        )
         
         return jsonify({
             'department': predicted_department,
-            'images_required': images_required
+            'images_required': images_required,
+            'prediction_confidence': prediction_confidence,
+            'prediction_confidence_pct': round(prediction_confidence * 100, 2),
+            'top_candidates': prediction.get('top_candidates', []),
+            'requires_manual_review': requires_manual_review,
+            'routing_decision': 'manual_review' if requires_manual_review else 'auto_assign',
+            'auto_assign_threshold': Config.ML_AUTO_ASSIGN_CONFIDENCE_THRESHOLD,
         }), 200
         
     except Exception as e:
@@ -99,8 +112,15 @@ def submit_grievance():
         except ValidationError as validation_error:
             return jsonify({'error': str(validation_error)}), 400
         
-        # Predict department using ML first
-        predicted_department = classifier.predict(complaint_text)
+        # Predict department using ML with confidence.
+        prediction = classifier.predict_with_confidence(complaint_text)
+        predicted_department = prediction['department']
+        prediction_confidence = float(prediction.get('confidence') or 0.0)
+        prediction_source = prediction.get('source', 'fallback')
+        requires_manual_triage = (
+            (not prediction.get('model_loaded'))
+            or (prediction_confidence < Config.ML_AUTO_ASSIGN_CONFIDENCE_THRESHOLD)
+        )
         
         # CONDITIONAL: Validate images based on department type
         images_required = does_department_require_images(predicted_department)
@@ -160,13 +180,36 @@ def submit_grievance():
         
         # Store images as JSON
         images_json = json.dumps(images) if images else None
+
+        routing_status = 'Assigned to Department'
+        assigned_department = predicted_department
+        routing_message = f'Your complaint has been assigned to {predicted_department} department for review.'
+        triage_reason = None
+
+        if requires_manual_triage:
+            routing_status = 'Manual Review Required'
+            assigned_department = Config.ML_MANUAL_REVIEW_DEPARTMENT
+            routing_message = (
+                f'Your complaint has been routed to manual triage because model confidence '
+                f'({prediction_confidence * 100:.1f}%) is below the auto-assign threshold '
+                f'({Config.ML_AUTO_ASSIGN_CONFIDENCE_THRESHOLD * 100:.1f}%). '
+                f'Admin review is pending.'
+            )
+            triage_reason = (
+                f'Low model confidence ({prediction_confidence * 100:.1f}%) for '
+                f'predicted department "{predicted_department}"'
+            )
         
         # Create grievance
         grievance = Grievance(
             user_id=user.id,
             complaint_text=complaint_text,
             predicted_department=predicted_department,
-            assigned_department=predicted_department,
+            assigned_department=assigned_department,
+            prediction_confidence=prediction_confidence,
+            prediction_source=prediction_source,
+            requires_manual_triage=requires_manual_triage,
+            triage_reason=triage_reason,
             status='Received',
             location=location,
             images=images_json,
@@ -193,15 +236,32 @@ def submit_grievance():
         # Create second update - Assigned to Department
         update2 = GrievanceUpdate(
             grievance_id=grievance.id,
-            status='Assigned to Department',
-            message=f'Your complaint has been assigned to {predicted_department} department for review.',
+            status=routing_status,
+            message=routing_message,
             updated_by_role='SYSTEM',
             updated_by_name='Smart Grievance System'
         )
         db.session.add(update2)
         
         # Update grievance status
-        grievance.status = 'Assigned to Department'
+        grievance.status = routing_status
+
+        if requires_manual_triage:
+            admins = User.query.filter(User.role.in_(ADMIN_ROLE_VALUES)).all()
+            for admin in admins:
+                triage_notification = Notification(
+                    user_id=admin.id,
+                    title=f'Manual ML Triage Needed - Grievance #{grievance.id}',
+                    message=(
+                        f'Predicted: {predicted_department} | '
+                        f'Confidence: {prediction_confidence * 100:.1f}% | '
+                        f'Citizen: {user.name}'
+                    ),
+                    notification_type='triage_review',
+                    related_grievance_id=grievance.id,
+                    is_read=False
+                )
+                db.session.add(triage_notification)
         
         db.session.commit()
         
@@ -210,17 +270,31 @@ def submit_grievance():
             user.email,
             grievance.id,
             predicted_department,
-            'Assigned to Department',
-            f'Your complaint has been assigned to {predicted_department} department.'
+            routing_status,
+            routing_message
         )
         
-        log_audit(user.id, 'create_grievance', 'grievance', grievance.id, json.dumps({'department': predicted_department}))
+        log_audit(
+            user.id,
+            'create_grievance',
+            'grievance',
+            grievance.id,
+            json.dumps({
+                'department': predicted_department,
+                'prediction_confidence': prediction_confidence,
+                'routing_status': routing_status,
+                'requires_manual_triage': requires_manual_triage,
+            })
+        )
         
         return jsonify({
             'message': 'Grievance submitted successfully',
             'grievance_id': grievance.id,
             'department': predicted_department,
-            'status': grievance.status
+            'status': grievance.status,
+            'routing_decision': 'manual_review' if requires_manual_triage else 'auto_assign',
+            'prediction_confidence': prediction_confidence,
+            'auto_assign_threshold': Config.ML_AUTO_ASSIGN_CONFIDENCE_THRESHOLD,
         }), 201
         
     except Exception as e:

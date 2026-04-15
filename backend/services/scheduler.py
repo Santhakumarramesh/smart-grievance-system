@@ -7,6 +7,7 @@ import os
 import threading
 import time
 from datetime import datetime
+from backend.config import Config
 from backend.services.comment_escalation import check_and_escalate_comments
 from backend.services.model_retrain import retrain_model
 
@@ -67,10 +68,10 @@ class BackgroundScheduler:
                     
                     # Model retraining (every RETRAIN_INTERVAL_HOURS)
                     self._hours_since_retrain += 1
-                    if self._hours_since_retrain >= RETRAIN_INTERVAL_HOURS:
+                    if Config.ENABLE_SCHEDULED_RETRAIN and self._hours_since_retrain >= RETRAIN_INTERVAL_HOURS:
                         self._hours_since_retrain = 0
                         print(f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Running scheduled ML model retraining...")
-                        success, msg = retrain_model()
+                        success, msg = retrain_model(trigger='scheduler')
                         if success:
                             print(f"✓ {msg}")
                         else:

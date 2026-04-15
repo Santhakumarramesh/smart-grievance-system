@@ -2,7 +2,9 @@ from flask import Blueprint, request, jsonify
 from datetime import datetime, timedelta
 from sqlalchemy import func
 from backend.models import User, Grievance, GrievanceUpdate, Notification
+from backend.models_addons import DepartmentCorrectionLog
 from backend.extensions import db
+from backend.config import Config
 from backend.routes.auth import get_current_user_from_token
 from backend.services.email_service import EmailService
 from backend.services.model_retrain import retrain_model, get_retrain_status
@@ -315,7 +317,15 @@ def assign_officer():
         if not officer or not is_role(officer, 'OFFICER'):
             return jsonify({'error': 'Officer not found'}), 404
 
-        if not officer.department or officer.department != grievance.assigned_department:
+        if not officer.department:
+            return jsonify({'error': 'Officer department is required for assignment'}), 400
+
+        manual_triage_case = (
+            grievance.requires_manual_triage
+            or grievance.status == 'Manual Review Required'
+            or grievance.assigned_department == Config.ML_MANUAL_REVIEW_DEPARTMENT
+        )
+        if not manual_triage_case and officer.department != grievance.assigned_department:
             return jsonify({
                 'error': (
                     'Officer department mismatch. '
@@ -331,20 +341,47 @@ def assign_officer():
         # Store old assignment context for notifications
         old_status = grievance.status
         
+        previous_assigned_department = grievance.assigned_department
+        department_corrected = officer.department != grievance.assigned_department
+
         # Assign officer
         grievance.assigned_officer_id = officer_id
+        grievance.assigned_department = officer.department
         grievance.status = 'Assigned to Department'
+        grievance.requires_manual_triage = False
+        grievance.triage_reason = None
         grievance.updated_at = datetime.utcnow()
         
         # Create update entry
+        assignment_message = (
+            f'Case assigned to Officer {officer.name} ({officer.designation or "Officer"}) by Admin.'
+        )
+        if department_corrected:
+            assignment_message = (
+                f'Case assigned to Officer {officer.name} ({officer.designation or "Officer"}) by Admin. '
+                f'Department corrected from {previous_assigned_department} to {officer.department}.'
+            )
+
         update = GrievanceUpdate(
             grievance_id=grievance.id,
             status='Assigned to Department',
-            message=f'Case assigned to Officer {officer.name} ({officer.designation or "Officer"}) by Admin.',
+            message=assignment_message,
             updated_by_role='ADMIN',
             updated_by_name=user.name
         )
         db.session.add(update)
+
+        if department_corrected:
+            correction_log = DepartmentCorrectionLog(
+                grievance_id=grievance.id,
+                predicted_department=grievance.predicted_department,
+                corrected_department=officer.department,
+                prediction_confidence=grievance.prediction_confidence,
+                corrected_by_user_id=user.id,
+                assigned_officer_id=officer.id,
+                reason='Admin selected officer department during triage review',
+            )
+            db.session.add(correction_log)
         
         # Create in-app notification for officer
         officer_notification = Notification(
@@ -369,6 +406,19 @@ def assign_officer():
         db.session.add(citizen_notification)
         
         db.session.commit()
+
+        if department_corrected:
+            correction_details = {
+                'grievance_id': grievance.id,
+                'predicted_department': grievance.predicted_department,
+                'old_assigned_department': previous_assigned_department,
+                'new_assigned_department': officer.department,
+                'prediction_confidence': grievance.prediction_confidence,
+                'assigned_officer_id': officer.id,
+            }
+            from backend.services.audit_service import log_audit
+            import json
+            log_audit(user.id, 'correct_department_prediction', 'grievance', grievance.id, json.dumps(correction_details))
         
         # Send email notification to officer
         EmailService.send_officer_assignment_notification(
@@ -466,7 +516,7 @@ def trigger_retrain():
         if auth_response:
             return auth_response
         
-        success, message = retrain_model()
+        success, message = retrain_model(trigger='manual')
         if success:
             status = get_retrain_status()
             return jsonify({
@@ -509,9 +559,37 @@ def get_model_status():
             return auth_response
         
         status = get_retrain_status()
-        if status:
-            return jsonify(status), 200
-        return jsonify({'message': 'No training metadata found. Run retrain first.'}), 404
+        corrections = DepartmentCorrectionLog.query.order_by(DepartmentCorrectionLog.created_at.desc()).limit(20).all()
+        total_corrections = DepartmentCorrectionLog.query.count()
+
+        latest_training = status.get('latest_training') or {}
+        metrics = latest_training.get('metrics', {})
+        accuracy = metrics.get('accuracy')
+        quality_note = None
+
+        if accuracy is None:
+            quality_note = (
+                'Training metadata is unavailable. Run /api/admin/retrain-model to refresh metrics.'
+            )
+        elif accuracy < 0.75:
+            quality_note = (
+                'Current ML accuracy is below the recommended 75% threshold. '
+                'Low-confidence cases are routed to manual review.'
+            )
+        else:
+            quality_note = 'Model quality is acceptable for confidence-aware auto-routing.'
+
+        status['correction_loop'] = {
+            'total_corrections': total_corrections,
+            'recent_corrections': [entry.to_dict() for entry in corrections],
+        }
+        status['quality_assessment'] = {
+            'accuracy': accuracy,
+            'recommended_minimum_accuracy': 0.75,
+            'note': quality_note,
+        }
+
+        return jsonify(status), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

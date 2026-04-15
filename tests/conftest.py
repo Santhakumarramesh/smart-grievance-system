@@ -33,6 +33,7 @@ def app(tmp_path, monkeypatch):
     monkeypatch.setattr(EmailService, "send_password_reset_confirmation", staticmethod(lambda *args, **kwargs: True))
     monkeypatch.setattr(EmailService, "send_officer_assignment_notification", staticmethod(lambda *args, **kwargs: True))
     monkeypatch.setattr(EmailService, "send_status_update_notification", staticmethod(lambda *args, **kwargs: True))
+    monkeypatch.setattr(EmailService, "send_grievance_notification", staticmethod(lambda *args, **kwargs: True))
 
     with app.app_context():
         db.create_all()

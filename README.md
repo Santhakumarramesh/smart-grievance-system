@@ -13,12 +13,13 @@ A citizen-centric grievance management platform for filing, tracking, and resolv
 
 ## Features
 
-- **AI Department Classification** — ML model (~74% accuracy) routes complaints to the right department (Water, Electricity, Roads, Sanitation, etc.)
+- **AI Department Classification** — ML model currently trains around ~74% accuracy on the bundled dataset and now uses confidence-aware routing
+- **Confidence-Aware Triage** — High-confidence predictions auto-assign to departments; low-confidence predictions are routed to manual admin triage
 - **Role-Based Access** — Citizens, Officers, and Admins with appropriate permissions
 - **Fraud Detection** — Content moderation, spam blocking, duplicate detection
 - **Comment & Escalation** — Officer-citizen communication with automatic escalation
 - **Multi-Language Support** — Indian language stop words for better classification
-- **Scheduled Retraining** — Model retrains weekly; admins can trigger manually
+- **Scheduled Retraining** — Model retrains weekly (configurable), supports manual retrain, and avoids overlapping retrain jobs
 - **Public Transparency Feed** — Anonymized recently resolved cases exposed via backend API
 
 ## Role Model and Permissions
@@ -39,7 +40,7 @@ Legacy hierarchy fields (`role_level`, `current_role_level`, `RoleHierarchy`, `D
 | View grievance details | Own grievances only | Grievances in own department | All grievances |
 | Update grievance status | No | Department grievances; cannot update cases assigned to another officer | All grievances |
 | Add grievance comment | Own grievances only | Department grievances; cannot comment on cases assigned to another officer. First officer comment can claim unassigned case | All grievances |
-| Assign officer | No | No | Yes (officer department must match grievance department) |
+| Assign officer | No | No | Yes (officer department must match grievance department, except manual-triage queue cases) |
 | Report fraud | No | Assigned officer only | Review/take action |
 | Export grievances | No | Own department only | All grievances |
 
@@ -128,8 +129,16 @@ python manage.py seed
 | `/api/grievances/predict-department` | POST | AI department prediction |
 | `/api/public/resolved-cases` | GET | Anonymized recent resolved grievances for homepage cards |
 | `/api/admin/retrain-model` | POST | Trigger model retraining (Admin) |
-| `/api/admin/model-status` | GET | Model metadata (Admin) |
+| `/api/admin/model-status` | GET | Runtime + training metadata + correction-loop summary (Admin) |
 | `/health` | GET | Health check |
+
+## ML Routing Configuration
+
+- `ML_AUTO_ASSIGN_CONFIDENCE_THRESHOLD` (default `0.65`) controls when auto-assignment is allowed.
+- `ML_MANUAL_REVIEW_DEPARTMENT` (default `Manual Review Queue`) is the placeholder department for low-confidence cases.
+- `ENABLE_SCHEDULED_RETRAIN` toggles scheduler-based retraining without disabling comment escalation.
+
+When model confidence is below threshold, grievances are queued for manual triage and department corrections are logged for future retraining analysis.
 
 ## Deployment
 

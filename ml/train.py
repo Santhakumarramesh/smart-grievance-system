@@ -7,6 +7,8 @@ import joblib
 import os
 import sys
 import warnings
+import hashlib
+from datetime import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
@@ -170,7 +172,9 @@ def train_classifier():
     
     print(f"\n✓ Accuracy: {accuracy:.4f} ({accuracy * 100:.2f}%)")
     print("\nClassification Report:")
-    print(classification_report(y_test, y_pred, zero_division=0))
+    report_text = classification_report(y_test, y_pred, zero_division=0)
+    print(report_text)
+    report_dict = classification_report(y_test, y_pred, zero_division=0, output_dict=True)
     
     # Save model and vectorizer
     print("\n" + "=" * 60)
@@ -191,11 +195,35 @@ def train_classifier():
     # Save training metadata for retraining logic
     metadata_path = os.path.join(artifacts_dir, 'train_metadata.json')
     import json
+    with open(data_path, 'rb') as dataset_file:
+        dataset_sha256 = hashlib.sha256(dataset_file.read()).hexdigest()
+
     metadata = {
-        'accuracy': float(accuracy),
-        'samples': len(df),
-        'departments': int(df['department'].nunique()),
-        'vocabulary_size': len(vectorizer.vocabulary_),
+        'trained_at_utc': datetime.utcnow().isoformat(),
+        'dataset': {
+            'path': os.path.relpath(data_path, os.path.dirname(os.path.dirname(__file__))),
+            'version_sha256': dataset_sha256,
+            'samples': len(df),
+            'train_samples': len(X_train),
+            'test_samples': len(X_test),
+            'department_count': int(df['department'].nunique()),
+        },
+        'model': {
+            'algorithm': 'LogisticRegression',
+            'vectorizer': 'TfidfVectorizer',
+            'max_features': MAX_FEATURES,
+            'min_df': MIN_DF,
+            'ngram_range': list(NGRAM_RANGE),
+            'vocabulary_size': len(vectorizer.vocabulary_),
+        },
+        'metrics': {
+            'accuracy': float(accuracy),
+            'macro_avg_precision': float(report_dict.get('macro avg', {}).get('precision', 0.0)),
+            'macro_avg_recall': float(report_dict.get('macro avg', {}).get('recall', 0.0)),
+            'macro_avg_f1': float(report_dict.get('macro avg', {}).get('f1-score', 0.0)),
+            'weighted_avg_f1': float(report_dict.get('weighted avg', {}).get('f1-score', 0.0)),
+        },
+        'label_classes': [str(label) for label in sorted(df['department'].unique().tolist())],
     }
     with open(metadata_path, 'w') as f:
         json.dump(metadata, f, indent=2)

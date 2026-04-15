@@ -4,6 +4,7 @@
         uploadedImages: [],
         imagesRequired: true,
         predictedDepartment: null,
+        predictionConfidence: null,
         predictTimer: null,
         onSubmitted: null,
         showAlert: null,
@@ -23,9 +24,10 @@
         return document.getElementById('imageDropZone');
     }
 
-    function updateImageRequirementUI(required, department) {
+    function updateImageRequirementUI(required, department, predictionConfidence = null, requiresManualReview = false) {
         state.imagesRequired = !!required;
         state.predictedDepartment = department || null;
+        state.predictionConfidence = typeof predictionConfidence === 'number' ? predictionConfidence : null;
 
         const requirementLabel = document.getElementById('imageRequirementLabel');
         const requirementHint = document.getElementById('imageRequirementHint');
@@ -51,7 +53,13 @@
 
         if (departmentHint) {
             if (department) {
-                departmentHint.textContent = `Predicted department: ${department}`;
+                const confidenceText = (
+                    state.predictionConfidence !== null
+                        ? ` (${(state.predictionConfidence * 100).toFixed(1)}% confidence)`
+                        : ''
+                );
+                const routingText = requiresManualReview ? ' - manual review likely' : '';
+                departmentHint.textContent = `Predicted department: ${department}${confidenceText}${routingText}`;
                 departmentHint.style.display = 'block';
             } else {
                 departmentHint.style.display = 'none';
@@ -80,7 +88,12 @@
                 method: 'POST',
                 body: JSON.stringify({ complaint_text: complaintText }),
             });
-            updateImageRequirementUI(result.images_required, result.department);
+            updateImageRequirementUI(
+                result.images_required,
+                result.department,
+                result.prediction_confidence,
+                result.requires_manual_review
+            );
         } catch (_) {
             // Keep default required mode on prediction errors.
             updateImageRequirementUI(true, null);
@@ -204,7 +217,11 @@
                 }),
             });
 
-            notify(`Grievance submitted successfully! ID: #${response.grievance_id}`, 'success');
+            let submitMessage = `Grievance submitted successfully! ID: #${response.grievance_id}`;
+            if (response.routing_decision === 'manual_review') {
+                submitMessage += ' This case has been routed for manual triage review.';
+            }
+            notify(submitMessage, 'success');
             const form = document.getElementById('grievanceForm');
             if (form) {
                 form.reset();

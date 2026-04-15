@@ -136,6 +136,10 @@ class Grievance(db.Model):
     complaint_text = db.Column(db.Text, nullable=False)
     predicted_department = db.Column(db.String(100), nullable=False)
     assigned_department = db.Column(db.String(100), nullable=False)
+    prediction_confidence = db.Column(db.Float, default=0.0)
+    prediction_source = db.Column(db.String(30), default='ml')
+    requires_manual_triage = db.Column(db.Boolean, default=False)
+    triage_reason = db.Column(db.Text, nullable=True)
     assigned_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Current officer handling the case
     current_role_level = db.Column(db.Integer, default=2)  # Legacy hierarchy field; active workflow uses assigned officer/admin escalation
     escalation_level = db.Column(db.Integer, default=0)  # Number of times escalated
@@ -185,6 +189,10 @@ class Grievance(db.Model):
             'complaint_text': self.complaint_text,
             'predicted_department': self.predicted_department,
             'assigned_department': self.assigned_department,
+            'prediction_confidence': self.prediction_confidence,
+            'prediction_source': self.prediction_source,
+            'requires_manual_triage': self.requires_manual_triage,
+            'triage_reason': self.triage_reason,
             'assigned_officer_id': self.assigned_officer_id,
             'status': self.status or 'Received',
             'location': self.location,

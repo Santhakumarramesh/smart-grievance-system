@@ -169,6 +169,7 @@ function formatDate(dateString) {
 const WORKFLOW_STATUS_META = {
     received: { badgeClass: 'badge-received', label: 'Received' },
     assigned: { badgeClass: 'badge-assigned', label: 'Assigned to Department' },
+    manual_review: { badgeClass: 'badge-investigation', label: 'Manual Review Required' },
     progress: { badgeClass: 'badge-progress', label: 'Under Progress' },
     investigation: { badgeClass: 'badge-investigation', label: 'Investigation' },
     reviewed: { badgeClass: 'badge-reviewed', label: 'Reviewed' },
@@ -182,6 +183,7 @@ function normalizeWorkflowStatus(status) {
 
     if (raw === 'received') return 'received';
     if (raw === 'assigned' || raw === 'assigned to department') return 'assigned';
+    if (raw === 'manual review required') return 'manual_review';
     if (raw === 'in progress' || raw === 'under progress') return 'progress';
     if (raw.includes('investigation')) return 'investigation';
     if (raw === 'reviewed') return 'reviewed';
