@@ -118,13 +118,17 @@ CI (`.github/workflows/ci.yml`) runs:
 - `ruff check backend tests`
 - `python -m pytest --cov=backend --cov-report=term-missing --cov-report=xml`
 - `bandit -q -r backend -x backend/seed.py` (non-blocking informational scan)
+- optional smoke harness (manual trigger): `python scripts/smoke_test.py`
 
 Local checks:
 
 ```bash
 ruff check backend tests
 python -m pytest --cov=backend --cov-report=term-missing
+python scripts/smoke_test.py
 ```
+
+To run smoke in GitHub Actions, trigger `CI` via `workflow_dispatch` with `run_smoke=true`.
 
 ## Deployment
 

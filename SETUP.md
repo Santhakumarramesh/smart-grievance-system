@@ -83,7 +83,17 @@ ruff check backend tests
 python -m pytest --cov=backend --cov-report=term-missing
 ```
 
-## 8. Working with Migrations
+## 8. Run Full Smoke Verification
+
+Run the strict end-to-end smoke harness (isolated SQLite DB, migrations, seed, critical flow checks):
+
+```bash
+python scripts/smoke_test.py
+```
+
+This is useful before release/deploy and for proving core workflow health quickly.
+
+## 9. Working with Migrations
 
 Create migration after model updates:
 
@@ -92,7 +102,7 @@ python -m flask --app backend.app:create_app db migrate -m "describe change"
 python -m flask --app backend.app:create_app db upgrade
 ```
 
-## 9. Production Checklist (Minimum)
+## 10. Production Checklist (Minimum)
 
 - Set `FLASK_ENV=production`
 - Set a strong `SECRET_KEY`
