@@ -31,6 +31,7 @@ def test_create_app_does_not_create_tables_when_auto_create_disabled(monkeypatch
     monkeypatch.setenv("ENABLE_SCHEDULER", "false")
     monkeypatch.setenv("ENABLE_STARTUP_MODEL_LOAD", "false")
     monkeypatch.setenv("FLASK_ENV", "production")
+    monkeypatch.setenv("SECRET_KEY", "phase3-test-secret")
 
     _reload_config()
     app_module = _reload_app()
@@ -48,6 +49,7 @@ def test_create_app_creates_tables_when_auto_create_enabled(monkeypatch, tmp_pat
     monkeypatch.setenv("ENABLE_SCHEDULER", "false")
     monkeypatch.setenv("ENABLE_STARTUP_MODEL_LOAD", "false")
     monkeypatch.setenv("FLASK_ENV", "production")
+    monkeypatch.setenv("SECRET_KEY", "phase3-test-secret")
 
     _reload_config()
     app_module = _reload_app()

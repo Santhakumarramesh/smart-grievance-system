@@ -120,6 +120,27 @@ python -m flask --app backend.app:create_app db upgrade
 python manage.py seed
 ```
 
+## Runtime Profiles
+
+| Profile | `FLASK_ENV` | DB | Email mode | Intended use |
+|---|---|---|---|---|
+| Local dev | `development` | SQLite (`sqlite:///grievance.db`) | Demo (`DEMO_EMAIL_MODE=true`) | local coding + testing |
+| Public demo | `production` | PostgreSQL | Demo (`DEMO_EMAIL_MODE=true`) | hosted demonstration without SMTP secrets |
+| Production | `production` | PostgreSQL | Real SMTP (`DEMO_EMAIL_MODE=false`) | real usage |
+
+### Required production environment variables
+
+- `FLASK_ENV=production`
+- `SECRET_KEY` (must be set; app now fails fast if left default in production)
+- `APP_BASE_URL` (public URL used in all generated links)
+- `DATABASE_URL` (PostgreSQL recommended)
+- `DEMO_EMAIL_MODE` (`true` or `false`)
+- `DEMO_SMS_MODE` (`true` currently)
+- `AUTO_CREATE_TABLES=false`
+
+If `DEMO_EMAIL_MODE=false`, set SMTP variables as well:
+- `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USE_TLS`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_DEFAULT_SENDER`
+
 ## Quality Gates
 
 CI enforces:
@@ -149,7 +170,7 @@ bandit -q -r backend -x backend/seed.py || true
 | `/api/public/resolved-cases` | GET | Anonymized recent resolved grievances for homepage cards |
 | `/api/admin/retrain-model` | POST | Trigger model retraining (Admin) |
 | `/api/admin/model-status` | GET | Runtime + training metadata + correction-loop summary (Admin) |
-| `/health` | GET | Health check |
+| `/health` | GET | App/database/model/scheduler health diagnostics |
 
 ## ML Routing Configuration
 
@@ -176,10 +197,10 @@ When model confidence is below threshold, grievances are queued for manual triag
 2. New Web Service → Python
 3. Build: `pip install -r requirements.txt`
 4. Start: `gunicorn "backend.app:create_app()" --bind 0.0.0.0:$PORT`
-5. Add env: `FLASK_ENV=production`, `SECRET_KEY`, `DATABASE_URL`, `DEMO_EMAIL_MODE=true`
+5. Add env: `FLASK_ENV=production`, `SECRET_KEY`, `APP_BASE_URL`, `DATABASE_URL`, `DEMO_EMAIL_MODE=true`
 6. Run migrations: `python -m flask --app backend.app:create_app db upgrade`
 
-See [DEPLOY.md](DEPLOY.md) for details. For auto-deploy on push to Render, add `.github/workflows/deploy.yml` via the GitHub web UI and set `RENDER_DEPLOY_HOOK_URL` in repo Secrets.
+See [DEPLOY.md](DEPLOY.md) for full environment matrix, scheduler strategy, and deployment steps.
 
 ### GitHub Pages (Static Demo)
 

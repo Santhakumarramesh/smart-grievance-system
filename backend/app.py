@@ -2,7 +2,9 @@ from flask import Flask, send_from_directory
 from flask_cors import CORS
 import os
 import sys
+from datetime import datetime, timezone
 from dotenv import load_dotenv
+from sqlalchemy import text
 
 # Load environment variables from .env file
 load_dotenv()
@@ -26,8 +28,14 @@ def _is_flask_db_command():
 
 
 def create_app():
+    Config.reload_from_env()
+    config_warnings = Config.validate_runtime_config()
+
     app = Flask(__name__, static_folder='../frontend')
     app.config.from_object(Config)
+
+    for warning in config_warnings:
+        print(f"⚠ Config warning: {warning}")
     
     # Initialize security headers
     SecurityHeaders(app)
@@ -54,7 +62,43 @@ def create_app():
     
     @app.route('/health')
     def health():
-        return {'status': 'healthy', 'demo_mode': Config.DEMO_EMAIL_MODE, 'security': 'enabled'}, 200
+        db_status = {
+            'connected': False,
+            'dialect': None,
+            'error': None,
+        }
+        try:
+            db.session.execute(text('SELECT 1'))
+            db_status['connected'] = True
+            db_status['dialect'] = db.engine.dialect.name
+        except Exception as exc:
+            db_status['error'] = str(exc)
+
+        model_status = classifier.get_runtime_status()
+        scheduler_status = scheduler.get_runtime_status()
+
+        status = 'healthy'
+        status_code = 200
+        if not db_status['connected']:
+            status = 'degraded'
+            status_code = 503
+        elif app.config.get('ENABLE_STARTUP_MODEL_LOAD') and not model_status.get('model_loaded'):
+            status = 'degraded'
+
+        return {
+            'status': status,
+            'timestamp_utc': datetime.now(timezone.utc).isoformat(),
+            'environment': app.config.get('ENVIRONMENT'),
+            'app_base_url': app.config.get('APP_BASE_URL'),
+            'demo_email_mode': app.config.get('DEMO_EMAIL_MODE'),
+            'demo_sms_mode': app.config.get('DEMO_SMS_MODE'),
+            'database': db_status,
+            'ml': {
+                'model_loaded': model_status.get('model_loaded'),
+                'loaded_at_utc': model_status.get('loaded_at_utc'),
+            },
+            'scheduler': scheduler_status,
+        }, status_code
     
     @app.route('/<path:path>')
     def serve_static(path):
@@ -100,7 +144,7 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     port = Config.PORT
-    is_production = os.getenv('FLASK_ENV', 'development') == 'production'
+    is_production = Config.ENVIRONMENT == 'production'
     
     print(f"\n{'='*60}")
     print(f"🚀 Smart Grievance System Starting...")

@@ -86,5 +86,17 @@ class BackgroundScheduler:
                 print(f"❌ Scheduler error: {e}")
                 continue
 
+    def get_runtime_status(self):
+        """Expose scheduler runtime state for health and diagnostics."""
+        return {
+            'enabled': Config.ENABLE_SCHEDULER,
+            'autostart': Config.SCHEDULER_AUTOSTART,
+            'running': self.running,
+            'thread_alive': bool(self.thread and self.thread.is_alive()),
+            'app_bound': self.app is not None,
+            'scheduled_retrain_enabled': Config.ENABLE_SCHEDULED_RETRAIN,
+            'retrain_interval_hours': RETRAIN_INTERVAL_HOURS,
+        }
+
 # Global scheduler instance
 scheduler = BackgroundScheduler()

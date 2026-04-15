@@ -2,54 +2,93 @@ import os
 from datetime import timedelta
 
 class Config:
-    # Secret key for JWT
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
-    
-    # Database (Render/Heroku use DATABASE_URL; fix postgres:// -> postgresql:// for SQLAlchemy)
-    _db_url = os.environ.get('DATABASE_URL', 'sqlite:///grievance.db')
-    if _db_url.startswith('postgres://'):
-        _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
-    SQLALCHEMY_DATABASE_URI = _db_url
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    AUTO_CREATE_TABLES = os.environ.get('AUTO_CREATE_TABLES', 'false').lower() == 'true'
-    
-    # JWT
-    JWT_SECRET_KEY = SECRET_KEY
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=7)
-    JWT_RESET_TOKEN_EXPIRES = timedelta(minutes=int(os.environ.get('JWT_RESET_TOKEN_EXPIRES_MINUTES', '15')))
-    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=int(os.environ.get('JWT_REFRESH_TOKEN_EXPIRES_DAYS', '30')))
-    ENABLE_REFRESH_TOKENS = os.environ.get('ENABLE_REFRESH_TOKENS', 'true').lower() == 'true'
+    DEFAULT_SECRET_KEY = 'dev-secret-key-change-in-production'
 
-    # Canonical frontend/app URL used in email and notification links
-    APP_BASE_URL = os.environ.get('APP_BASE_URL', 'http://localhost:8000').rstrip('/')
-    
-    # OTP Settings
-    OTP_EXPIRY_MINUTES = 5
-    OTP_MAX_ATTEMPTS = 5
-    OTP_RATE_LIMIT_PER_HOUR = 3
-    
-    # Demo Mode (Free tier)
-    DEMO_EMAIL_MODE = os.environ.get('DEMO_EMAIL_MODE', 'true').lower() == 'true'
-    DEMO_SMS_MODE = os.environ.get('DEMO_SMS_MODE', 'true').lower() == 'true'
-    
-    # Email Configuration (Gmail SMTP - Free)
-    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
-    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '')  # Your Gmail address
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')  # Your Gmail App Password
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'Smart Grievance System <noreply@grievance.gov>')
-    
-    # ML Model paths
-    MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ml', 'artifacts', 'model.joblib')
-    VECTORIZER_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ml', 'artifacts', 'vectorizer.joblib')
-    MODEL_METADATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ml', 'artifacts', 'train_metadata.json')
-    ENABLE_STARTUP_MODEL_LOAD = os.environ.get('ENABLE_STARTUP_MODEL_LOAD', 'true').lower() == 'true'
-    ENABLE_SCHEDULER = os.environ.get('ENABLE_SCHEDULER', 'true').lower() == 'true'
-    SCHEDULER_AUTOSTART = os.environ.get('SCHEDULER_AUTOSTART', 'false').lower() == 'true'
-    ENABLE_SCHEDULED_RETRAIN = os.environ.get('ENABLE_SCHEDULED_RETRAIN', 'true').lower() == 'true'
-    ML_AUTO_ASSIGN_CONFIDENCE_THRESHOLD = float(os.environ.get('ML_AUTO_ASSIGN_CONFIDENCE_THRESHOLD', '0.65'))
-    ML_MANUAL_REVIEW_DEPARTMENT = os.environ.get('ML_MANUAL_REVIEW_DEPARTMENT', 'Manual Review Queue')
-    
-    # App settings (8000 for local dev, use PORT env for production)
-    PORT = int(os.environ.get('PORT', 8000))
+    @classmethod
+    def _env_bool(cls, key, default):
+        return os.environ.get(key, str(default)).lower() == 'true'
+
+    @classmethod
+    def reload_from_env(cls):
+        # Environment mode
+        cls.ENVIRONMENT = os.environ.get('FLASK_ENV', os.environ.get('APP_ENV', 'development')).lower()
+        cls.IS_PRODUCTION = cls.ENVIRONMENT == 'production'
+
+        # Secret key for JWT
+        cls.SECRET_KEY = os.environ.get('SECRET_KEY', cls.DEFAULT_SECRET_KEY)
+
+        # Database (Render/Heroku use DATABASE_URL; fix postgres:// -> postgresql:// for SQLAlchemy)
+        db_url = os.environ.get('DATABASE_URL', 'sqlite:///grievance.db')
+        if db_url.startswith('postgres://'):
+            db_url = db_url.replace('postgres://', 'postgresql://', 1)
+        cls.DATABASE_URL = db_url
+        cls.SQLALCHEMY_DATABASE_URI = db_url
+        cls.SQLALCHEMY_TRACK_MODIFICATIONS = False
+        cls.AUTO_CREATE_TABLES = cls._env_bool('AUTO_CREATE_TABLES', 'false')
+
+        # JWT
+        cls.JWT_SECRET_KEY = cls.SECRET_KEY
+        cls.JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=7)
+        cls.JWT_RESET_TOKEN_EXPIRES = timedelta(
+            minutes=int(os.environ.get('JWT_RESET_TOKEN_EXPIRES_MINUTES', '15'))
+        )
+        cls.JWT_REFRESH_TOKEN_EXPIRES = timedelta(
+            days=int(os.environ.get('JWT_REFRESH_TOKEN_EXPIRES_DAYS', '30'))
+        )
+        cls.ENABLE_REFRESH_TOKENS = cls._env_bool('ENABLE_REFRESH_TOKENS', 'true')
+
+        # Canonical frontend/app URL used in email and notification links
+        cls.APP_BASE_URL = os.environ.get('APP_BASE_URL', 'http://localhost:8000').rstrip('/')
+
+        # OTP Settings
+        cls.OTP_EXPIRY_MINUTES = 5
+        cls.OTP_MAX_ATTEMPTS = 5
+        cls.OTP_RATE_LIMIT_PER_HOUR = 3
+
+        # Demo Mode
+        cls.DEMO_EMAIL_MODE = cls._env_bool('DEMO_EMAIL_MODE', 'true')
+        cls.DEMO_SMS_MODE = cls._env_bool('DEMO_SMS_MODE', 'true')
+
+        # Email Configuration
+        cls.MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+        cls.MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
+        cls.MAIL_USE_TLS = cls._env_bool('MAIL_USE_TLS', 'true')
+        cls.MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '')
+        cls.MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
+        cls.MAIL_DEFAULT_SENDER = os.environ.get(
+            'MAIL_DEFAULT_SENDER',
+            'Smart Grievance System <noreply@grievance.gov>'
+        )
+
+        # ML Model paths
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        cls.MODEL_PATH = os.path.join(project_root, 'ml', 'artifacts', 'model.joblib')
+        cls.VECTORIZER_PATH = os.path.join(project_root, 'ml', 'artifacts', 'vectorizer.joblib')
+        cls.MODEL_METADATA_PATH = os.path.join(project_root, 'ml', 'artifacts', 'train_metadata.json')
+        cls.ENABLE_STARTUP_MODEL_LOAD = cls._env_bool('ENABLE_STARTUP_MODEL_LOAD', 'true')
+        cls.ENABLE_SCHEDULER = cls._env_bool('ENABLE_SCHEDULER', 'true')
+        cls.SCHEDULER_AUTOSTART = cls._env_bool('SCHEDULER_AUTOSTART', 'false')
+        cls.ENABLE_SCHEDULED_RETRAIN = cls._env_bool('ENABLE_SCHEDULED_RETRAIN', 'true')
+        cls.ML_AUTO_ASSIGN_CONFIDENCE_THRESHOLD = float(
+            os.environ.get('ML_AUTO_ASSIGN_CONFIDENCE_THRESHOLD', '0.65')
+        )
+        cls.ML_MANUAL_REVIEW_DEPARTMENT = os.environ.get(
+            'ML_MANUAL_REVIEW_DEPARTMENT',
+            'Manual Review Queue'
+        )
+
+        # App settings
+        cls.PORT = int(os.environ.get('PORT', 8000))
+
+    @classmethod
+    def validate_runtime_config(cls):
+        if cls.IS_PRODUCTION and cls.SECRET_KEY == cls.DEFAULT_SECRET_KEY:
+            raise RuntimeError('SECRET_KEY must be set in production')
+
+        warnings = []
+        if cls.IS_PRODUCTION and cls.APP_BASE_URL.startswith('http://localhost'):
+            warnings.append('APP_BASE_URL still points to localhost in production')
+        return warnings
+
+
+Config.reload_from_env()

@@ -1,153 +1,122 @@
-# 🚀 Deploy Smart Grievance System to GitHub & Run Online
+# Smart Grievance System Deployment Guide
 
-## Option 1: Push to GitHub
+This project supports three runtime profiles:
 
-### 1. Create a new repository on GitHub
-- Go to [github.com/new](https://github.com/new)
-- Name: `smart-grievance-system`
-- Choose Public, don't initialize with README
+- Local development (`SQLite`, optional demo email mode)
+- Public demo deployment (`PostgreSQL`, demo email mode)
+- Production deployment (`PostgreSQL`, real SMTP email mode)
 
-### 2. Push your code
-```bash
-cd "/Users/santhakumar/Desktop/smart greviance system"
+## 1. Required Runtime Configuration
 
-# If not already a git repo
-git init
+Set these variables in your hosting environment.
 
-# Add all files
-git add .
-git commit -m "Smart Grievance System - ready for deployment"
+| Variable | Required | Example |
+|---|---|---|
+| `FLASK_ENV` | Yes | `production` |
+| `SECRET_KEY` | Yes | random 32+ char string |
+| `APP_BASE_URL` | Yes | `https://your-domain.com` |
+| `DATABASE_URL` | Yes | `postgresql://user:pass@host:5432/db` |
+| `DEMO_EMAIL_MODE` | Yes | `true` for demo, `false` for real SMTP |
+| `DEMO_SMS_MODE` | Yes | `true` (SMS is demo-only currently) |
+| `AUTO_CREATE_TABLES` | Yes | `false` |
 
-# Add your GitHub repo (replace YOUR_USERNAME with your GitHub username)
-git remote add origin https://github.com/YOUR_USERNAME/smart-grievance-system.git
+If `DEMO_EMAIL_MODE=false`, also set:
 
-# Push to main
-git branch -M main
-git push -u origin main
-```
+- `MAIL_SERVER`
+- `MAIL_PORT`
+- `MAIL_USE_TLS`
+- `MAIL_USERNAME`
+- `MAIL_PASSWORD`
+- `MAIL_DEFAULT_SENDER`
 
----
+## 2. Render Deployment (Blueprint Recommended)
 
-## CI and Quality Checks
+This repo includes `render.yaml` with:
 
-This repo includes `.github/workflows/ci.yml` with:
-- lint gate (`ruff check backend tests`)
-- backend tests (`pytest`) with coverage output
-- minimum coverage gate (`fail_under = 50`)
-- optional Bandit scan (`continue-on-error: true`)
+- Python web service
+- health check path (`/health`)
+- managed PostgreSQL service binding for `DATABASE_URL`
+- production-safe defaults (`AUTO_CREATE_TABLES=false`, scheduler autostart off)
 
-The CI workflow fails the pull request/build when lint or tests fail.
+### Steps
 
----
+1. Open Render Dashboard → **New** → **Blueprint**.
+2. Connect this GitHub repository.
+3. Fill missing `sync: false` values (for example `APP_BASE_URL`, SMTP credentials).
+4. Deploy.
 
-## Option 2: Deploy on Render.com (Free)
+## 3. Render Deployment (Manual Service Setup)
 
-Render hosts the full Flask app with backend. **Free tier** includes 750 hours/month.
+Use these values:
 
-### Step 1: Connect GitHub to Render
-1. Go to [render.com](https://render.com) and sign up (free)
-2. Click **New** → **Web Service**
-3. Connect your GitHub account and select `smart-grievance-system` repo
+- Build command: `pip install -r requirements.txt`
+- Start command: `gunicorn "backend.app:create_app()" --bind 0.0.0.0:$PORT`
+- Runtime: Python 3.11
+- Health check path: `/health`
 
-### Step 2: Configure the service
-| Setting | Value |
-|---------|-------|
-| **Name** | smart-grievance-system |
-| **Region** | Oregon (or nearest) |
-| **Branch** | main |
-| **Runtime** | Python 3 |
-| **Build Command** | `pip install -r requirements.txt` |
-| **Start Command** | `gunicorn "backend.app:create_app()" --bind 0.0.0.0:$PORT` |
+Attach a PostgreSQL database and map its connection string to `DATABASE_URL`.
 
-### Step 3: Environment variables (optional)
-Add in Render Dashboard → Environment:
-| Key | Value |
-|-----|-------|
-| `FLASK_ENV` | production |
-| `SECRET_KEY` | (generate a random 32-char string) |
-| `APP_BASE_URL` | https://your-render-domain.onrender.com |
-| `DATABASE_URL` | (Render Postgres URL, recommended) |
-| `DEMO_EMAIL_MODE` | true |
-| `ML_AUTO_ASSIGN_CONFIDENCE_THRESHOLD` | 0.65 |
-| `ML_MANUAL_REVIEW_DEPARTMENT` | Manual Review Queue |
-| `ENABLE_SCHEDULED_RETRAIN` | true |
-| `ENABLE_SCHEDULER` | true |
-| `SCHEDULER_AUTOSTART` | false (set true on exactly one worker only) |
+## 4. Migrations and Seed Data
 
-### Background-job safety
-
-- Keep `SCHEDULER_AUTOSTART=false` on normal web instances.
-- Enable `SCHEDULER_AUTOSTART=true` only on a single dedicated process/instance so escalations and retraining do not run multiple times in parallel.
-
-### Step 4: Deploy
-Click **Create Web Service**. Render will build and deploy. Your app will be live at:
-```
-https://smart-grievance-system-xxxx.onrender.com
-```
-
-### Step 5: Seed the database (first time)
-After first deploy, run database migrations, then seed (optional for demo users).
-
-**Quick seed via Render Shell:**
-1. In Render Dashboard → Your Service → **Shell**
-2. Run:
-   - `python -m flask --app backend.app:create_app db upgrade`
-   - `python manage.py seed`
-
----
-
-## Option 3: Deploy with Render Blueprint
-
-If you have `render.yaml` in your repo:
-
-1. Go to [Render Dashboard](https://dashboard.render.com)
-2. Click **New** → **Blueprint**
-3. Connect your GitHub repo
-4. Render will detect `render.yaml` and create the service automatically
-
----
-
-## Option 4: Run locally (development)
+Run after first deployment (Render shell or release command):
 
 ```bash
-cd "/Users/santhakumar/Desktop/smart greviance system"
-pip install -r requirements.txt
 python -m flask --app backend.app:create_app db upgrade
-python manage.py seed   # Applies migrations + creates demo users
+python manage.py seed
+```
+
+`manage.py seed` runs migrations first, then loads demo accounts/data.
+
+## 5. Scheduler and Background Jobs
+
+The app includes background tasks for comment escalation and scheduled retraining.
+
+- Keep `ENABLE_SCHEDULER=true` unless intentionally disabling all background jobs.
+- Keep `SCHEDULER_AUTOSTART=false` on normal web instances.
+- Set `SCHEDULER_AUTOSTART=true` on exactly one dedicated instance/process only.
+
+This prevents duplicate escalation/retraining runs across multiple web workers.
+
+## 6. Health Endpoint
+
+`GET /health` now returns:
+
+- app status (`healthy` or `degraded`)
+- environment and configured base URL
+- DB connectivity details
+- ML model loaded state
+- scheduler runtime state
+
+Status code behavior:
+
+- `200`: app is up and DB is reachable
+- `503`: DB connectivity check failed
+
+## 7. Local Development Profile
+
+Suggested local values:
+
+```env
+FLASK_ENV=development
+SECRET_KEY=local-dev-secret
+APP_BASE_URL=http://localhost:8000
+DATABASE_URL=sqlite:///grievance.db
+DEMO_EMAIL_MODE=true
+DEMO_SMS_MODE=true
+AUTO_CREATE_TABLES=false
+```
+
+Run locally:
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+python -m flask --app backend.app:create_app db upgrade
+python manage.py seed
 python run.py
 ```
 
-Open **http://localhost:8000**
+## 8. Static Demo (GitHub Pages)
 
-**Test accounts:**
-- Admin: admin@grievance.gov / admin123
-- Officer: electricity@grievance.gov / officer123
-- Citizen: citizen@example.com / citizen123
+`docs/` is a static showcase only. It does not use backend auth, DB, ML runtime, or real workflows.
 
----
-
-## GitHub Pages (Static demo)
-
-The `docs/` folder is a **static demo** (no backend). The full app requires Render or similar.
-
-**Option A — GitHub Actions (recommended):**
-1. Repo → Add file → Create new file → name: `.github/workflows/gh-pages.yml`
-2. Copy content from the `gh-pages.yml` file in this repo
-3. Repo → Settings → Pages → Source: **GitHub Actions**
-
-**Option B — Deploy from branch:**
-1. Repo → Settings → Pages → Source: Deploy from branch
-2. Branch: main, Folder: /docs
-
-**Note:** Workflow files require PAT with `workflow` scope to push. Add via GitHub web UI if needed.
-
----
-
-## Troubleshooting
-
-| Issue | Fix |
-|-------|-----|
-| Build fails | Ensure `requirements.txt` has all deps; check Python 3.11 |
-| 502 Bad Gateway | Increase start timeout in Render; check `/health` endpoint |
-| Database errors | Free tier uses SQLite (ephemeral); for persistent data add PostgreSQL |
-| CORS errors | App uses same-origin; ensure frontend and API are same domain |
+Use it only for UI demonstration, not production or integration testing.
