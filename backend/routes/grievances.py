@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from backend.models import Grievance, GrievanceUpdate, GrievanceComment, User, FraudReport, Notification
 from backend.extensions import db
@@ -305,7 +305,7 @@ def update_grievance(grievance_id):
         if user.role not in ['OFFICER', 'ADMIN']:
             return jsonify({'error': 'Only officers can update grievances'}), 403
         
-        data = request.get_json()
+        data = request.get_json() or {}
         new_status = data.get('status')
         message = data.get('message')
         
@@ -427,7 +427,7 @@ def add_comment(grievance_id):
         if not user:
             return jsonify({'error': 'Unauthorized'}), 401
         
-        data = request.get_json()
+        data = request.get_json() or {}
         comment_text = data.get('comment_text')
         
         if not comment_text or len(comment_text.strip()) < 5:
@@ -455,8 +455,10 @@ def add_comment(grievance_id):
         )
         
         db.session.add(comment)
+        tracking_url = EmailService.tracking_url(grievance_id)
+        pending_emails = []
         
-        # Send email notification to the appropriate party
+        # Prepare notification recipients and escalation metadata before commit.
         if user.role == 'CITIZEN':
             # Notify ONLY the currently assigned officer (not all officers)
             if grievance.assigned_officer_id:
@@ -464,12 +466,11 @@ def add_comment(grievance_id):
                 
                 if assigned_officer:
                     # Track notification for escalation
-                    from datetime import timedelta
                     comment.notified_officer_id = assigned_officer.id
                     comment.notification_sent_at = datetime.utcnow()
                     comment.response_deadline = datetime.utcnow() + timedelta(hours=24)  # 24 hours to respond
-                    
-                    EmailService.send_email(
+
+                    pending_emails.append((
                         assigned_officer.email,
                         f'🔔 New Comment on Grievance #{grievance_id} - Response Required',
                         f"""
@@ -481,12 +482,12 @@ A citizen has added a new comment on Grievance #{grievance_id} assigned to you:
 
 ⚠️ Please respond within 24 hours to avoid escalation to your superior.
 
-View and respond at: http://localhost:8000/track.html?id={grievance_id}
+View and respond at: {tracking_url}
 
 Best regards,
 Smart Grievance System
                         """
-                    )
+                    ))
                     
                     # Create in-app notification
                     notification = Notification(
@@ -507,8 +508,9 @@ Smart Grievance System
                 if dept_head:
                     comment.notified_officer_id = dept_head.id
                     comment.notification_sent_at = datetime.utcnow()
-                    
-                    EmailService.send_email(
+                    comment.response_deadline = datetime.utcnow() + timedelta(hours=24)
+
+                    pending_emails.append((
                         dept_head.email,
                         f'New Comment on Grievance #{grievance_id}',
                         f"""
@@ -518,17 +520,17 @@ A citizen has added a comment on an unassigned grievance #{grievance_id}:
 
 "{comment_text}"
 
-View at: http://localhost:8000/track.html?id={grievance_id}
+View at: {tracking_url}
 
 Best regards,
 Smart Grievance System
                         """
-                    )
+                    ))
         else:
             # Notify citizen
             citizen = User.query.get(grievance.user_id)
             if citizen:
-                EmailService.send_email(
+                pending_emails.append((
                     citizen.email,
                     f'New Response on Your Grievance #{grievance_id}',
                     f"""
@@ -538,12 +540,20 @@ Dear {citizen.name},
 
 "{comment_text}"
 
-View and respond at: http://localhost:5000/track.html?id={grievance_id}
+View and respond at: {tracking_url}
 
 Best regards,
 Smart Grievance System
                     """
-                )
+                ))
+
+        db.session.commit()
+
+        for to_email, subject, body in pending_emails:
+            try:
+                EmailService.send_email(to_email, subject, body)
+            except Exception as email_error:
+                print(f"Failed to send comment notification email: {email_error}")
         
         return jsonify({
             'message': 'Comment added successfully',

@@ -270,7 +270,7 @@ def assign_officer():
         if not user or user.role != 'ADMIN':
             return jsonify({'error': 'Admin access required'}), 403
         
-        data = request.get_json()
+        data = request.get_json() or {}
         grievance_id = data.get('grievance_id')
         officer_id = data.get('officer_id')
         
@@ -292,8 +292,8 @@ def assign_officer():
         if not citizen:
             return jsonify({'error': 'Citizen not found'}), 404
         
-        # Store old officer (if any)
-        old_officer_id = grievance.assigned_officer_id
+        # Store old assignment context for notifications
+        old_status = grievance.status
         
         # Assign officer
         grievance.assigned_officer_id = officer_id
@@ -350,7 +350,7 @@ def assign_officer():
             user_email=citizen.email,
             user_name=citizen.name,
             grievance_id=grievance.id,
-            old_status=grievance.status if old_officer_id else 'Received',
+            old_status=old_status,
             new_status='Assigned to Department',
             update_message=f'Your complaint has been assigned to {officer.name} ({officer.designation or "Officer"}) for resolution.',
             department=grievance.assigned_department,

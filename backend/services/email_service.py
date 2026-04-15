@@ -8,6 +8,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
+from urllib.parse import urlencode
 
 try:
     import requests
@@ -21,6 +22,32 @@ from backend.config import Config
 class EmailService:
     # Formspree endpoint (set via environment variable)
     FORMSPREE_ENDPOINT = os.environ.get('FORMSPREE_ENDPOINT', '')
+
+    @staticmethod
+    def app_base_url():
+        """Return canonical app base URL for links included in emails."""
+        return (Config.APP_BASE_URL or 'http://localhost:8000').rstrip('/')
+
+    @staticmethod
+    def build_app_url(path, query_params=None):
+        """Build absolute app URL using APP_BASE_URL."""
+        normalized_path = path if path.startswith('/') else f'/{path}'
+        url = f"{EmailService.app_base_url()}{normalized_path}"
+        if query_params:
+            url = f"{url}?{urlencode(query_params)}"
+        return url
+
+    @staticmethod
+    def tracking_url(grievance_id):
+        return EmailService.build_app_url('/track.html', {'id': grievance_id})
+
+    @staticmethod
+    def login_url():
+        return EmailService.build_app_url('/login.html')
+
+    @staticmethod
+    def officer_portal_url():
+        return EmailService.build_app_url('/officer.html')
     
     @staticmethod
     def send_via_gmail(to_email, subject, body):
@@ -165,7 +192,7 @@ class EmailService:
         subject = f"Grievance #{grievance_id} - Status Update: {status}"
         
         # Create tracking URL
-        tracking_url = f"http://localhost:8000/track.html?id={grievance_id}"
+        tracking_url = EmailService.tracking_url(grievance_id)
         
         body = f"""
 Dear Citizen,
@@ -277,7 +304,7 @@ Your account has been successfully created and verified.
 🔗 GET STARTED
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Login at: http://localhost:8000/login.html
+Login at: {EmailService.login_url()}
 
 Thank you for trusting us with your concerns.
 
@@ -319,7 +346,7 @@ Your account security is important to us.
 🔗 LOGIN NOW
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Login at: http://localhost:8000/login.html
+Login at: {EmailService.login_url()}
 
 ---
 This is an automated message. Please do not reply.
@@ -335,7 +362,7 @@ Smart Grievance System | Digital India Initiative 🇮🇳
         """
         subject = f"New Comment on Grievance #{grievance_id}"
         
-        tracking_url = f"http://localhost:8000/track.html?id={grievance_id}"
+        tracking_url = EmailService.tracking_url(grievance_id)
         
         body = f"""
 Dear User,
@@ -372,7 +399,7 @@ Smart Grievance System | Digital India Initiative
         """
         subject = f"🚨 New Case Assigned - Grievance #{grievance_id}"
         
-        officer_portal_url = f"http://localhost:8000/officer.html"
+        officer_portal_url = EmailService.officer_portal_url()
         
         body = f"""
 Dear {officer_name},
@@ -429,7 +456,7 @@ Smart Grievance System | Digital India Initiative 🇮🇳
         """
         subject = f"Status Update: Grievance #{grievance_id} - {new_status}"
         
-        tracking_url = f"http://localhost:8000/track.html?id={grievance_id}"
+        tracking_url = EmailService.tracking_url(grievance_id)
         
         # Status emoji mapping
         status_emoji = {

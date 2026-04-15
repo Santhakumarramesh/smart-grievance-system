@@ -15,6 +15,10 @@ class Config:
     # JWT
     JWT_SECRET_KEY = SECRET_KEY
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=7)
+    JWT_RESET_TOKEN_EXPIRES = timedelta(minutes=int(os.environ.get('JWT_RESET_TOKEN_EXPIRES_MINUTES', '15')))
+
+    # Canonical frontend/app URL used in email and notification links
+    APP_BASE_URL = os.environ.get('APP_BASE_URL', 'http://localhost:8000').rstrip('/')
     
     # OTP Settings
     OTP_EXPIRY_MINUTES = 5

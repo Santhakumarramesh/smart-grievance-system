@@ -12,18 +12,45 @@ from backend.services.audit_service import log_audit
 
 auth_bp = Blueprint('auth', __name__)
 
-def create_token(user_id):
-    """Create JWT token"""
+def create_token(user_id, token_type='access', expires_delta=None):
+    """Create JWT token with explicit token type and expiry."""
+    now = datetime.utcnow()
+    token_expiry = expires_delta
+    if token_expiry is None:
+        token_expiry = Config.JWT_ACCESS_TOKEN_EXPIRES if token_type == 'access' else Config.JWT_RESET_TOKEN_EXPIRES
+
     payload = {
         'user_id': user_id,
-        'exp': datetime.utcnow() + Config.JWT_ACCESS_TOKEN_EXPIRES
+        'token_type': token_type,
+        'iat': now,
+        'exp': now + token_expiry
     }
     return jwt.encode(payload, Config.SECRET_KEY, algorithm='HS256')
 
-def verify_token(token):
-    """Verify JWT token and return user_id"""
+def create_access_token(user_id):
+    """Create access token."""
+    return create_token(user_id, token_type='access', expires_delta=Config.JWT_ACCESS_TOKEN_EXPIRES)
+
+def create_reset_token(user_id):
+    """Create password reset token."""
+    return create_token(user_id, token_type='password_reset', expires_delta=Config.JWT_RESET_TOKEN_EXPIRES)
+
+def decode_token(token, expected_type='access'):
+    """Decode and validate token type."""
+    payload = jwt.decode(token, Config.SECRET_KEY, algorithms=['HS256'])
+    token_type = payload.get('token_type')
+    if expected_type:
+        # Backward compatibility: old tokens without token_type are treated as access tokens.
+        if token_type and token_type != expected_type:
+            raise jwt.InvalidTokenError('Invalid token type')
+        if not token_type and expected_type != 'access':
+            raise jwt.InvalidTokenError('Invalid token type')
+    return payload
+
+def verify_token(token, expected_type='access'):
+    """Verify JWT token and return user_id."""
     try:
-        payload = jwt.decode(token, Config.SECRET_KEY, algorithms=['HS256'])
+        payload = decode_token(token, expected_type=expected_type)
         return payload['user_id']
     except jwt.ExpiredSignatureError:
         return None
@@ -221,7 +248,7 @@ def login():
     Server-side lockout: 3 failed attempts = 24-hour lockout per email
     """
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         email = data.get('email')
         password = data.get('password')
         
@@ -270,7 +297,7 @@ def login():
             }), 403
         
         # Create token
-        token = create_token(user.id)
+        token = create_access_token(user.id)
         log_audit(user.id, 'login', 'user', user.id)
         return jsonify({
             'message': 'Login successful',
@@ -326,7 +353,7 @@ def verify_reset_otp():
     Required: email, otp
     """
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         email = data.get('email')
         otp = data.get('otp')
         
@@ -344,7 +371,7 @@ def verify_reset_otp():
         if not user:
             return jsonify({'error': 'User not found'}), 404
         
-        reset_token = create_token(user.id, expiry_minutes=15)
+        reset_token = create_reset_token(user.id)
         
         return jsonify({
             'message': 'OTP verified successfully',
@@ -361,7 +388,7 @@ def reset_password():
     Required: reset_token, new_password
     """
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         reset_token = data.get('reset_token')
         new_password = data.get('new_password')
         
@@ -374,7 +401,7 @@ def reset_password():
         
         # Verify reset token
         try:
-            payload = jwt.decode(reset_token, Config.SECRET_KEY, algorithms=['HS256'])
+            payload = decode_token(reset_token, expected_type='password_reset')
             user_id = payload.get('user_id')
         except jwt.ExpiredSignatureError:
             return jsonify({'error': 'Reset token has expired. Please request a new one.'}), 401

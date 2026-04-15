@@ -94,6 +94,7 @@ def check_and_escalate_comments():
     ).all()
     
     escalated_count = 0
+    updated_any_comment = False
     
     for comment in overdue_comments:
         # Check if officer has responded after this comment
@@ -112,6 +113,7 @@ def check_and_escalate_comments():
         if officer_response:
             # Officer has responded, mark as handled
             comment.escalated = True  # Mark as handled (no escalation needed)
+            updated_any_comment = True
             continue
         
         # No response from officer - ESCALATE!
@@ -145,7 +147,7 @@ Response deadline: {comment.response_deadline.strftime('%Y-%m-%d %H:%M')}
 
 Please review and take necessary action immediately.
 
-View grievance: http://localhost:8000/track.html?id={grievance.id}
+View grievance: {EmailService.tracking_url(grievance.id)}
 
 Best regards,
 Smart Grievance System
@@ -173,7 +175,7 @@ Your assigned grievance #{grievance.id} has been escalated to {superior.name} du
 
 Please coordinate with your superior and respond promptly to citizen comments in the future.
 
-View grievance: http://localhost:8000/track.html?id={grievance.id}
+View grievance: {EmailService.tracking_url(grievance.id)}
 
 Best regards,
 Smart Grievance System
@@ -181,11 +183,13 @@ Smart Grievance System
             )
             
             escalated_count += 1
+            updated_any_comment = True
     
     # Commit all changes
-    if escalated_count > 0:
+    if updated_any_comment:
         db.session.commit()
-        print(f"✓ Escalated {escalated_count} overdue comments")
+        if escalated_count > 0:
+            print(f"✓ Escalated {escalated_count} overdue comments")
     
     return escalated_count
 
@@ -246,7 +250,7 @@ Citizen's Comment:
 
 Please review and take action.
 
-View grievance: http://localhost:8000/track.html?id={grievance.id}
+View grievance: {EmailService.tracking_url(grievance.id)}
 
 Best regards,
 Smart Grievance System
