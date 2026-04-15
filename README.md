@@ -61,6 +61,7 @@ Open **http://localhost:8000**
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/auth/login` | POST | Login |
+| `/api/auth/refresh-token` | POST | Exchange refresh token for new access token |
 | `/api/auth/register` | POST | Register citizen |
 | `/api/grievances/submit` | POST | Submit complaint |
 | `/api/grievances/predict-department` | POST | AI department prediction |
@@ -92,7 +93,8 @@ The `docs/` folder is a **static demo only** — it uses localStorage, has no ba
 
 ## Security
 
-- **Auth:** JWT in Authorization header (CSRF-resistant; no cookies)
+- **Auth:** Access JWT + password-reset JWT (+ optional refresh token) with explicit token types and expiries
+- **Session model:** Tokens currently stored in browser `localStorage` (see `SECURITY.md` for tradeoff and HttpOnly-cookie migration note)
 - **Lockout:** 3 failed logins = 24-hour server-side lockout per email
 - **Rate limiting:** IP-based limits on login, registration, grievance submission
 - **Validation:** Server-side for all inputs; bleach sanitization for XSS

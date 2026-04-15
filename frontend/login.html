@@ -422,6 +422,9 @@
 
                 // Store token and user
                 setToken(data.token);
+                if (data.refresh_token) {
+                    setRefreshToken(data.refresh_token);
+                }
                 setUser(data.user);
 
                 showAlert('✅ Login successful! Redirecting...', 'success');

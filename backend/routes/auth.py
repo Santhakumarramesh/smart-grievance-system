@@ -9,8 +9,27 @@ from backend.services.otp_service import OTPService
 from backend.services.email_service import EmailService
 from backend.security import require_firewall, validate_request_data, SecurityFirewall, SecurityLogger
 from backend.services.audit_service import log_audit
+from backend.utils.validation import (
+    ValidationError,
+    normalize_phone,
+    validate_address,
+    validate_city_or_state,
+    validate_date_of_birth,
+    validate_gender,
+    validate_name,
+    validate_pincode,
+)
 
 auth_bp = Blueprint('auth', __name__)
+
+def auth_error(message, code='auth_error', status=401):
+    """Consistent auth error payload."""
+    error_label = 'Unauthorized' if status == 401 else 'Forbidden'
+    return jsonify({
+        'error': error_label,
+        'message': message,
+        'code': code
+    }), status
 
 def create_token(user_id, token_type='access', expires_delta=None):
     """Create JWT token with explicit token type and expiry."""
@@ -18,18 +37,25 @@ def create_token(user_id, token_type='access', expires_delta=None):
     token_expiry = expires_delta
     if token_expiry is None:
         token_expiry = Config.JWT_ACCESS_TOKEN_EXPIRES if token_type == 'access' else Config.JWT_RESET_TOKEN_EXPIRES
+    expires_at = now + token_expiry
 
     payload = {
         'user_id': user_id,
         'token_type': token_type,
         'iat': now,
-        'exp': now + token_expiry
+        'exp': expires_at,
+        'issued_at': now.isoformat() + 'Z',
+        'expires_at': expires_at.isoformat() + 'Z'
     }
     return jwt.encode(payload, Config.SECRET_KEY, algorithm='HS256')
 
 def create_access_token(user_id):
     """Create access token."""
     return create_token(user_id, token_type='access', expires_delta=Config.JWT_ACCESS_TOKEN_EXPIRES)
+
+def create_refresh_token(user_id):
+    """Create refresh token."""
+    return create_token(user_id, token_type='refresh', expires_delta=Config.JWT_REFRESH_TOKEN_EXPIRES)
 
 def create_reset_token(user_id):
     """Create password reset token."""
@@ -40,10 +66,11 @@ def decode_token(token, expected_type='access'):
     payload = jwt.decode(token, Config.SECRET_KEY, algorithms=['HS256'])
     token_type = payload.get('token_type')
     if expected_type:
+        expected_types = {expected_type} if isinstance(expected_type, str) else set(expected_type)
         # Backward compatibility: old tokens without token_type are treated as access tokens.
-        if token_type and token_type != expected_type:
+        if token_type and token_type not in expected_types:
             raise jwt.InvalidTokenError('Invalid token type')
-        if not token_type and expected_type != 'access':
+        if not token_type and 'access' not in expected_types:
             raise jwt.InvalidTokenError('Invalid token type')
     return payload
 
@@ -66,7 +93,7 @@ def register():
     Optional: aadhaar_last4, consent
     """
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         
         # Validate required fields
         required_fields = ['name', 'email', 'phone', 'password', 'date_of_birth', 'gender']
@@ -80,42 +107,20 @@ def register():
             return jsonify({'error': f'Invalid email: {email_error}'}), 400
         data['email'] = normalized_email
         
-        # Validate phone number
-        is_valid_phone, phone_error = SecurityFirewall.validate_phone(data['phone'])
-        if not is_valid_phone:
-            return jsonify({'error': phone_error}), 400
-        
         # Validate password strength
         is_strong, password_error = SecurityFirewall.check_password_strength(data['password'])
         if not is_strong:
             return jsonify({'error': password_error}), 400
-        
-        # Sanitize name input
-        is_valid_name, sanitized_name, name_error = SecurityFirewall.validate_input(data['name'], 'name')
-        if not is_valid_name:
-            SecurityLogger.log_suspicious_activity(request.remote_addr, f"Invalid name input: {name_error}")
-            return jsonify({'error': name_error}), 400
-        data['name'] = sanitized_name
-        
-        # Validate phone number format
-        phone = data['phone']
-        if not phone.isdigit() or len(phone) != 10:
-            return jsonify({'error': 'Phone number must be 10 digits'}), 400
-        
-        # Validate age (must be 18+)
-        from datetime import datetime
+
         try:
-            dob = datetime.strptime(data['date_of_birth'], '%Y-%m-%d')
-            today = datetime.now()
-            age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
-            
-            if age < 18:
-                return jsonify({'error': 'You must be at least 18 years old to register'}), 400
-            
-            if age > 120:
-                return jsonify({'error': 'Please enter a valid date of birth'}), 400
-        except ValueError:
-            return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+            data['name'] = validate_name(data['name'])
+            phone = normalize_phone(data['phone'])
+            data['date_of_birth'] = validate_date_of_birth(data['date_of_birth'], min_age=18, max_age=120)
+            data['gender'] = validate_gender(data['gender'])
+            if not data['gender']:
+                return jsonify({'error': 'gender is required'}), 400
+        except ValidationError as validation_error:
+            return jsonify({'error': str(validation_error)}), 400
         
         # Check if user already exists
         existing_user = User.query.filter_by(email=data['email']).first()
@@ -164,7 +169,7 @@ def send_otp():
     Required: identifier (email or phone), channel ('email' or 'phone')
     """
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         identifier = data.get('identifier')
         channel = data.get('channel', 'email')
         
@@ -202,7 +207,7 @@ def verify_otp():
     Required: identifier, otp
     """
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         identifier = data.get('identifier')
         otp = data.get('otp')
         
@@ -266,7 +271,8 @@ def login():
             return jsonify({
                 'error': 'Account temporarily locked',
                 'message': f'Too many failed attempts. Try again in {int(remaining // 3600)} hours.',
-                'lockout_until': attempt.lockout_until.isoformat()
+                'lockout_until': attempt.lockout_until.isoformat(),
+                'code': 'auth_locked_out'
             }), 429
         
         user = User.query.filter_by(email=normalized_email).first()
@@ -281,7 +287,11 @@ def login():
             attempt.updated_at = datetime.utcnow()
             db.session.commit()
             SecurityLogger.log_authentication_failure(request.remote_addr, normalized_email)
-            return jsonify({'error': 'Invalid email or password'}), 401
+            return jsonify({
+                'error': 'Unauthorized',
+                'message': 'Invalid email or password',
+                'code': 'auth_invalid_credentials'
+            }), 401
         
         if attempt:
             attempt.attempt_count = 0
@@ -291,20 +301,69 @@ def login():
         # Check if account is suspended
         if user.account_suspended:
             SecurityLogger.log_blocked_attempt(request.remote_addr, f"Suspended account login attempt: {normalized_email}")
-            return jsonify({
-                'error': 'Account Suspended',
-                'message': f'Your account has been suspended. Reason: {user.suspension_reason}'
-            }), 403
+            return auth_error(
+                f'Your account has been suspended. Reason: {user.suspension_reason}',
+                code='auth_account_suspended',
+                status=403
+            )
         
         # Create token
         token = create_access_token(user.id)
-        log_audit(user.id, 'login', 'user', user.id)
-        return jsonify({
+        response_payload = {
             'message': 'Login successful',
+            'token_type': 'Bearer',
             'token': token,
-            'user': user.to_dict()
-        }), 200
+            'user': user.to_dict(),
+            'expires_in_seconds': int(Config.JWT_ACCESS_TOKEN_EXPIRES.total_seconds())
+        }
+        if Config.ENABLE_REFRESH_TOKENS:
+            response_payload['refresh_token'] = create_refresh_token(user.id)
+
+        log_audit(user.id, 'login', 'user', user.id)
+        return jsonify(response_payload), 200
         
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@auth_bp.route('/refresh-token', methods=['POST'])
+def refresh_access_token():
+    """Issue a new access token using refresh token."""
+    if not Config.ENABLE_REFRESH_TOKENS:
+        return jsonify({'error': 'Refresh tokens are disabled'}), 404
+
+    try:
+        data = request.get_json() or {}
+        refresh_token = data.get('refresh_token')
+        if not refresh_token:
+            return auth_error('refresh_token is required', code='auth_missing_refresh_token', status=401)
+
+        try:
+            payload = decode_token(refresh_token, expected_type='refresh')
+            user_id = payload.get('user_id')
+        except jwt.ExpiredSignatureError:
+            return auth_error('Refresh token has expired', code='auth_refresh_expired', status=401)
+        except jwt.InvalidTokenError:
+            return auth_error('Invalid refresh token', code='auth_invalid_refresh_token', status=401)
+
+        user = User.query.get(user_id)
+        if not user:
+            return auth_error('User not found', code='auth_user_not_found', status=401)
+
+        if user.account_suspended:
+            return auth_error(
+                f'Your account has been suspended. Reason: {user.suspension_reason}',
+                code='auth_account_suspended',
+                status=403
+            )
+
+        response_payload = {
+            'token_type': 'Bearer',
+            'token': create_access_token(user.id),
+            'expires_in_seconds': int(Config.JWT_ACCESS_TOKEN_EXPIRES.total_seconds())
+        }
+        if Config.ENABLE_REFRESH_TOKENS:
+            response_payload['refresh_token'] = create_refresh_token(user.id)
+        return jsonify(response_payload), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -315,11 +374,16 @@ def forgot_password():
     Required: email
     """
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         email = data.get('email')
         
         if not email:
             return jsonify({'error': 'Email is required'}), 400
+
+        is_valid_email, normalized_email, email_error = SecurityFirewall.validate_email_address(email)
+        if not is_valid_email:
+            return jsonify({'error': f'Invalid email: {email_error}'}), 400
+        email = normalized_email
         
         # Find user
         user = User.query.filter_by(email=email).first()
@@ -359,6 +423,11 @@ def verify_reset_otp():
         
         if not email or not otp:
             return jsonify({'error': 'Email and OTP are required'}), 400
+
+        is_valid_email, normalized_email, email_error = SecurityFirewall.validate_email_address(email)
+        if not is_valid_email:
+            return jsonify({'error': f'Invalid email: {email_error}'}), 400
+        email = normalized_email
         
         # Verify OTP
         success, message = OTPService.verify_otp(email, otp)
@@ -396,8 +465,9 @@ def reset_password():
             return jsonify({'error': 'Reset token and new password are required'}), 400
         
         # Validate password strength
-        if len(new_password) < 8:
-            return jsonify({'error': 'Password must be at least 8 characters long'}), 400
+        is_strong, password_error = SecurityFirewall.check_password_strength(new_password)
+        if not is_strong:
+            return jsonify({'error': password_error}), 400
         
         # Verify reset token
         try:
@@ -434,21 +504,9 @@ def get_current_user():
     Requires: Authorization header with Bearer token
     """
     try:
-        auth_header = request.headers.get('Authorization')
-        
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return jsonify({'error': 'No token provided'}), 401
-        
-        token = auth_header.split(' ')[1]
-        user_id = verify_token(token)
-        
-        if not user_id:
-            return jsonify({'error': 'Invalid or expired token'}), 401
-        
-        user = User.query.get(user_id)
-        
-        if not user:
-            return jsonify({'error': 'User not found'}), 404
+        user, auth_response = get_current_user_from_token(return_error=True)
+        if auth_response:
+            return auth_response
         
         return jsonify({'user': user.to_dict()}), 200
         
@@ -462,42 +520,53 @@ def update_profile():
     Requires: Authorization header with Bearer token
     """
     try:
-        user = get_current_user_from_token()
-        
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
-        
-        data = request.get_json()
-        
-        # Update allowed fields
-        if 'name' in data:
-            user.name = data['name']
-        if 'phone' in data:
-            user.phone = data['phone']
-        if 'profile_photo' in data:
-            user.profile_photo = data['profile_photo']
-        # Default complaint location (optional)
-        if 'address' in data:
-            user.address = data['address']
-        if 'city' in data:
-            user.city = data['city']
-        if 'state' in data:
-            user.state = data['state']
-        if 'pincode' in data:
-            user.pincode = data['pincode']
-        # Residential address (permanent)
-        if 'residential_address' in data:
-            user.residential_address = data['residential_address']
-        if 'residential_city' in data:
-            user.residential_city = data['residential_city']
-        if 'residential_state' in data:
-            user.residential_state = data['residential_state']
-        if 'residential_pincode' in data:
-            user.residential_pincode = data['residential_pincode']
-        if 'date_of_birth' in data:
-            user.date_of_birth = data['date_of_birth']
-        if 'gender' in data:
-            user.gender = data['gender']
+        user, auth_response = get_current_user_from_token(return_error=True)
+        if auth_response:
+            return auth_response
+
+        data = request.get_json() or {}
+        try:
+            # Update allowed fields with strict server-side validation.
+            if 'name' in data:
+                user.name = validate_name(data['name'])
+            if 'phone' in data:
+                phone = normalize_phone(data['phone'])
+                existing_phone = User.query.filter(User.id != user.id, User.phone == phone).first()
+                if existing_phone:
+                    return jsonify({'error': 'Phone number already registered'}), 400
+                user.phone = phone
+            if 'profile_photo' in data:
+                profile_photo = data['profile_photo']
+                if profile_photo is not None and not isinstance(profile_photo, str):
+                    raise ValidationError('profile_photo must be a string')
+                if profile_photo and len(profile_photo) > 2_000_000:
+                    raise ValidationError('profile_photo payload is too large')
+                user.profile_photo = profile_photo
+
+            if 'address' in data:
+                user.address = validate_address(data['address'], 'address')
+            if 'city' in data:
+                user.city = validate_city_or_state(data['city'], 'city')
+            if 'state' in data:
+                user.state = validate_city_or_state(data['state'], 'state')
+            if 'pincode' in data:
+                user.pincode = validate_pincode(data['pincode'], 'pincode')
+
+            if 'residential_address' in data:
+                user.residential_address = validate_address(data['residential_address'], 'residential_address')
+            if 'residential_city' in data:
+                user.residential_city = validate_city_or_state(data['residential_city'], 'residential_city')
+            if 'residential_state' in data:
+                user.residential_state = validate_city_or_state(data['residential_state'], 'residential_state')
+            if 'residential_pincode' in data:
+                user.residential_pincode = validate_pincode(data['residential_pincode'], 'residential_pincode')
+
+            if 'date_of_birth' in data:
+                user.date_of_birth = validate_date_of_birth(data['date_of_birth'], min_age=18, max_age=120)
+            if 'gender' in data:
+                user.gender = validate_gender(data['gender'])
+        except ValidationError as validation_error:
+            return jsonify({'error': str(validation_error)}), 400
         
         db.session.commit()
         
@@ -510,24 +579,54 @@ def update_profile():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-def get_current_user_from_token():
-    """
-    Helper function to get current user from request token
-    Returns: User object or None
-    """
+def get_current_user_from_token(return_error=False, required_roles=None, allow_suspended=False):
+    """Get current user from bearer token with optional structured auth errors."""
     try:
         auth_header = request.headers.get('Authorization')
         
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return None
+        if not auth_header:
+            error_response = auth_error('Authorization token required', code='auth_missing_token', status=401)
+            return (None, error_response) if return_error else None
+
+        if not auth_header.startswith('Bearer '):
+            error_response = auth_error(
+                'Authorization header must use Bearer token',
+                code='auth_bad_header',
+                status=401
+            )
+            return (None, error_response) if return_error else None
         
         token = auth_header.split(' ')[1]
-        user_id = verify_token(token)
+        user_id = verify_token(token, expected_type='access')
         
         if not user_id:
-            return None
+            error_response = auth_error('Invalid or expired token', code='auth_invalid_token', status=401)
+            return (None, error_response) if return_error else None
         
-        return User.query.get(user_id)
+        user = User.query.get(user_id)
+        if not user:
+            error_response = auth_error('User not found', code='auth_user_not_found', status=401)
+            return (None, error_response) if return_error else None
+
+        if user.account_suspended and not allow_suspended:
+            error_response = auth_error(
+                f'Your account has been suspended. Reason: {user.suspension_reason}',
+                code='auth_account_suspended',
+                status=403
+            )
+            return (None, error_response) if return_error else None
+
+        if required_roles and user.role not in required_roles:
+            error_response = auth_error(
+                'You do not have permission to access this resource',
+                code='auth_forbidden',
+                status=403
+            )
+            return (None, error_response) if return_error else None
+
+        return (user, None) if return_error else user
         
-    except:
+    except Exception:
+        if return_error:
+            return None, auth_error('Invalid or expired token', code='auth_invalid_token', status=401)
         return None

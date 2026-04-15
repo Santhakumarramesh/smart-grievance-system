@@ -20,6 +20,7 @@ This document clarifies the security posture for auditors and reviewers.
 - **Database:** SQLAlchemy with PostgreSQL (production) or SQLite (development)
 - **Complaints, users, roles, lockouts, fraud flags:** Stored server-side only
 - **localStorage usage:** JWT token + cached user object for display; language preference
+- **Token strategy:** Access token + password-reset token + optional refresh token, each with explicit token type and expiry in payload
 
 ### Authentication & Authorization
 
@@ -49,6 +50,13 @@ This document clarifies the security posture for auditors and reviewers.
 
 - JWT in `Authorization` header (not cookies) — not vulnerable to classic CSRF
 - No cookie-based session auth
+
+### Session Storage Tradeoff (Current)
+
+- Tokens are currently stored in `localStorage` for frontend simplicity and static-host compatibility.
+- Tradeoff: `localStorage` is accessible to JavaScript, so any XSS can expose tokens.
+- Mitigations currently in place: server-side sanitization, strict backend validation, and short-lived reset tokens.
+- Recommended next step for higher-security deployments: migrate to HttpOnly secure cookies with CSRF protection.
 
 ---
 

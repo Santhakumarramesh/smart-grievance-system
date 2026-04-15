@@ -6,6 +6,8 @@ from backend.extensions import db
 from backend.routes.auth import get_current_user_from_token
 from backend.services.email_service import EmailService
 from backend.services.model_retrain import retrain_model, get_retrain_status
+from backend.security import SecurityFirewall
+from backend.utils.validation import ValidationError, normalize_phone, validate_name
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -16,30 +18,55 @@ def create_officer():
     Required: name, email, phone, password, department
     """
     try:
-        user = get_current_user_from_token()
-        if not user or user.role != 'ADMIN':
-            return jsonify({'error': 'Admin access required'}), 403
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['ADMIN'])
+        if auth_response:
+            return auth_response
         
-        data = request.get_json()
+        data = request.get_json() or {}
         
         # Validate required fields
         required_fields = ['name', 'email', 'phone', 'password', 'department']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({'error': f'{field} is required'}), 400
+
+        is_valid_email, normalized_email, email_error = SecurityFirewall.validate_email_address(data['email'])
+        if not is_valid_email:
+            return jsonify({'error': f'Invalid email: {email_error}'}), 400
+
+        is_valid_department, sanitized_department, department_error = SecurityFirewall.validate_input(
+            data['department'],
+            'department'
+        )
+        if not is_valid_department:
+            return jsonify({'error': department_error or 'Invalid department'}), 400
+
+        is_strong, password_error = SecurityFirewall.check_password_strength(data['password'])
+        if not is_strong:
+            return jsonify({'error': password_error}), 400
+
+        try:
+            validated_name = validate_name(data['name'])
+            validated_phone = normalize_phone(data['phone'])
+        except ValidationError as validation_error:
+            return jsonify({'error': str(validation_error)}), 400
         
         # Check if user already exists
-        existing_user = User.query.filter_by(email=data['email']).first()
+        existing_user = User.query.filter_by(email=normalized_email).first()
         if existing_user:
             return jsonify({'error': 'Email already registered'}), 400
+
+        existing_phone = User.query.filter_by(phone=validated_phone).first()
+        if existing_phone:
+            return jsonify({'error': 'Phone number already registered'}), 400
         
         # Create officer
         officer = User(
-            name=data['name'],
-            email=data['email'],
-            phone=data['phone'],
+            name=validated_name,
+            email=normalized_email,
+            phone=validated_phone,
             role='OFFICER',
-            department=data['department'],
+            department=sanitized_department,
             email_verified=True,  # Auto-verify officers
             phone_verified=True
         )
@@ -63,9 +90,9 @@ def get_officers():
     Get all officers (Admin only)
     """
     try:
-        user = get_current_user_from_token()
-        if not user or user.role != 'ADMIN':
-            return jsonify({'error': 'Admin access required'}), 403
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['ADMIN'])
+        if auth_response:
+            return auth_response
         
         officers = User.query.filter_by(role='OFFICER').all()
         
@@ -82,9 +109,9 @@ def get_users():
     Get all users/citizens (Admin only)
     """
     try:
-        user = get_current_user_from_token()
-        if not user or user.role != 'ADMIN':
-            return jsonify({'error': 'Admin access required'}), 403
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['ADMIN'])
+        if auth_response:
+            return auth_response
         
         # Get all citizens
         citizens = User.query.filter_by(role='CITIZEN').all()
@@ -116,9 +143,9 @@ def get_analytics():
     - total_users
     """
     try:
-        user = get_current_user_from_token()
-        if not user or user.role != 'ADMIN':
-            return jsonify({'error': 'Admin access required'}), 403
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['ADMIN'])
+        if auth_response:
+            return auth_response
         
         # Count by status
         status_counts = db.session.query(
@@ -178,9 +205,9 @@ def get_all_grievances():
     Get all grievances with complete user and officer information (Admin only)
     """
     try:
-        user = get_current_user_from_token()
-        if not user or user.role != 'ADMIN':
-            return jsonify({'error': 'Admin access required'}), 403
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['ADMIN'])
+        if auth_response:
+            return auth_response
         
         # Get query parameters for filtering
         status = request.args.get('status')
@@ -235,9 +262,9 @@ def get_departments():
     Get list of all departments
     """
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
+        user, auth_response = get_current_user_from_token(return_error=True)
+        if auth_response:
+            return auth_response
         
         # Get unique departments from grievances and officers
         dept_from_grievances = db.session.query(Grievance.assigned_department).distinct().all()
@@ -266,9 +293,9 @@ def assign_officer():
     Sends email notification to officer and user
     """
     try:
-        user = get_current_user_from_token()
-        if not user or user.role != 'ADMIN':
-            return jsonify({'error': 'Admin access required'}), 403
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['ADMIN'])
+        if auth_response:
+            return auth_response
         
         data = request.get_json() or {}
         grievance_id = data.get('grievance_id')
@@ -372,9 +399,9 @@ def get_notifications():
     Get notifications for the current user
     """
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
+        user, auth_response = get_current_user_from_token(return_error=True)
+        if auth_response:
+            return auth_response
         
         # Get unread count
         unread_count = Notification.query.filter_by(user_id=user.id, is_read=False).count()
@@ -399,9 +426,9 @@ def mark_notification_read(notification_id):
     Mark a notification as read
     """
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
+        user, auth_response = get_current_user_from_token(return_error=True)
+        if auth_response:
+            return auth_response
         
         notification = Notification.query.get(notification_id)
         if not notification:
@@ -426,9 +453,9 @@ def trigger_retrain():
     Retrains on data/indian_grievance_dataset.csv and reloads the classifier.
     """
     try:
-        user = get_current_user_from_token()
-        if not user or user.role != 'ADMIN':
-            return jsonify({'error': 'Admin access required'}), 403
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['ADMIN'])
+        if auth_response:
+            return auth_response
         
         success, message = retrain_model()
         if success:
@@ -446,9 +473,9 @@ def trigger_retrain():
 def reset_login_lockout(email):
     """Reset login lockout for an email (Admin only)."""
     try:
-        user = get_current_user_from_token()
-        if not user or user.role != 'ADMIN':
-            return jsonify({'error': 'Admin access required'}), 403
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['ADMIN'])
+        if auth_response:
+            return auth_response
         
         from backend.models import FailedLoginAttempt
         attempt = FailedLoginAttempt.query.filter_by(identifier=email).first()
@@ -468,9 +495,9 @@ def get_model_status():
     Get current ML model training metadata (Admin only).
     """
     try:
-        user = get_current_user_from_token()
-        if not user or user.role != 'ADMIN':
-            return jsonify({'error': 'Admin access required'}), 403
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['ADMIN'])
+        if auth_response:
+            return auth_response
         
         status = get_retrain_status()
         if status:
@@ -486,9 +513,9 @@ def mark_all_notifications_read():
     Mark all notifications as read for current user
     """
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
+        user, auth_response = get_current_user_from_token(return_error=True)
+        if auth_response:
+            return auth_response
         
         Notification.query.filter_by(user_id=user.id, is_read=False).update({'is_read': True})
         db.session.commit()

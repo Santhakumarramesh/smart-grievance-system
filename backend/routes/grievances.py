@@ -10,6 +10,13 @@ from backend.services.ai_image_detector import AIImageDetector
 from backend.services.comment_escalation import check_and_escalate_comments, escalate_comment_manually
 from backend.services.audit_service import log_audit
 from backend.security import require_firewall, SecurityFirewall, SecurityLogger
+from backend.utils.validation import (
+    ValidationError,
+    validate_comment_text,
+    validate_complaint_text,
+    validate_location,
+    validate_update_message,
+)
 
 grievances_bp = Blueprint('grievances', __name__)
 
@@ -38,18 +45,22 @@ def predict_department():
     Required: complaint_text
     """
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
-        
-        data = request.get_json()
+        user, auth_response = get_current_user_from_token(return_error=True)
+        if auth_response:
+            return auth_response
+
+        data = request.get_json() or {}
         complaint_text = data.get('complaint_text')
         
         if not complaint_text:
             return jsonify({'error': 'Complaint text is required'}), 400
+
+        is_valid, sanitized_text, error = SecurityFirewall.validate_input(complaint_text, 'complaint_text')
+        if not is_valid:
+            return jsonify({'error': error or 'Invalid complaint text'}), 400
         
         # Predict department
-        predicted_department = classifier.predict(complaint_text)
+        predicted_department = classifier.predict(sanitized_text)
         
         # Check if images are required
         images_required = does_department_require_images(predicted_department)
@@ -71,20 +82,20 @@ def submit_grievance():
     Optional: location
     """
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
-        
-        data = request.get_json()
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['CITIZEN'])
+        if auth_response:
+            return auth_response
+
+        data = request.get_json() or {}
         complaint_text = data.get('complaint_text')
         location = data.get('location', '')
         images = data.get('images', [])
-        
-        if not complaint_text or len(complaint_text.strip()) < 20:
-            return jsonify({'error': 'Complaint text must be at least 20 characters'}), 400
-        
-        if not location or len(location.strip()) < 10:
-            return jsonify({'error': 'Please provide a detailed location'}), 400
+
+        try:
+            complaint_text = validate_complaint_text(complaint_text)
+            location = validate_location(location)
+        except ValidationError as validation_error:
+            return jsonify({'error': str(validation_error)}), 400
         
         # Predict department using ML first
         predicted_department = classifier.predict(complaint_text)
@@ -220,9 +231,9 @@ def get_my_grievances():
     Get all grievances for current user
     """
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
+        user, auth_response = get_current_user_from_token(return_error=True)
+        if auth_response:
+            return auth_response
         
         grievances = Grievance.query.filter_by(user_id=user.id).order_by(Grievance.created_at.desc()).all()
         
@@ -239,9 +250,9 @@ def get_grievance(grievance_id):
     Get grievance details with timeline
     """
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
+        user, auth_response = get_current_user_from_token(return_error=True)
+        if auth_response:
+            return auth_response
         
         grievance = Grievance.query.get(grievance_id)
         
@@ -269,12 +280,9 @@ def get_department_grievances(department):
     Get all grievances for a department (Officer only)
     """
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
-        
-        if user.role not in ['OFFICER', 'ADMIN']:
-            return jsonify({'error': 'Only officers can access this endpoint'}), 403
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['OFFICER', 'ADMIN'])
+        if auth_response:
+            return auth_response
         
         # Officers can only see their department
         if user.role == 'OFFICER' and user.department != department:
@@ -298,19 +306,21 @@ def update_grievance(grievance_id):
     Required: status, message
     """
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
-        
-        if user.role not in ['OFFICER', 'ADMIN']:
-            return jsonify({'error': 'Only officers can update grievances'}), 403
-        
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['OFFICER', 'ADMIN'])
+        if auth_response:
+            return auth_response
+
         data = request.get_json() or {}
         new_status = data.get('status')
         message = data.get('message')
         
         if not new_status or not message:
             return jsonify({'error': 'status and message are required'}), 400
+
+        try:
+            message = validate_update_message(message)
+        except ValidationError as validation_error:
+            return jsonify({'error': str(validation_error)}), 400
         
         # Valid statuses
         valid_statuses = [
@@ -389,9 +399,9 @@ def get_comments(grievance_id):
     Get all comments for a grievance
     """
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
+        user, auth_response = get_current_user_from_token(return_error=True)
+        if auth_response:
+            return auth_response
         
         grievance = Grievance.query.get(grievance_id)
         
@@ -423,15 +433,16 @@ def add_comment(grievance_id):
     Required: comment_text
     """
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
+        user, auth_response = get_current_user_from_token(return_error=True)
+        if auth_response:
+            return auth_response
         
         data = request.get_json() or {}
         comment_text = data.get('comment_text')
-        
-        if not comment_text or len(comment_text.strip()) < 5:
-            return jsonify({'error': 'Comment must be at least 5 characters'}), 400
+        try:
+            comment_text = validate_comment_text(comment_text)
+        except ValidationError as validation_error:
+            return jsonify({'error': str(validation_error)}), 400
         
         grievance = Grievance.query.get(grievance_id)
         
@@ -571,12 +582,9 @@ def report_fraud(grievance_id):
     Officers can report complaints after site visit verification
     """
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
-        
-        if user.role != 'OFFICER':
-            return jsonify({'error': 'Only officers can report fraudulent complaints'}), 403
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['OFFICER'])
+        if auth_response:
+            return auth_response
         
         data = request.get_json()
         fraud_type = data.get('fraud_type')
@@ -687,12 +695,9 @@ def get_fraud_reports():
     Get fraud reports (Admin only)
     """
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
-        
-        if user.role != 'ADMIN':
-            return jsonify({'error': 'Admin access required'}), 403
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['ADMIN'])
+        if auth_response:
+            return auth_response
         
         reports = FraudReport.query.order_by(FraudReport.created_at.desc()).all()
         
@@ -735,12 +740,9 @@ def take_fraud_action(report_id):
     Take action on fraud report (Admin only)
     """
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
-        
-        if user.role != 'ADMIN':
-            return jsonify({'error': 'Admin access required'}), 403
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['ADMIN'])
+        if auth_response:
+            return auth_response
         
         data = request.get_json()
         action = data.get('action')  # 'verify', 'dismiss', 'warn', 'suspend'
@@ -823,11 +825,9 @@ def check_comment_escalations():
     This endpoint should be called periodically by a cron job or scheduler
     """
     try:
-        user = get_current_user_from_token()
-        
-        # Only admin can manually trigger escalation checks
-        if user and user.role != 'ADMIN':
-            return jsonify({'error': 'Admin access required'}), 403
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['ADMIN'])
+        if auth_response:
+            return auth_response
         
         # Run escalation check
         escalated_count = check_and_escalate_comments()
@@ -846,10 +846,9 @@ def manually_escalate_comment(comment_id):
     Manually escalate a specific comment (Admin only)
     """
     try:
-        user = get_current_user_from_token()
-        
-        if not user or user.role != 'ADMIN':
-            return jsonify({'error': 'Admin access required'}), 403
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['ADMIN'])
+        if auth_response:
+            return auth_response
         
         result = escalate_comment_manually(comment_id)
         

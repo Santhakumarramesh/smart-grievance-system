@@ -21,6 +21,19 @@ function removeToken() {
     localStorage.removeItem('token');
 }
 
+function getRefreshToken() {
+    return localStorage.getItem('refresh_token');
+}
+
+function setRefreshToken(token) {
+    if (!token) return;
+    localStorage.setItem('refresh_token', token);
+}
+
+function removeRefreshToken() {
+    localStorage.removeItem('refresh_token');
+}
+
 function getUser() {
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
@@ -61,7 +74,16 @@ async function apiCall(endpoint, options = {}) {
     }
 
     if (response.status === 401) {
+        const shouldRetry = !options._retry && !!getRefreshToken();
+        if (shouldRetry) {
+            const refreshed = await tryRefreshToken();
+            if (refreshed) {
+                return apiCall(endpoint, { ...options, _retry: true });
+            }
+        }
+
         removeToken();
+        removeRefreshToken();
         removeUser();
         window.location.href = 'login.html';
         throw new Error('Session expired. Please login again.');
@@ -73,6 +95,31 @@ async function apiCall(endpoint, options = {}) {
     }
 
     return data;
+}
+
+async function tryRefreshToken() {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) return false;
+
+    try {
+        const response = await fetch(`${API_BASE}/auth/refresh-token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refreshToken })
+        });
+        if (!response.ok) return false;
+
+        const data = await response.json();
+        if (!data.token) return false;
+
+        setToken(data.token);
+        if (data.refresh_token) {
+            setRefreshToken(data.refresh_token);
+        }
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 // Show alert
@@ -92,6 +139,7 @@ function showAlert(message, type = 'info') {
 // Logout
 function logout() {
     removeToken();
+    removeRefreshToken();
     removeUser();
     window.location.href = 'login.html';
 }

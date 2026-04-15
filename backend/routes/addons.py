@@ -52,9 +52,9 @@ def public_stats():
 def submit_rating(grievance_id):
     """Submit rating for resolved grievance"""
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
+        user, auth_response = get_current_user_from_token(return_error=True)
+        if auth_response:
+            return auth_response
         
         data = request.get_json()
         rating = data.get('rating', 0)
@@ -100,9 +100,9 @@ def submit_rating(grievance_id):
 def get_rating(grievance_id):
     """Get rating for a grievance"""
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
+        user, auth_response = get_current_user_from_token(return_error=True)
+        if auth_response:
+            return auth_response
         
         r = GrievanceRating.query.filter_by(grievance_id=grievance_id, user_id=user.id).first()
         if not r:
@@ -140,9 +140,9 @@ def get_qr_code(grievance_id):
 def export_audit():
     """Export audit log (Admin only)"""
     try:
-        user = get_current_user_from_token()
-        if not user or user.role != 'ADMIN':
-            return jsonify({'error': 'Admin required'}), 403
+        user, auth_response = get_current_user_from_token(return_error=True, required_roles=['ADMIN'])
+        if auth_response:
+            return auth_response
         
         days = int(request.args.get('days', 7))
         since = datetime.utcnow() - timedelta(days=days)
@@ -187,9 +187,9 @@ def export_audit():
 def export_grievances():
     """Export grievances to Excel (Admin/Officer)"""
     try:
-        user = get_current_user_from_token()
-        if not user:
-            return jsonify({'error': 'Unauthorized'}), 401
+        user, auth_response = get_current_user_from_token(return_error=True)
+        if auth_response:
+            return auth_response
         
         from openpyxl import Workbook
         wb = Workbook()

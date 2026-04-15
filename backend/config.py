@@ -16,6 +16,8 @@ class Config:
     JWT_SECRET_KEY = SECRET_KEY
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=7)
     JWT_RESET_TOKEN_EXPIRES = timedelta(minutes=int(os.environ.get('JWT_RESET_TOKEN_EXPIRES_MINUTES', '15')))
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=int(os.environ.get('JWT_REFRESH_TOKEN_EXPIRES_DAYS', '30')))
+    ENABLE_REFRESH_TOKENS = os.environ.get('ENABLE_REFRESH_TOKENS', 'true').lower() == 'true'
 
     # Canonical frontend/app URL used in email and notification links
     APP_BASE_URL = os.environ.get('APP_BASE_URL', 'http://localhost:8000').rstrip('/')
