@@ -1,6 +1,7 @@
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from backend.extensions import db
+from backend.utils.roles import canonical_role
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -10,8 +11,8 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     phone = db.Column(db.String(15), nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default='CITIZEN')  # CITIZEN, FIELD_OFFICER, SECTION_OFFICER, DEPARTMENT_HEAD, DISTRICT_HEAD, STATE_HEAD, ADMIN
-    role_level = db.Column(db.Integer, default=0)  # 0=Citizen, 1=Field, 2=Section, 3=Dept Head, 4=District, 5=State, 6=Admin
+    role = db.Column(db.String(20), nullable=False, default='CITIZEN')  # Active roles: CITIZEN, OFFICER, ADMIN (legacy officer aliases still accepted)
+    role_level = db.Column(db.Integer, default=0)  # Legacy hierarchy field; retained for compatibility
     department = db.Column(db.String(100), nullable=True)  # For officers
     
     # Jurisdiction fields
@@ -71,7 +72,7 @@ class User(db.Model):
             'name': self.name,
             'email': self.email,
             'phone': self.phone,
-            'role': self.role,
+            'role': canonical_role(self.role),
             'department': self.department,
             'email_verified': self.email_verified,
             'phone_verified': self.phone_verified,
@@ -136,7 +137,7 @@ class Grievance(db.Model):
     predicted_department = db.Column(db.String(100), nullable=False)
     assigned_department = db.Column(db.String(100), nullable=False)
     assigned_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Current officer handling the case
-    current_role_level = db.Column(db.Integer, default=2)  # Current hierarchy level (starts at Section Officer)
+    current_role_level = db.Column(db.Integer, default=2)  # Legacy hierarchy field; active workflow uses assigned officer/admin escalation
     escalation_level = db.Column(db.Integer, default=0)  # Number of times escalated
     status = db.Column(db.String(50), nullable=False, default='Received')
     

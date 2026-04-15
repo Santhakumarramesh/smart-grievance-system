@@ -19,6 +19,7 @@ from backend.utils.validation import (
     validate_name,
     validate_pincode,
 )
+from backend.utils.roles import has_any_role
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -616,7 +617,7 @@ def get_current_user_from_token(return_error=False, required_roles=None, allow_s
             )
             return (None, error_response) if return_error else None
 
-        if required_roles and user.role not in required_roles:
+        if required_roles and not has_any_role(user.role, required_roles):
             error_response = auth_error(
                 'You do not have permission to access this resource',
                 code='auth_forbidden',

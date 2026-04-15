@@ -3,72 +3,60 @@ Comment Escalation Service
 Handles automatic escalation of citizen comments when officers don't respond in time
 """
 from datetime import datetime
-from backend.models import GrievanceComment, Grievance, User, Notification
+from backend.models import GrievanceComment, Grievance, User, Notification, EscalationLog
 from backend.extensions import db
 from backend.services.email_service import EmailService
+from backend.utils.roles import (
+    ADMIN_ROLE_VALUES,
+    OFFICER_ROLE_VALUES,
+    is_role,
+    role_level_for_log,
+)
 
-# Role hierarchy for escalation (role_level -> role_name)
-ROLE_HIERARCHY = {
-    1: 'FIELD_OFFICER',
-    2: 'SECTION_OFFICER',
-    3: 'DEPARTMENT_HEAD',
-    4: 'DISTRICT_HEAD',
-    5: 'STATE_HEAD',
-    6: 'ADMIN'
-}
 
-def get_superior_officer(current_officer, grievance):
+def get_escalation_recipient(current_officer, grievance):
     """
-    Get the superior officer in the hierarchy for escalation
-    
-    Args:
-        current_officer: User object of current officer
-        grievance: Grievance object
-    
-    Returns:
-        User object of superior officer or None
+    Resolve escalation target using the active workflow model:
+    1. Assigned officer (if different from current notified officer)
+    2. Another officer in the same department
+    3. Admin fallback
     """
     if not current_officer:
         return None
-    
-    # Get current role level from grievance
-    current_level = grievance.current_role_level
-    
-    # Get next level in hierarchy
-    next_level = current_level + 1
-    
-    if next_level > 6:  # Already at ADMIN level
-        return None
-    
-    next_role = ROLE_HIERARCHY.get(next_level)
-    
-    if not next_role:
-        return None
-    
-    # Find officer at next level in same department (prefer higher role_level when set)
-    # Hierarchy: Field(1) -> Section(2) -> DeptHead(3) -> District(4) -> State(5) -> Admin(6)
-    superior = None
-    if next_level <= 5:
-        superior = User.query.filter(
-            User.role == 'OFFICER',
-            User.department == grievance.assigned_department,
-            User.id != current_officer.id,
-            User.role_level > 0,
-            User.role_level >= next_level
-        ).order_by(User.role_level.asc()).first()
-    
-    # Fallback: any officer in same department
-    if not superior:
-        superior = User.query.filter_by(
-            role='OFFICER',
-            department=grievance.assigned_department
-        ).filter(User.id != current_officer.id).first()
-    
-    # If no officer in department, escalate to admin
-    if not superior:
-        superior = User.query.filter_by(role='ADMIN').first()
-    
-    return superior
+
+    if grievance.assigned_officer_id and grievance.assigned_officer_id != current_officer.id:
+        assigned_officer = User.query.get(grievance.assigned_officer_id)
+        if (
+            assigned_officer
+            and is_role(assigned_officer, 'OFFICER')
+            and assigned_officer.department == grievance.assigned_department
+        ):
+            return assigned_officer
+
+    department_officer = User.query.filter(
+        User.role.in_(OFFICER_ROLE_VALUES),
+        User.department == grievance.assigned_department,
+        User.id != current_officer.id,
+    ).order_by(User.created_at.asc(), User.id.asc()).first()
+    if department_officer:
+        return department_officer
+
+    return User.query.filter(User.role.in_(ADMIN_ROLE_VALUES)).order_by(User.created_at.asc(), User.id.asc()).first()
+
+
+def _create_escalation_log(grievance_id, from_officer, to_officer, reason, escalation_type):
+    if not to_officer:
+        return
+    log = EscalationLog(
+        grievance_id=grievance_id,
+        from_officer_id=from_officer.id if from_officer else None,
+        to_officer_id=to_officer.id,
+        from_role_level=role_level_for_log(from_officer) if from_officer else 0,
+        to_role_level=role_level_for_log(to_officer),
+        reason=reason,
+        escalation_type=escalation_type,
+    )
+    db.session.add(log)
 
 
 def check_and_escalate_comments():
@@ -117,18 +105,43 @@ def check_and_escalate_comments():
             continue
         
         # No response from officer - ESCALATE!
-        current_officer = User.query.get(comment.notified_officer_id)
-        
+        current_officer = None
+        if comment.notified_officer_id:
+            current_officer = User.query.get(comment.notified_officer_id)
+        if not current_officer and grievance.assigned_officer_id:
+            current_officer = User.query.get(grievance.assigned_officer_id)
+        if not current_officer:
+            current_officer = User.query.filter(
+                User.role.in_(OFFICER_ROLE_VALUES),
+                User.department == grievance.assigned_department,
+            ).order_by(User.created_at.asc(), User.id.asc()).first()
+
         if not current_officer:
             continue
-        
-        superior = get_superior_officer(current_officer, grievance)
+
+        superior = get_escalation_recipient(current_officer, grievance)
         
         if superior:
             # Mark comment as escalated
             comment.escalated = True
             comment.escalated_at = now
             comment.escalated_to_officer_id = superior.id
+            _create_escalation_log(
+                grievance_id=grievance.id,
+                from_officer=current_officer,
+                to_officer=superior,
+                reason='No response within 24 hours',
+                escalation_type='auto',
+            )
+
+            comment_sent_at = (
+                comment.notification_sent_at.strftime('%Y-%m-%d %H:%M')
+                if comment.notification_sent_at else 'N/A'
+            )
+            response_deadline = (
+                comment.response_deadline.strftime('%Y-%m-%d %H:%M')
+                if comment.response_deadline else 'N/A'
+            )
             
             # Send email to superior
             EmailService.send_email(
@@ -142,8 +155,8 @@ This is an escalation alert. A citizen comment on Grievance #{grievance.id} has 
 Citizen's Comment:
 "{comment.comment_text}"
 
-Comment was sent: {comment.notification_sent_at.strftime('%Y-%m-%d %H:%M')}
-Response deadline: {comment.response_deadline.strftime('%Y-%m-%d %H:%M')}
+Comment was sent: {comment_sent_at}
+Response deadline: {response_deadline}
 
 Please review and take necessary action immediately.
 
@@ -221,12 +234,16 @@ def escalate_comment_manually(comment_id):
     if not grievance:
         return {'success': False, 'message': 'Grievance not found'}
     
-    current_officer = User.query.get(comment.notified_officer_id)
+    current_officer = None
+    if comment.notified_officer_id:
+        current_officer = User.query.get(comment.notified_officer_id)
+    if not current_officer and grievance.assigned_officer_id:
+        current_officer = User.query.get(grievance.assigned_officer_id)
     
     if not current_officer:
         return {'success': False, 'message': 'No officer assigned'}
     
-    superior = get_superior_officer(current_officer, grievance)
+    superior = get_escalation_recipient(current_officer, grievance)
     
     if not superior:
         return {'success': False, 'message': 'No superior officer found for escalation'}
@@ -235,6 +252,13 @@ def escalate_comment_manually(comment_id):
     comment.escalated = True
     comment.escalated_at = datetime.utcnow()
     comment.escalated_to_officer_id = superior.id
+    _create_escalation_log(
+        grievance_id=grievance.id,
+        from_officer=current_officer,
+        to_officer=superior,
+        reason='Manual escalation by admin',
+        escalation_type='manual',
+    )
     
     # Send notifications
     EmailService.send_email(

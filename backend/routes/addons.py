@@ -10,6 +10,7 @@ from backend.models_addons import AuditLog, GrievanceRating
 from backend.extensions import db
 from backend.services.audit_service import log_audit
 from backend.routes.auth import get_current_user_from_token
+from backend.utils.roles import canonical_role
 
 addons_bp = Blueprint('addons', __name__)
 
@@ -187,7 +188,10 @@ def export_audit():
 def export_grievances():
     """Export grievances to Excel (Admin/Officer)"""
     try:
-        user, auth_response = get_current_user_from_token(return_error=True)
+        user, auth_response = get_current_user_from_token(
+            return_error=True,
+            required_roles=['ADMIN', 'OFFICER']
+        )
         if auth_response:
             return auth_response
         
@@ -197,7 +201,7 @@ def export_grievances():
         ws.title = "Grievances"
         ws.append(['ID', 'Department', 'Status', 'Location', 'Created', 'Updated'])
         
-        if user.role == 'ADMIN':
+        if canonical_role(user.role) == 'ADMIN':
             grievances = Grievance.query.order_by(Grievance.created_at.desc()).limit(1000).all()
         else:
             grievances = Grievance.query.filter_by(assigned_department=user.department).order_by(Grievance.created_at.desc()).limit(500).all()

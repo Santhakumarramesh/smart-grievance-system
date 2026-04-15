@@ -20,6 +20,37 @@ A citizen-centric grievance management platform for filing, tracking, and resolv
 - **Multi-Language Support** — Indian language stop words for better classification
 - **Scheduled Retraining** — Model retrains weekly; admins can trigger manually
 
+## Role Model and Permissions
+
+The active workflow model is intentionally simple and enforced server-side:
+
+- `CITIZEN`
+- `OFFICER`
+- `ADMIN`
+
+Legacy hierarchy fields (`role_level`, `current_role_level`, `RoleHierarchy`, `DepartmentMapping`) are retained for backward compatibility with older data/migrations, but they are no longer used for runtime authorization decisions.
+
+### Permissions Matrix
+
+| Action | Citizen | Officer | Admin |
+|--------|---------|---------|-------|
+| Submit grievance | Yes (own account only) | No | No |
+| View grievance details | Own grievances only | Grievances in own department | All grievances |
+| Update grievance status | No | Department grievances; cannot update cases assigned to another officer | All grievances |
+| Add grievance comment | Own grievances only | Department grievances; cannot comment on cases assigned to another officer. First officer comment can claim unassigned case | All grievances |
+| Assign officer | No | No | Yes (officer department must match grievance department) |
+| Report fraud | No | Assigned officer only | Review/take action |
+| Export grievances | No | Own department only | All grievances |
+
+### Escalation Rules
+
+- Citizen comments start a 24-hour response window for the notified/assigned officer.
+- On SLA miss, escalation target is resolved in this order:
+  1. Assigned officer (if different from the originally notified officer)
+  2. Another officer in the same department
+  3. Admin fallback
+- Every escalation writes an `EscalationLog` record (`auto` or `manual`).
+
 ## Quick Start
 
 ```bash

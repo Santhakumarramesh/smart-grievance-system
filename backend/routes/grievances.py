@@ -10,6 +10,8 @@ from backend.services.ai_image_detector import AIImageDetector
 from backend.services.comment_escalation import check_and_escalate_comments, escalate_comment_manually
 from backend.services.audit_service import log_audit
 from backend.security import require_firewall, SecurityFirewall, SecurityLogger
+from backend.utils.roles import ADMIN_ROLE_VALUES, OFFICER_ROLE_VALUES, canonical_role, is_role
+from backend.utils.workflow import can_view_grievance, can_officer_act_on_grievance
 from backend.utils.validation import (
     ValidationError,
     validate_comment_text,
@@ -259,14 +261,11 @@ def get_grievance(grievance_id):
         if not grievance:
             return jsonify({'error': 'Grievance not found'}), 404
         
-        # Check authorization
-        if user.role == 'CITIZEN' and grievance.user_id != user.id:
-            return jsonify({'error': 'Unauthorized to view this grievance'}), 403
-        
-        if user.role == 'OFFICER' and grievance.assigned_department != user.department:
-            return jsonify({'error': 'Unauthorized to view this grievance'}), 403
-        
-        include_officer = user.role in ['OFFICER', 'ADMIN']
+        allowed, error = can_view_grievance(user, grievance)
+        if not allowed:
+            return jsonify({'error': error}), 403
+
+        include_officer = canonical_role(user.role) in ['OFFICER', 'ADMIN']
         return jsonify({
             'grievance': grievance.to_dict(include_updates=True, include_comments=True, include_officer=include_officer)
         }), 200
@@ -285,7 +284,7 @@ def get_department_grievances(department):
             return auth_response
         
         # Officers can only see their department
-        if user.role == 'OFFICER' and user.department != department:
+        if is_role(user, 'OFFICER') and user.department != department:
             return jsonify({'error': 'Unauthorized to view this department'}), 403
         
         grievances = Grievance.query.filter_by(
@@ -341,9 +340,10 @@ def update_grievance(grievance_id):
         if not grievance:
             return jsonify({'error': 'Grievance not found'}), 404
         
-        # Check authorization
-        if user.role == 'OFFICER' and grievance.assigned_department != user.department:
-            return jsonify({'error': 'Unauthorized to update this grievance'}), 403
+        if is_role(user, 'OFFICER'):
+            allowed, error = can_officer_act_on_grievance(user, grievance)
+            if not allowed:
+                return jsonify({'error': error}), 403
         
         # Store old status for notification
         old_status = grievance.status
@@ -361,6 +361,10 @@ def update_grievance(grievance_id):
         # Update grievance status
         grievance.status = new_status
         grievance.updated_at = datetime.utcnow()
+
+        # First officer action on an unassigned grievance claims ownership.
+        if is_role(user, 'OFFICER') and not grievance.assigned_officer_id:
+            grievance.assigned_officer_id = user.id
         
         # Assign officer if status is "Assigned to Department" and not already assigned
         if new_status == 'Assigned to Department' and not grievance.assigned_officer_id:
@@ -408,12 +412,9 @@ def get_comments(grievance_id):
         if not grievance:
             return jsonify({'error': 'Grievance not found'}), 404
         
-        # Check authorization
-        if user.role == 'CITIZEN' and grievance.user_id != user.id:
-            return jsonify({'error': 'Unauthorized to view this grievance'}), 403
-        
-        if user.role == 'OFFICER' and grievance.assigned_department != user.department:
-            return jsonify({'error': 'Unauthorized to view this grievance'}), 403
+        allowed, error = can_view_grievance(user, grievance)
+        if not allowed:
+            return jsonify({'error': error}), 403
         
         comments = GrievanceComment.query.filter_by(
             grievance_id=grievance_id
@@ -449,12 +450,16 @@ def add_comment(grievance_id):
         if not grievance:
             return jsonify({'error': 'Grievance not found'}), 404
         
-        # Check authorization
-        if user.role == 'CITIZEN' and grievance.user_id != user.id:
-            return jsonify({'error': 'Unauthorized to comment on this grievance'}), 403
-        
-        if user.role == 'OFFICER' and grievance.assigned_department != user.department:
-            return jsonify({'error': 'Unauthorized to comment on this grievance'}), 403
+        if is_role(user, 'CITIZEN'):
+            if grievance.user_id != user.id:
+                return jsonify({'error': 'Unauthorized to comment on this grievance'}), 403
+        elif is_role(user, 'OFFICER'):
+            allowed, error = can_officer_act_on_grievance(user, grievance)
+            if not allowed:
+                return jsonify({'error': error}), 403
+            if not grievance.assigned_officer_id:
+                grievance.assigned_officer_id = user.id
+                grievance.updated_at = datetime.utcnow()
         
         # Create comment
         comment = GrievanceComment(
@@ -470,7 +475,7 @@ def add_comment(grievance_id):
         pending_emails = []
         
         # Prepare notification recipients and escalation metadata before commit.
-        if user.role == 'CITIZEN':
+        if is_role(user, 'CITIZEN'):
             # Notify ONLY the currently assigned officer (not all officers)
             if grievance.assigned_officer_id:
                 assigned_officer = User.query.get(grievance.assigned_officer_id)
@@ -511,9 +516,9 @@ Smart Grievance System
                     db.session.add(notification)
             else:
                 # If no specific officer assigned, notify department head
-                dept_head = User.query.filter_by(
-                    department=grievance.assigned_department,
-                    role='OFFICER'
+                dept_head = User.query.filter(
+                    User.department == grievance.assigned_department,
+                    User.role.in_(OFFICER_ROLE_VALUES)
                 ).order_by(User.id.asc()).first()  # Get first officer as fallback
                 
                 if dept_head:
@@ -612,9 +617,9 @@ def report_fraud(grievance_id):
         if not grievance:
             return jsonify({'error': 'Grievance not found'}), 404
         
-        # Check if officer is assigned to this grievance's department
-        if grievance.assigned_department != user.department:
-            return jsonify({'error': 'You can only report fraud for grievances in your department'}), 403
+        allowed, error = can_officer_act_on_grievance(user, grievance, require_assignment=True)
+        if not allowed:
+            return jsonify({'error': error}), 403
         
         # Check if already reported
         existing_report = FraudReport.query.filter_by(
@@ -653,7 +658,7 @@ def report_fraud(grievance_id):
         db.session.add(update)
         
         # Notify admin
-        admins = User.query.filter_by(role='ADMIN').all()
+        admins = User.query.filter(User.role.in_(ADMIN_ROLE_VALUES)).all()
         for admin in admins:
             admin_notification = Notification(
                 user_id=admin.id,

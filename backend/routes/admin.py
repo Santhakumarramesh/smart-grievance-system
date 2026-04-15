@@ -8,6 +8,7 @@ from backend.services.email_service import EmailService
 from backend.services.model_retrain import retrain_model, get_retrain_status
 from backend.security import SecurityFirewall
 from backend.utils.validation import ValidationError, normalize_phone, validate_name
+from backend.utils.roles import OFFICER_ROLE_VALUES, is_role
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -94,7 +95,7 @@ def get_officers():
         if auth_response:
             return auth_response
         
-        officers = User.query.filter_by(role='OFFICER').all()
+        officers = User.query.filter(User.role.in_(OFFICER_ROLE_VALUES)).all()
         
         return jsonify({
             'officers': [officer.to_dict() for officer in officers]
@@ -185,7 +186,7 @@ def get_analytics():
         # Total counts
         total_grievances = Grievance.query.count()
         total_users = User.query.filter_by(role='CITIZEN').count()
-        total_officers = User.query.filter_by(role='OFFICER').count()
+        total_officers = User.query.filter(User.role.in_(OFFICER_ROLE_VALUES)).count()
         
         return jsonify({
             'counts_by_status': counts_by_status,
@@ -268,7 +269,7 @@ def get_departments():
         
         # Get unique departments from grievances and officers
         dept_from_grievances = db.session.query(Grievance.assigned_department).distinct().all()
-        dept_from_officers = db.session.query(User.department).filter(User.role == 'OFFICER').distinct().all()
+        dept_from_officers = db.session.query(User.department).filter(User.role.in_(OFFICER_ROLE_VALUES)).distinct().all()
         
         departments = set()
         for (dept,) in dept_from_grievances:
@@ -311,8 +312,16 @@ def assign_officer():
         
         # Get officer
         officer = User.query.get(officer_id)
-        if not officer or officer.role != 'OFFICER':
+        if not officer or not is_role(officer, 'OFFICER'):
             return jsonify({'error': 'Officer not found'}), 404
+
+        if not officer.department or officer.department != grievance.assigned_department:
+            return jsonify({
+                'error': (
+                    'Officer department mismatch. '
+                    f'Grievance is assigned to {grievance.assigned_department}.'
+                )
+            }), 400
         
         # Get citizen
         citizen = User.query.get(grievance.user_id)
