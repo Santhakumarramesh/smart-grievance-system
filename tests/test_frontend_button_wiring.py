@@ -108,3 +108,9 @@ def test_password_minlength_is_consistent_with_backend_policy():
                 mismatches.append((page, value))
 
     assert not mismatches, f"Password minlength below policy found: {mismatches}"
+
+
+def test_login_page_has_no_demo_credentials_block():
+    content = (FRONTEND_DIR / "login.html").read_text(encoding="utf-8", errors="ignore")
+    assert "Demo Credentials" not in content
+    assert "demo-item" not in content

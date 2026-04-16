@@ -152,6 +152,7 @@
         </div>
     </div>
 
+    <script src="runtime-config.js"></script>
     <script src="app.js"></script>
     <script src="language-config.js"></script>
     <script src="translations.js"></script>
@@ -164,7 +165,12 @@
         
         async function downloadExport(type) {
             try {
-                const url = type === 'audit' ? '/api/admin/audit/export?days=7' : '/api/admin/export/grievances';
+                const apiBase = (typeof getApiBaseUrl === 'function')
+                    ? getApiBaseUrl()
+                    : `${window.location.origin}/api`;
+                const url = type === 'audit'
+                    ? `${apiBase}/admin/audit/export?days=7`
+                    : `${apiBase}/admin/export/grievances`;
                 const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + getToken() } });
                 const blob = await res.blob();
                 const a = document.createElement('a');

@@ -188,46 +188,6 @@
             text-decoration: underline;
         }
 
-        .demo-credentials {
-            background: linear-gradient(135deg, 
-                rgba(59, 130, 246, 0.05) 0%, 
-                rgba(255, 255, 255, 1) 100%);
-            border-left: 4px solid #3B82F6;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
-            font-size: 0.85rem;
-        }
-
-        .demo-credentials strong {
-            color: #1F2937;
-            display: block;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-        }
-
-        .demo-item {
-            padding: 6px 0;
-            color: #4B5563;
-            line-height: 1.6;
-        }
-
-        .demo-item strong {
-            color: #1F2937;
-            display: inline;
-            margin: 0;
-            font-size: 0.85rem;
-        }
-
-        .demo-item code {
-            background: rgba(59, 130, 246, 0.1);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            color: #1E40AF;
-            font-family: 'Courier New', monospace;
-        }
-
         /* Alert Messages */
         .alert {
             padding: 12px 15px;
@@ -308,9 +268,6 @@
                 padding: 25px 20px;
             }
 
-            .demo-credentials {
-                font-size: 0.8rem;
-            }
         }
     </style>
     <link rel="stylesheet" href="department-backgrounds.css">
@@ -367,22 +324,11 @@
                     <a href="public-dashboard.html" style="color: #64748b; font-size: 13px;">📊 View Public Statistics</a>
                 </div>
 
-                <div class="demo-credentials">
-                    <strong>🎯 Demo Credentials:</strong>
-                    <div class="demo-item">
-                        <strong>Admin:</strong> <code>admin@grievance.gov</code> / <code>admin123</code>
-                    </div>
-                    <div class="demo-item">
-                        <strong>Officer:</strong> <code>electricity@grievance.gov</code> / <code>officer123</code>
-                    </div>
-                    <div class="demo-item">
-                        <strong>Citizen:</strong> <code>citizen@example.com</code> / <code>citizen123</code>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 
+    <script src="runtime-config.js"></script>
     <script src="app.js"></script>
     <script>
         function showAlert(message, type) {
@@ -447,18 +393,6 @@
             }
         });
 
-        // Auto-fill demo credentials on click
-        document.querySelectorAll('.demo-item code').forEach(code => {
-            code.style.cursor = 'pointer';
-            code.addEventListener('click', function() {
-                const text = this.textContent;
-                if (text.includes('@')) {
-                    document.getElementById('email').value = text;
-                } else if (text.length < 15) {
-                    document.getElementById('password').value = text;
-                }
-            });
-        });
     </script>
     <script src="language-config.js"></script>
     <script src="translations.js"></script>

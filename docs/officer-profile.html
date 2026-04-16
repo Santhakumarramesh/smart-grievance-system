@@ -186,7 +186,6 @@
                 <div class="header-content">
                     <h1>🇮🇳 Smart Grievance System</h1>
                     <div class="header-actions">
-                        <a href="officer.html" class="btn btn-secondary" style="text-decoration: none;">Dashboard</a>
                         <div class="user-info" id="userInfo"></div>
                         <button id="logoutBtn" class="btn btn-secondary">Logout</button>
                     </div>
@@ -319,65 +318,82 @@
         <!-- Action Buttons -->
         <div class="action-buttons">
             <button class="btn-back" onclick="goBack()">← Back to Dashboard</button>
-            <a href="edit-profile.html" class="btn-back" style="text-decoration: none; display: inline-block;">✏️ Edit Profile</a>
         </div>
     </div>
 
-    <script src="demo-system.js"></script>
+    <script src="runtime-config.js"></script>
+    <script src="app.js"></script>
     <script>
         let currentUser = null;
 
-        function loadProfile() {
-            if (!grievanceSystem.requireAuth()) {
-                window.location.href = 'login.html';
-                return;
+        async function loadProfile() {
+            try {
+                // Fetch latest user data from API
+                const userData = await apiCall('/auth/me');
+                currentUser = userData.user;
+                
+                if (!currentUser) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                if (currentUser.role !== 'OFFICER') {
+                    window.location.href = currentUser.role === 'ADMIN' ? 'admin.html' : 'profile.html';
+                    return;
+                }
+
+                // Update header user info
+                document.getElementById('userInfo').textContent = currentUser.name;
+
+                // Set avatar
+                document.getElementById('avatar').textContent = currentUser.name.charAt(0).toUpperCase();
+
+                // Set basic info
+                document.getElementById('userName').textContent = currentUser.name;
+                document.getElementById('userEmail').textContent = currentUser.email;
+                document.getElementById('department').textContent = currentUser.department;
+                document.getElementById('designation').textContent = currentUser.designation || 'Department Officer';
+                document.getElementById('officeBuilding').textContent = currentUser.office_building || 'Not provided';
+
+                // Office contact info
+                document.getElementById('officeNumber').textContent = currentUser.office_number || 'Not provided';
+                document.getElementById('officeEmail').textContent = currentUser.office_email || currentUser.email;
+                document.getElementById('officeLocation').textContent = currentUser.office_location || 'Not provided';
+
+                // Personal info
+                document.getElementById('nameDisplay').textContent = currentUser.name;
+                document.getElementById('emailDisplay').textContent = currentUser.email;
+                document.getElementById('phoneDisplay').textContent = currentUser.phone || 'Not provided';
+                
+                const createdDate = new Date(currentUser.created_at).toLocaleDateString('en-IN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                document.getElementById('memberSince').textContent = createdDate;
+
+                // Load statistics
+                await loadStatistics();
+
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showAlert('Error loading profile', 'error');
             }
-            currentUser = grievanceSystem.getUser();
-            
-            if (!currentUser || !['OFFICER', 'DEPARTMENT_HEAD', 'FIELD_WORKER'].includes(currentUser.role)) {
-                alert('Access denied! Officer portal only.');
-                window.location.href = 'index.html';
-                return;
-            }
-
-            // Update header user info
-            document.getElementById('userInfo').textContent = currentUser.name;
-
-            // Set avatar
-            document.getElementById('avatar').textContent = (currentUser.name || 'O').charAt(0).toUpperCase();
-
-            // Set basic info
-            document.getElementById('userName').textContent = currentUser.name || 'Officer';
-            document.getElementById('userEmail').textContent = currentUser.email || '';
-            document.getElementById('department').textContent = currentUser.department || 'General';
-            document.getElementById('designation').textContent = currentUser.role?.replace('_', ' ') || 'Department Officer';
-            document.getElementById('officeBuilding').textContent = currentUser.address || 'Not provided';
-
-            // Office contact info
-            document.getElementById('officeNumber').textContent = currentUser.phone || 'Not provided';
-            document.getElementById('officeEmail').textContent = currentUser.email || 'Not provided';
-            document.getElementById('officeLocation').textContent = currentUser.location || currentUser.address || 'Not provided';
-
-            // Personal info
-            document.getElementById('nameDisplay').textContent = currentUser.name || '';
-            document.getElementById('emailDisplay').textContent = currentUser.email || '';
-            document.getElementById('phoneDisplay').textContent = currentUser.phone || 'Not provided';
-            
-            document.getElementById('memberSince').textContent = 'Recently';
-
-            // Load statistics from demo-system
-            loadStatistics();
         }
 
-        function loadStatistics() {
-            const grievances = grievanceSystem.getUserGrievances();
-            const total = grievances.length;
-            const resolved = grievances.filter(g => g.status === 'Resolved' || g.status === 'Closed').length;
-            const pending = total - resolved;
+        async function loadStatistics() {
+            try {
+                const data = await apiCall(`/grievances/department/${encodeURIComponent(currentUser.department)}`);
+                const grievances = data.grievances || [];
+                const total = grievances.length;
+                const resolved = grievances.filter(g => g.status === 'Resolved' || g.status === 'Closed').length;
+                const pending = grievances.filter(g => g.status !== 'Resolved' && g.status !== 'Closed').length;
 
-            document.getElementById('totalCases').textContent = total;
-            document.getElementById('resolvedCases').textContent = resolved;
-            document.getElementById('pendingCases').textContent = pending;
+                document.getElementById('totalCases').textContent = total;
+                document.getElementById('resolvedCases').textContent = resolved;
+                document.getElementById('pendingCases').textContent = pending;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
         }
 
         function goBack() {
@@ -386,11 +402,16 @@
 
         // Logout functionality
         document.getElementById('logoutBtn').addEventListener('click', () => {
-            grievanceSystem.logout();
+            removeToken();
+            removeUser();
+            window.location.href = 'login.html';
         });
 
         // Load profile on page load
         document.addEventListener('DOMContentLoaded', loadProfile);
     </script>
+    <script src="language-config.js"></script>
+    <script src="translations.js"></script>
+    <script src="language-selector-widget.js"></script>
 </body>
 </html>

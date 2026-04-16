@@ -8,9 +8,9 @@ A role-based grievance management platform for citizens, officers, and admins wi
 | Mode | Path | Purpose |
 |---|---|---|
 | Full application | `backend/` + `frontend/` | Real Flask API, database, JWT auth, ML routing, notifications |
-| Static showcase | `docs/` | GitHub Pages demo only (localStorage, no backend integration) |
+| GitHub Pages mirror | `docs/` | Mirror of `frontend/` with runtime API base resolution for hosted static access |
 
-`docs/` is not production behavior. Use the full application for real testing and deployment.
+`docs/` now uses the same UI code as `frontend/`, but API behavior still depends on reachable backend configuration.
 
 ## Architecture
 
@@ -66,7 +66,6 @@ Detailed architecture sections: [ARCHITECTURE.md](ARCHITECTURE.md)
 - Frontend session tokens are stored in `localStorage` (documented tradeoff in `SECURITY.md`).
 - UI language support is partially complete: selector is real, but translation coverage is not exhaustive across every page element.
 - `content_moderator.py` exists, but full end-to-end moderation enforcement is not yet integrated into grievance submission logic.
-- `docs/` is intentionally demo-only and can diverge from production runtime behavior.
 
 ## Setup Guide
 

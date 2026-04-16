@@ -104,7 +104,7 @@ def seed_database(run_migrations=True):
                     officer.office_building = f"Block {chr(65 + departments.index(dept))}"
                     officer.designation = f"Senior {dept} Officer"
                     print(f"✓ Updated office details for {dept}")
-                # Keep seeded demo credentials consistent with documentation.
+                # Keep seeded local credentials consistent with documentation.
                 officer.set_password('officer123')
             else:
                 officer = User(

@@ -18,6 +18,9 @@ class OTPService:
         identifier: email or phone
         channel: 'email' or 'phone'
         """
+        if channel == 'phone' and not Config.DEMO_SMS_MODE:
+            return None, "Phone OTP delivery is not configured for this environment."
+
         # Check rate limit
         one_hour_ago = datetime.utcnow() - timedelta(hours=1)
         recent_requests = OTPRequest.query.filter(
@@ -41,11 +44,11 @@ class OTPService:
         
         db.session.add(otp_request)
         db.session.commit()
-        
-        # In demo mode, print OTP to console
-        if Config.DEMO_EMAIL_MODE or Config.DEMO_SMS_MODE:
+
+        # In explicit demo mode, print OTP to console for manual testing.
+        if channel == 'phone' and Config.DEMO_SMS_MODE:
             print(f"\n{'='*60}")
-            print(f"[DEMO MODE] OTP for {identifier} ({channel})")
+            print(f"[DEMO SMS MODE] OTP for {identifier} ({channel})")
             print(f"OTP: {otp}")
             print(f"Expires at: {otp_request.expires_at}")
             print(f"{'='*60}\n")
@@ -57,11 +60,17 @@ class OTPService:
                 user = User.query.filter_by(email=identifier).first()
                 user_name = user.name if user else None
                 
-                # Send OTP email
-                EmailService.send_otp_email(identifier, str(otp), user_name)
+                # Send OTP email (must succeed in non-demo email mode).
+                email_sent = EmailService.send_otp_email(identifier, str(otp), user_name)
+                if not email_sent:
+                    db.session.delete(otp_request)
+                    db.session.commit()
+                    return None, "Failed to send OTP email. Please try again later."
             except Exception as e:
                 print(f"⚠️ Failed to send OTP email: {e}")
-                # Don't fail the OTP creation if email fails
+                db.session.delete(otp_request)
+                db.session.commit()
+                return None, "Failed to send OTP email. Please try again later."
         
         return otp, None
     

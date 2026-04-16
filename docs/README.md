@@ -1,15 +1,20 @@
-# Static Demo (GitHub Pages)
+# GitHub Pages Frontend Mirror
 
-This folder is a **standalone static demo** for GitHub Pages. It does **not** use the Flask backend.
+`docs/` is a mirrored copy of `frontend/` for GitHub Pages hosting.
 
-- **Data:** Stored in `localStorage` (browser only)
-- **Auth:** Simulated; no real authentication
-- **No database, no API, no ML**
+- It uses the same production UI code as the main frontend.
+- It does **not** use the old localStorage demo system.
+- API requests are resolved by `runtime-config.js`.
 
-For the full application with real backend, database, and ML classification, run:
+## API Base Resolution
 
-```bash
-python run.py
-```
+`runtime-config.js` resolves API base in this order:
 
-Then open http://localhost:8000 (serves from `frontend/`).
+1. `window.APP_RUNTIME_CONFIG.apiBaseUrl`
+2. `<meta name="app-api-base-url" ...>`
+3. `localStorage['app_api_base_url']`
+4. Default fallback:
+   - `https://smart-grievance-system.onrender.com/api` on `*.github.io`
+   - `<current-origin>/api` elsewhere
+
+If your backend URL changes, set `window.APP_RUNTIME_CONFIG.apiBaseUrl` before loading `app.js`, or define `app_api_base_url` in localStorage.

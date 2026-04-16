@@ -1,5 +1,7 @@
-// API Base URL
-const API_BASE = window.location.origin + '/api';
+// API Base URL (runtime-config.js can override this without rebuild)
+const API_BASE = (typeof getApiBaseUrl === 'function')
+    ? getApiBaseUrl()
+    : `${window.location.origin}/api`;
 
 function escapeHtml(text) {
     if (!text) return '';

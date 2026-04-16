@@ -1,4 +1,5 @@
 from backend.extensions import db
+from backend.config import Config
 from backend.models import Grievance, GrievanceComment, GrievanceUpdate, Notification, User
 from backend.routes.auth import create_access_token, decode_token
 from backend.services.email_service import EmailService
@@ -299,3 +300,33 @@ def test_grievance_status_update_preserves_old_status_for_notification(client, a
             status="Under Progress",
         ).first()
         assert status_update is not None
+
+
+def test_send_otp_response_omits_demo_metadata(client, monkeypatch):
+    monkeypatch.setattr(OTPService, "generate_otp", staticmethod(lambda: 654321))
+
+    response = client.post(
+        "/api/auth/send-otp",
+        json={"identifier": "otp.citizen@example.com", "channel": "email"},
+    )
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["message"] == "OTP sent to otp.citizen@example.com via email"
+    assert "demo_mode" not in payload
+    assert "demo_note" not in payload
+
+
+def test_phone_otp_requires_explicit_demo_sms_mode(client):
+    original_sms_mode = Config.DEMO_SMS_MODE
+    Config.DEMO_SMS_MODE = False
+
+    try:
+        response = client.post(
+            "/api/auth/send-otp",
+            json={"identifier": "9876500999", "channel": "phone"},
+        )
+    finally:
+        Config.DEMO_SMS_MODE = original_sms_mode
+
+    assert response.status_code == 400
+    assert "not configured" in response.get_json()["error"].lower()

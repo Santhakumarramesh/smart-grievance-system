@@ -45,9 +45,9 @@ class Config:
         cls.OTP_MAX_ATTEMPTS = 5
         cls.OTP_RATE_LIMIT_PER_HOUR = 3
 
-        # Demo Mode
-        cls.DEMO_EMAIL_MODE = cls._env_bool('DEMO_EMAIL_MODE', 'true')
-        cls.DEMO_SMS_MODE = cls._env_bool('DEMO_SMS_MODE', 'true')
+        # Demo/Debug delivery toggles (disabled by default).
+        cls.DEMO_EMAIL_MODE = cls._env_bool('DEMO_EMAIL_MODE', 'false')
+        cls.DEMO_SMS_MODE = cls._env_bool('DEMO_SMS_MODE', 'false')
 
         # Email Configuration
         cls.MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
@@ -84,10 +84,18 @@ class Config:
     def validate_runtime_config(cls):
         if cls.IS_PRODUCTION and cls.SECRET_KEY == cls.DEFAULT_SECRET_KEY:
             raise RuntimeError('SECRET_KEY must be set in production')
+        if cls.IS_PRODUCTION and cls.DEMO_EMAIL_MODE:
+            raise RuntimeError('DEMO_EMAIL_MODE must be false in production')
 
         warnings = []
         if cls.IS_PRODUCTION and cls.APP_BASE_URL.startswith('http://localhost'):
             warnings.append('APP_BASE_URL still points to localhost in production')
+        if cls.IS_PRODUCTION and cls.DEMO_SMS_MODE:
+            warnings.append('DEMO_SMS_MODE=true: phone OTP delivery is in demo mode and not production-grade')
+        has_smtp = bool(cls.MAIL_USERNAME and cls.MAIL_PASSWORD)
+        has_formspree = bool(os.environ.get('FORMSPREE_ENDPOINT', '').strip())
+        if cls.IS_PRODUCTION and not cls.DEMO_EMAIL_MODE and not has_smtp and not has_formspree:
+            warnings.append('No production email provider configured (SMTP or FORMSPREE_ENDPOINT)')
         return warnings
 
 

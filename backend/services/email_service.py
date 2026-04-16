@@ -196,7 +196,12 @@ class EmailService:
         if EmailService.FORMSPREE_ENDPOINT and EmailService.send_via_formspree(to_email, subject, body):
             return True
 
-        return EmailService.send_to_console(to_email, subject, body)
+        # In development, keep console fallback for local debugging.
+        if not Config.IS_PRODUCTION:
+            return EmailService.send_to_console(to_email, subject, body)
+
+        print("⚠ Email delivery skipped: no configured SMTP/Formspree provider in production mode")
+        return False
 
     @staticmethod
     def send_otp_email(user_email, otp, user_name=None):

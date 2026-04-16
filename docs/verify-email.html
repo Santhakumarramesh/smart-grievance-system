@@ -309,7 +309,7 @@
         </div>
     </div>
 
-    <script src="prototype-banner.js"></script>
+    <script src="runtime-config.js"></script>
     <script src="app.js"></script>
     <script>
         let userEmail = '';
@@ -436,7 +436,7 @@
                 showAlert('✅ Email verified successfully! Redirecting to login...', 'success');
                 
                 setTimeout(() => {
-                    window.location.href = 'login.html';
+                    window.location.href = '/login.html';
                 }, 2000);
                 
             } catch (error) {
@@ -506,7 +506,7 @@
             if (!userEmail) {
                 showAlert('❌ No email found. Redirecting to registration...', 'error');
                 setTimeout(() => {
-                    window.location.href = 'register.html';
+                    window.location.href = '/register.html';
                 }, 2000);
                 return;
             }
@@ -518,6 +518,8 @@
             showAlert('📧 OTP sent to your email. Please check your inbox.', 'info');
         });
     </script>
+    <script src="language-config.js"></script>
+    <script src="translations.js"></script>
     <script src="language-selector-widget.js"></script>
 </body>
 </html>

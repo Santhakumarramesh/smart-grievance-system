@@ -146,7 +146,7 @@ def register():
         # Handle Aadhaar (optional)
         if data.get('aadhaar_last4'):
             user.aadhaar_last4 = data['aadhaar_last4']
-            # Hash full aadhaar if provided (for demo, we only store last 4)
+            # Hash provided Aadhaar suffix before persistence.
             user.aadhaar_hash = hashlib.sha256(data['aadhaar_last4'].encode()).hexdigest()
         
         db.session.add(user)
@@ -190,12 +190,11 @@ def send_otp():
         otp, error = OTPService.create_otp_request(identifier, channel)
         
         if error:
-            return jsonify({'error': error}), 429
+            status = 429 if 'Too many OTP requests' in error else 400
+            return jsonify({'error': error}), status
         
         return jsonify({
-            'message': f'OTP sent to {identifier} via {channel}',
-            'demo_mode': Config.DEMO_EMAIL_MODE or Config.DEMO_SMS_MODE,
-            'demo_note': 'Check console for OTP in demo mode'
+            'message': f'OTP sent to {identifier} via {channel}'
         }), 200
         
     except Exception as e:

@@ -149,7 +149,7 @@ if __name__ == '__main__':
     print(f"\n{'='*60}")
     print(f"🚀 Smart Grievance System Starting...")
     print(f"📍 Running on http://localhost:{port}")
-    print(f"📧 Demo Mode: {Config.DEMO_EMAIL_MODE}")
+    print(f"📧 Email Console Mode: {Config.DEMO_EMAIL_MODE}")
     print(f"🔧 Environment: {'PRODUCTION' if is_production else 'DEVELOPMENT'}")
     print(f"{'='*60}\n")
     

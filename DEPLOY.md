@@ -1,10 +1,9 @@
 # Smart Grievance System Deployment Guide
 
-This project supports three runtime profiles:
+This project supports two runtime profiles:
 
-- Local development (`SQLite`, optional demo email mode)
-- Public demo deployment (`PostgreSQL`, demo email mode)
-- Production deployment (`PostgreSQL`, real SMTP email mode)
+- Local development (`SQLite`, optional console email mode for debugging)
+- Production deployment (`PostgreSQL`, real email provider mode)
 
 Related docs:
 - Local setup: [SETUP.md](SETUP.md)
@@ -21,11 +20,11 @@ Set these variables in your hosting environment.
 | `SECRET_KEY` | Yes | random 32+ char string |
 | `APP_BASE_URL` | Yes | `https://your-domain.com` |
 | `DATABASE_URL` | Yes | `postgresql://user:pass@host:5432/db` |
-| `DEMO_EMAIL_MODE` | Yes | `true` for demo, `false` for real SMTP |
-| `DEMO_SMS_MODE` | Yes | `true` (SMS is demo-only currently) |
+| `DEMO_EMAIL_MODE` | Yes | `false` in production |
+| `DEMO_SMS_MODE` | Yes | `false` in production |
 | `AUTO_CREATE_TABLES` | Yes | `false` |
 
-If `DEMO_EMAIL_MODE=false`, also set:
+If `DEMO_EMAIL_MODE=false`, configure at least one provider:
 
 - `MAIL_SERVER`
 - `MAIL_PORT`
@@ -33,6 +32,7 @@ If `DEMO_EMAIL_MODE=false`, also set:
 - `MAIL_USERNAME`
 - `MAIL_PASSWORD`
 - `MAIL_DEFAULT_SENDER`
+- or `FORMSPREE_ENDPOINT`
 
 ## 2. Render Deployment (Blueprint Recommended)
 
@@ -70,7 +70,7 @@ python -m flask --app backend.app:create_app db upgrade
 python manage.py seed
 ```
 
-`manage.py seed` runs migrations first, then loads demo accounts/data.
+`manage.py seed` runs migrations first, then loads baseline local accounts/data.
 
 ## 5. Scheduler and Background Jobs
 
@@ -106,8 +106,8 @@ FLASK_ENV=development
 SECRET_KEY=local-dev-secret
 APP_BASE_URL=http://localhost:8000
 DATABASE_URL=sqlite:///grievance.db
-DEMO_EMAIL_MODE=true
-DEMO_SMS_MODE=true
+DEMO_EMAIL_MODE=false
+DEMO_SMS_MODE=false
 AUTO_CREATE_TABLES=false
 ```
 
@@ -120,8 +120,9 @@ python manage.py seed
 python run.py
 ```
 
-## 8. Static Demo (GitHub Pages)
+## 8. GitHub Pages Frontend Mirror
 
-`docs/` is a static showcase only. It does not use backend auth, DB, ML runtime, or real workflows.
+`docs/` mirrors `frontend/` and uses the same runtime UI logic.
 
-Use it only for UI demonstration, not production or integration testing.
+- It still needs a reachable backend API.
+- API base is resolved via `runtime-config.js` (or defaults to Render backend on `github.io`).

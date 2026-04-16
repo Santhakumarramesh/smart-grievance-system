@@ -39,8 +39,8 @@ FLASK_ENV=development
 SECRET_KEY=local-dev-secret
 APP_BASE_URL=http://localhost:8000
 DATABASE_URL=sqlite:///grievance.db
-DEMO_EMAIL_MODE=true
-DEMO_SMS_MODE=true
+DEMO_EMAIL_MODE=false
+DEMO_SMS_MODE=false
 AUTO_CREATE_TABLES=false
 ENABLE_STARTUP_MODEL_LOAD=true
 ENABLE_SCHEDULER=true
@@ -55,7 +55,7 @@ python manage.py seed
 ```
 
 Notes:
-- `manage.py seed` applies migrations first, then seeds demo records.
+- `manage.py seed` applies migrations first, then seeds baseline admin/officer/citizen records for local testing.
 - Use migration commands for schema changes; do not rely on `db.create_all()` in production.
 
 ## 5. Run the Application
@@ -68,7 +68,7 @@ Open:
 - App: `http://localhost:8000`
 - Health: `http://localhost:8000/health`
 
-## 6. Demo Accounts
+## 6. Seeded Local Accounts
 
 | Role | Email | Password |
 |---|---|---|
@@ -109,6 +109,8 @@ python -m flask --app backend.app:create_app db upgrade
 - Set `APP_BASE_URL` to your public domain
 - Use PostgreSQL `DATABASE_URL`
 - Keep `AUTO_CREATE_TABLES=false`
+- Keep `DEMO_EMAIL_MODE=false`
+- Keep `DEMO_SMS_MODE=false`
 - If running multiple instances, keep `SCHEDULER_AUTOSTART=false` on all but one
 
 Use [DEPLOY.md](DEPLOY.md) for full deployment details.

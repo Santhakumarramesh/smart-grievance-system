@@ -1,5 +1,14 @@
-// API Base URL
-const API_BASE = window.location.origin + '/api';
+// API Base URL (runtime-config.js can override this without rebuild)
+const API_BASE = (typeof getApiBaseUrl === 'function')
+    ? getApiBaseUrl()
+    : `${window.location.origin}/api`;
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
 // Token management
 function getToken() {
@@ -12,6 +21,19 @@ function setToken(token) {
 
 function removeToken() {
     localStorage.removeItem('token');
+}
+
+function getRefreshToken() {
+    return localStorage.getItem('refresh_token');
+}
+
+function setRefreshToken(token) {
+    if (!token) return;
+    localStorage.setItem('refresh_token', token);
+}
+
+function removeRefreshToken() {
+    localStorage.removeItem('refresh_token');
 }
 
 function getUser() {
@@ -27,7 +49,7 @@ function removeUser() {
     localStorage.removeItem('user');
 }
 
-// API call helper
+// API call helper with robust error handling
 async function apiCall(endpoint, options = {}) {
     const token = getToken();
     const headers = {
@@ -36,18 +58,70 @@ async function apiCall(endpoint, options = {}) {
         ...options.headers
     };
 
-    const response = await fetch(`${API_BASE}${endpoint}`, {
-        ...options,
-        headers
-    });
+    let response;
+    try {
+        response = await fetch(`${API_BASE}${endpoint}`, {
+            ...options,
+            headers
+        });
+    } catch (err) {
+        throw new Error('Network error. Please check your connection and try again.');
+    }
 
-    const data = await response.json();
+    let data;
+    try {
+        data = await response.json();
+    } catch {
+        throw new Error('Invalid response from server');
+    }
+
+    if (response.status === 401) {
+        const shouldRetry = !options._retry && !!getRefreshToken();
+        if (shouldRetry) {
+            const refreshed = await tryRefreshToken();
+            if (refreshed) {
+                return apiCall(endpoint, { ...options, _retry: true });
+            }
+        }
+
+        removeToken();
+        removeRefreshToken();
+        removeUser();
+        window.location.href = 'login.html';
+        throw new Error('Session expired. Please login again.');
+    }
 
     if (!response.ok) {
-        throw new Error(data.error || 'Something went wrong');
+        const msg = data.message || data.error || 'Something went wrong';
+        throw new Error(msg);
     }
 
     return data;
+}
+
+async function tryRefreshToken() {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) return false;
+
+    try {
+        const response = await fetch(`${API_BASE}/auth/refresh-token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refreshToken })
+        });
+        if (!response.ok) return false;
+
+        const data = await response.json();
+        if (!data.token) return false;
+
+        setToken(data.token);
+        if (data.refresh_token) {
+            setRefreshToken(data.refresh_token);
+        }
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 // Show alert
@@ -67,6 +141,7 @@ function showAlert(message, type = 'info') {
 // Logout
 function logout() {
     removeToken();
+    removeRefreshToken();
     removeUser();
     window.location.href = 'login.html';
 }
@@ -93,18 +168,61 @@ function formatDate(dateString) {
     });
 }
 
-// Get status badge class
+const WORKFLOW_STATUS_META = {
+    received: { badgeClass: 'badge-received', label: 'Received' },
+    assigned: { badgeClass: 'badge-assigned', label: 'Assigned to Department' },
+    manual_review: { badgeClass: 'badge-investigation', label: 'Manual Review Required' },
+    progress: { badgeClass: 'badge-progress', label: 'Under Progress' },
+    investigation: { badgeClass: 'badge-investigation', label: 'Investigation' },
+    reviewed: { badgeClass: 'badge-reviewed', label: 'Reviewed' },
+    resolved: { badgeClass: 'badge-resolved', label: 'Resolved' },
+    closed: { badgeClass: 'badge-closed', label: 'Closed' },
+};
+
+function normalizeWorkflowStatus(status) {
+    if (!status) return 'received';
+    const raw = String(status).trim().toLowerCase();
+
+    if (raw === 'received') return 'received';
+    if (raw === 'assigned' || raw === 'assigned to department') return 'assigned';
+    if (raw === 'manual review required') return 'manual_review';
+    if (raw === 'in progress' || raw === 'under progress') return 'progress';
+    if (raw.includes('investigation')) return 'investigation';
+    if (raw === 'reviewed') return 'reviewed';
+    if (raw === 'resolved') return 'resolved';
+    if (raw === 'closed' || raw === 'rejected') return 'closed';
+    return 'received';
+}
+
 function getStatusBadgeClass(status) {
-    const statusMap = {
-        'Received': 'badge-received',
-        'Assigned to Department': 'badge-assigned',
-        'Under Progress': 'badge-progress',
-        'Investigation': 'badge-investigation',
-        'Reviewed': 'badge-reviewed',
-        'Resolved': 'badge-resolved',
-        'Closed': 'badge-closed'
-    };
-    return statusMap[status] || 'badge-received';
+    const key = normalizeWorkflowStatus(status);
+    return WORKFLOW_STATUS_META[key].badgeClass;
+}
+
+function getStatusDisplayLabel(status) {
+    if (!status) return WORKFLOW_STATUS_META.received.label;
+    const key = normalizeWorkflowStatus(status);
+    if (
+        typeof status === 'string'
+        && status.toLowerCase().includes('fraud')
+    ) {
+        return status;
+    }
+    return WORKFLOW_STATUS_META[key].label;
+}
+
+function renderStatusBadge(status) {
+    const safeLabel = escapeHtml(getStatusDisplayLabel(status));
+    return `<span class="badge ${getStatusBadgeClass(status)}">${safeLabel}</span>`;
+}
+
+// Get home URL based on user role
+function getHomeUrl() {
+    const user = getUser();
+    if (!user) return 'index.html';
+    if (user.role === 'ADMIN') return 'admin.html';
+    if (user.role === 'OFFICER') return 'officer.html';
+    return 'index.html';
 }
 
 // Update header with user info
@@ -131,4 +249,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update header
     updateHeader();
+
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
 });
