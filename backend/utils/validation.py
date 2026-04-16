@@ -1,5 +1,6 @@
 from datetime import date, datetime
 import re
+import unicodedata
 
 from backend.security import SecurityFirewall
 
@@ -29,14 +30,35 @@ def _sanitize_text(value, field_name):
     return sanitized.strip()
 
 
+def _is_unicode_letter(char):
+    return unicodedata.category(char).startswith("L")
+
+
+def _is_allowed_unicode_text_char(char, allowed_symbols):
+    category = unicodedata.category(char)
+    return category.startswith(("L", "M")) or char in allowed_symbols
+
+
+def _validate_unicode_text(value, field_name, *, min_len, max_len, allowed_symbols):
+    if len(value) < min_len or len(value) > max_len:
+        raise ValidationError(f"{field_name} must be between {min_len} and {max_len} characters")
+    if not _is_unicode_letter(value[0]):
+        raise ValidationError(f"{field_name} must start with a letter")
+    if not all(_is_allowed_unicode_text_char(ch, allowed_symbols) for ch in value):
+        raise ValidationError(f"{field_name} contains unsupported characters")
+
+
 def validate_name(name):
     normalized = _sanitize_text(name, "name")
     if not normalized:
         raise ValidationError("name is required")
-    if len(normalized) < 2 or len(normalized) > 100:
-        raise ValidationError("name must be between 2 and 100 characters")
-    if not re.fullmatch(r"[A-Za-z][A-Za-z .'-]*", normalized):
-        raise ValidationError("name contains unsupported characters")
+    _validate_unicode_text(
+        normalized,
+        "name",
+        min_len=2,
+        max_len=100,
+        allowed_symbols={" ", ".", "'", "-"},
+    )
     return normalized
 
 
@@ -114,10 +136,13 @@ def validate_city_or_state(value, field_name):
     normalized = _sanitize_text(value, field_name)
     if normalized == "":
         return ""
-    if len(normalized) < 2 or len(normalized) > 100:
-        raise ValidationError(f"{field_name} must be between 2 and 100 characters")
-    if not re.fullmatch(r"[A-Za-z][A-Za-z .'-]*", normalized):
-        raise ValidationError(f"{field_name} contains unsupported characters")
+    _validate_unicode_text(
+        normalized,
+        field_name,
+        min_len=2,
+        max_len=100,
+        allowed_symbols={" ", ".", "'", "-", "&", "/"},
+    )
     return normalized
 
 

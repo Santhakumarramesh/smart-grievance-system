@@ -132,6 +132,27 @@ def test_malformed_input_payloads_rejected(client, app):
     assert "prohibited content" in invalid_complaint.get_json()["error"]
 
 
+def test_profile_update_accepts_unicode_name_and_city_fields(client, app):
+    with app.app_context():
+        user = create_user("Valid User", "unicodeprofile@example.com", "9876544333")
+        token = create_access_token(user.id)
+
+    response = client.put(
+        "/api/auth/profile/update",
+        json={
+            "name": "राम कुमार",
+            "city": "चेन्नई",
+            "state": "தமிழ்நாடு",
+        },
+        headers=auth_headers(token),
+    )
+    assert response.status_code == 200
+    payload = response.get_json()["user"]
+    assert payload["name"] == "राम कुमार"
+    assert payload["city"] == "चेन्नई"
+    assert payload["state"] == "தமிழ்நாடு"
+
+
 def test_natural_language_with_update_and_system_words_is_allowed(client, app):
     with app.app_context():
         citizen = create_user("Citizen Flow", "citizen.flow@example.com", "9876555555")
