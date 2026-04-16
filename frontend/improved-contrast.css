@@ -345,10 +345,7 @@ strong, b {
     font-weight: 600 !important;
 }
 
-/* Reduce background opacity to make text stand out more */
-body {
-    background: #fafafa !important;
-}
+/* Keep contrast improvements without forcing a global flat page background. */
 
 .card {
     background: #ffffff !important;

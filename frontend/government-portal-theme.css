@@ -5,17 +5,13 @@
 
 /* Clean, professional background */
 body {
-    background: #f5f7fa !important;
+    background: #f5f7fa;
     background-image: 
-        linear-gradient(to bottom, #ffffff 0%, #f5f7fa 100%) !important;
+        radial-gradient(circle at 8% 12%, rgba(255, 153, 51, 0.10) 0%, transparent 38%),
+        radial-gradient(circle at 92% 88%, rgba(19, 136, 8, 0.10) 0%, transparent 36%),
+        linear-gradient(to bottom, #ffffff 0%, #f5f7fa 100%);
     position: relative;
     min-height: 100vh;
-}
-
-/* Remove old background effects */
-body::before,
-body::after {
-    display: none !important;
 }
 
 /* Government portal header strip */
