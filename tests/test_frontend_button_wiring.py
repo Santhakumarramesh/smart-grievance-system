@@ -114,3 +114,22 @@ def test_login_page_has_no_demo_credentials_block():
     content = (FRONTEND_DIR / "login.html").read_text(encoding="utf-8", errors="ignore")
     assert "Demo Credentials" not in content
     assert "demo-item" not in content
+
+
+def test_auth_pages_use_relative_redirect_paths():
+    pages = ["verify-email.html", "forgot-password.html"]
+    violations = []
+    for page in pages:
+        content = (FRONTEND_DIR / page).read_text(encoding="utf-8", errors="ignore")
+        if "window.location.href = '/login.html'" in content:
+            violations.append((page, "/login.html"))
+        if "window.location.href = '/register.html'" in content:
+            violations.append((page, "/register.html"))
+
+    assert not violations, f"Absolute root redirects found in auth pages: {violations}"
+
+
+def test_register_page_sets_pending_otp_state_for_verify_flow():
+    content = (FRONTEND_DIR / "register.html").read_text(encoding="utf-8", errors="ignore")
+    assert "pendingVerificationOtpState" in content
+    assert "verify-email.html?email=" in content

@@ -389,17 +389,20 @@
             const submitBtn = e.target.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Creating Account...';
+            let shouldKeepDisabled = false;
 
             try {
                 // Step 1: Register user
-                const registerData = await apiCall('/auth/register', {
+                await apiCall('/auth/register', {
                     method: 'POST',
                     body: JSON.stringify(formData)
                 });
 
-                showAlert('✅ Account created! Sending verification code...', 'success');
+                showAlert('✅ Account created successfully!', 'success');
+                localStorage.setItem('pendingVerificationEmail', email);
 
                 // Step 2: Send OTP
+                let otpSendFailed = false;
                 try {
                     await apiCall('/auth/send-otp', {
                         method: 'POST',
@@ -410,27 +413,25 @@
                     });
 
                     showAlert('✅ Verification code sent! Redirecting...', 'success');
-                    
-                    // Store email for verification page
-                    localStorage.setItem('pendingVerificationEmail', email);
-                    
-                    // Redirect to verification page
-                    setTimeout(() => {
-                        window.location.href = `verify-email.html?email=${encodeURIComponent(email)}`;
-                    }, 1500);
-
                 } catch (otpError) {
                     console.error('OTP send error:', otpError);
-                    showAlert('⚠️ Account created but OTP failed. Redirecting to login...', 'error');
+                    otpSendFailed = true;
+                    showAlert('⚠️ Account created, but OTP could not be sent right now. You can resend on the next page.', 'error');
+                } finally {
+                    localStorage.setItem('pendingVerificationOtpState', otpSendFailed ? 'pending' : 'sent');
+                    shouldKeepDisabled = true;
                     setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 2000);
+                        window.location.href = `verify-email.html?email=${encodeURIComponent(email)}`;
+                    }, otpSendFailed ? 2200 : 1500);
                 }
 
             } catch (error) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Register';
                 showAlert('❌ ' + error.message, 'error');
+            } finally {
+                if (!shouldKeepDisabled) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Register';
+                }
             }
         });
     </script>

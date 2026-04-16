@@ -2,6 +2,7 @@
 const API_BASE = (typeof getApiBaseUrl === 'function')
     ? getApiBaseUrl()
     : `${window.location.origin}/api`;
+const API_TIMEOUT_MS = 25000;
 
 function escapeHtml(text) {
     if (!text) return '';
@@ -58,14 +59,27 @@ async function apiCall(endpoint, options = {}) {
         ...options.headers
     };
 
+    const controller = options.signal ? null : new AbortController();
+    const timeoutId = controller
+        ? setTimeout(() => controller.abort(), API_TIMEOUT_MS)
+        : null;
+
     let response;
     try {
         response = await fetch(`${API_BASE}${endpoint}`, {
             ...options,
-            headers
+            headers,
+            signal: options.signal || (controller ? controller.signal : undefined)
         });
     } catch (err) {
-        throw new Error('Network error. Please check your connection and try again.');
+        if (err && err.name === 'AbortError') {
+            throw new Error('Server is taking too long to respond. Please try again in a moment.');
+        }
+        throw new Error('Unable to reach server. Please check connection or try again shortly.');
+    } finally {
+        if (timeoutId) {
+            clearTimeout(timeoutId);
+        }
     }
 
     let data;

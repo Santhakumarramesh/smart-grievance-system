@@ -436,7 +436,7 @@
                 showAlert('✅ Email verified successfully! Redirecting to login...', 'success');
                 
                 setTimeout(() => {
-                    window.location.href = '/login.html';
+                    window.location.href = 'login.html';
                 }, 2000);
                 
             } catch (error) {
@@ -506,7 +506,7 @@
             if (!userEmail) {
                 showAlert('❌ No email found. Redirecting to registration...', 'error');
                 setTimeout(() => {
-                    window.location.href = '/register.html';
+                    window.location.href = 'register.html';
                 }, 2000);
                 return;
             }
@@ -514,8 +514,14 @@
             document.getElementById('emailDisplay').textContent = userEmail;
             otpInputs[0].focus();
             startTimer();
-            
-            showAlert('📧 OTP sent to your email. Please check your inbox.', 'info');
+
+            const otpState = localStorage.getItem('pendingVerificationOtpState');
+            localStorage.removeItem('pendingVerificationOtpState');
+            if (otpState === 'pending') {
+                showAlert('⚠️ OTP is not delivered yet. Please click "Resend OTP".', 'error');
+            } else {
+                showAlert('📧 OTP sent to your email. Please check your inbox.', 'info');
+            }
         });
     </script>
     <script src="language-config.js"></script>
