@@ -256,6 +256,15 @@
                             citizen@example.com / citizen123
                         </code>
                     </div>
+                    <div style="margin-top: 12px;">
+                        <button
+                            type="button"
+                            onclick="clearDemoLockout(event)"
+                            style="padding: 6px 10px; border: 1px solid #D97706; border-radius: 6px; background: #FFF7ED; color: #92400E; font-weight: 600; cursor: pointer;"
+                        >
+                            Reset demo lockout
+                        </button>
+                    </div>
                 </div>
 
                 <form id="loginForm" onsubmit="handleLogin(event)">
@@ -313,8 +322,24 @@
         }
 
         function getFailedAttempts() {
-            const attempts = localStorage.getItem('failedLoginAttempts');
-            return attempts ? JSON.parse(attempts) : { count: 0, lockoutUntil: null };
+            let parsedAttempts;
+            try {
+                const attempts = localStorage.getItem('failedLoginAttempts');
+                parsedAttempts = attempts ? JSON.parse(attempts) : { count: 0, lockoutUntil: null };
+            } catch (error) {
+                console.warn('Invalid failedLoginAttempts state. Resetting lockout metadata.', error);
+                localStorage.removeItem('failedLoginAttempts');
+                parsedAttempts = { count: 0, lockoutUntil: null };
+            }
+
+            const count = Number.isInteger(parsedAttempts.count) && parsedAttempts.count >= 0
+                ? parsedAttempts.count
+                : 0;
+            const lockoutUntil = typeof parsedAttempts.lockoutUntil === 'number'
+                ? parsedAttempts.lockoutUntil
+                : null;
+
+            return { count, lockoutUntil };
         }
 
         function setFailedAttempts(count, lockoutUntil = null) {
@@ -323,6 +348,40 @@
 
         function resetFailedAttempts() {
             localStorage.removeItem('failedLoginAttempts');
+        }
+
+        function getStoredUsers() {
+            try {
+                const rawUsers = localStorage.getItem('allUsers');
+                const users = rawUsers ? JSON.parse(rawUsers) : [];
+                return Array.isArray(users) ? users : [];
+            } catch (error) {
+                console.warn('Invalid allUsers state. Ignoring stored users payload.', error);
+                return [];
+            }
+        }
+
+        function setLoginButtonState({ loading = false, disabled = false } = {}) {
+            const btn = document.getElementById('loginBtn');
+            if (!btn) return;
+
+            btn.classList.toggle('loading', loading);
+            btn.disabled = disabled;
+            btn.textContent = loading ? '' : 'Login';
+        }
+
+        function showLockoutAlert(lockoutMessage) {
+            showAlert(
+                `🔒 ${lockoutMessage}<br><button type="button" onclick="clearDemoLockout(event)" style="margin-top: 8px; padding: 5px 8px; border: 1px solid #B91C1C; border-radius: 6px; background: #FEE2E2; color: #7F1D1D; font-size: 0.8rem; font-weight: 600; cursor: pointer;">Reset demo lockout</button>`,
+                'error'
+            );
+        }
+
+        function clearDemoLockout(event) {
+            if (event) event.preventDefault();
+            resetFailedAttempts();
+            setLoginButtonState({ loading: false, disabled: false });
+            showAlert('✅ Demo lockout reset. You can try logging in again.', 'success');
         }
 
         function checkLockout() {
@@ -348,73 +407,77 @@
 
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
-            const btn = document.getElementById('loginBtn');
 
             const lockoutMessage = checkLockout();
             if (lockoutMessage) {
-                showAlert('🔒 ' + lockoutMessage, 'error');
+                showLockoutAlert(lockoutMessage);
                 return;
             }
 
-            btn.classList.add('loading');
-            btn.textContent = '';
-            btn.disabled = true;
+            setLoginButtonState({ loading: true, disabled: true });
 
             setTimeout(() => {
-                // Check demo users - use DEMO_USERS from demo-system for correct IDs (citizen id:5)
-                let user = null;
-                if (window.grievanceSystem && window.grievanceSystem.DEMO_USERS) {
-                    user = grievanceSystem.DEMO_USERS.find(u => u.email === email && u.password === password);
-                    // Alias: electricity@grievance.gov -> electricity.officer
-                    if (!user && email === 'electricity@grievance.gov') {
-                        const officer = grievanceSystem.DEMO_USERS.find(u => u.email === 'electricity.officer@grievance.gov' && u.password === password);
-                        if (officer) user = officer;
-                    }
-                }
-
-                // Check registered users (allUsers)
-                if (!user) {
-                    const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
-                    user = allUsers.find(u => u.email === email && u.password === password);
-                }
-
-                if (user) {
-                    console.log('Login successful:', user);
-                    resetFailedAttempts();
-                    
-                    localStorage.setItem('user', JSON.stringify(user));
-                    localStorage.setItem('isLoggedIn', 'true');
-                    localStorage.setItem('token', 'demo-token-' + Date.now());
-                    
-                    showAlert('✅ Login successful! Redirecting...', 'success');
-
-                    setTimeout(() => {
-                        if (user.role === 'ADMIN') {
-                            window.location.href = 'admin.html';
-                        } else if (['OFFICER', 'DEPARTMENT_HEAD', 'FIELD_WORKER'].includes(user.role)) {
-                            window.location.href = 'officer.html';
-                        } else {
-                            window.location.href = 'profile.html';
+                let shouldKeepButtonDisabled = false;
+                try {
+                    // Check demo users - use DEMO_USERS from demo-system for correct IDs (citizen id:5)
+                    let user = null;
+                    if (window.grievanceSystem && window.grievanceSystem.DEMO_USERS) {
+                        user = grievanceSystem.DEMO_USERS.find(u => u.email === email && u.password === password);
+                        // Alias: electricity@grievance.gov -> electricity.officer
+                        if (!user && email === 'electricity@grievance.gov') {
+                            const officer = grievanceSystem.DEMO_USERS.find(u => u.email === 'electricity.officer@grievance.gov' && u.password === password);
+                            if (officer) user = officer;
                         }
-                    }, 1500);
-                } else {
-                    console.log('Login failed: Invalid credentials');
-                    const attempts = getFailedAttempts();
-                    const newCount = attempts.count + 1;
-
-                    if (newCount >= MAX_ATTEMPTS) {
-                        const lockoutUntil = new Date().getTime() + LOCKOUT_DURATION;
-                        setFailedAttempts(newCount, lockoutUntil);
-                        showAlert(`🔒 Too many failed attempts! Account locked for 24 hours.`, 'error');
-                    } else {
-                        setFailedAttempts(newCount);
-                        const remainingAttempts = MAX_ATTEMPTS - newCount;
-                        showAlert(`❌ Invalid email or password! ${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''} remaining.`, 'error');
                     }
 
-                    btn.classList.remove('loading');
-                    btn.textContent = 'Login';
-                    btn.disabled = false;
+                    // Check registered users (allUsers)
+                    if (!user) {
+                        const allUsers = getStoredUsers();
+                        user = allUsers.find(u => u.email === email && u.password === password);
+                    }
+
+                    if (user) {
+                        console.log('Login successful:', user);
+                        resetFailedAttempts();
+                        
+                        localStorage.setItem('user', JSON.stringify(user));
+                        localStorage.setItem('isLoggedIn', 'true');
+                        localStorage.setItem('token', 'demo-token-' + Date.now());
+                        
+                        showAlert('✅ Login successful! Redirecting...', 'success');
+                        shouldKeepButtonDisabled = true;
+
+                        setTimeout(() => {
+                            if (user.role === 'ADMIN') {
+                                window.location.href = 'admin.html';
+                            } else if (['OFFICER', 'DEPARTMENT_HEAD', 'FIELD_WORKER'].includes(user.role)) {
+                                window.location.href = 'officer.html';
+                            } else {
+                                window.location.href = 'profile.html';
+                            }
+                        }, 1500);
+                    } else {
+                        console.log('Login failed: Invalid credentials');
+                        const attempts = getFailedAttempts();
+                        const newCount = attempts.count + 1;
+
+                        if (newCount >= MAX_ATTEMPTS) {
+                            const lockoutUntil = new Date().getTime() + LOCKOUT_DURATION;
+                            setFailedAttempts(newCount, lockoutUntil);
+                            showLockoutAlert('Too many failed attempts. Login is temporarily locked.');
+                        } else {
+                            setFailedAttempts(newCount);
+                            const remainingAttempts = MAX_ATTEMPTS - newCount;
+                            showAlert(`❌ Invalid email or password! ${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''} remaining.`, 'error');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Unexpected login error:', error);
+                    showAlert('❌ Login failed due to an unexpected error. Please try again.', 'error');
+                } finally {
+                    if (!shouldKeepButtonDisabled) {
+                        setLoginButtonState({ loading: false, disabled: false });
+                    }
                 }
             }, 1000);
         }
@@ -422,11 +485,11 @@
         window.addEventListener('DOMContentLoaded', () => {
             console.log('Login page loaded');
             console.log('grievanceSystem:', window.grievanceSystem ? 'Available' : 'Not available');
+            setLoginButtonState({ loading: false, disabled: false });
             
             const lockoutMessage = checkLockout();
             if (lockoutMessage) {
-                showAlert('🔒 ' + lockoutMessage, 'error');
-                document.getElementById('loginBtn').disabled = true;
+                showLockoutAlert(lockoutMessage);
             }
         });
     </script>
