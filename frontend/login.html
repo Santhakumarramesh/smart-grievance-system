@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Smart Grievance System</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="government-portal-theme.css">
-    <link rel="stylesheet" href="improved-contrast.css">
+    <link rel="stylesheet" href="styles.css?v=20260416a">
+    <link rel="stylesheet" href="government-portal-theme.css?v=20260416a">
+    <link rel="stylesheet" href="improved-contrast.css?v=20260416a">
     <style>
         body {
             margin: 0;
@@ -15,12 +15,31 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg,
-                #fff3e0 0%,
-                #fdfefe 45%,
-                #ecfdf3 100%);
+            background: #f6f7fb;
             position: relative;
-            background-attachment: fixed;
+            overflow-x: hidden;
+        }
+
+        .login-bg-base {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background:
+                radial-gradient(circle at 8% 15%, rgba(255, 153, 51, 0.35) 0%, transparent 42%),
+                radial-gradient(circle at 88% 78%, rgba(19, 136, 8, 0.30) 0%, transparent 42%),
+                radial-gradient(circle at 52% 12%, rgba(0, 61, 165, 0.22) 0%, transparent 36%),
+                linear-gradient(135deg, #fff7ec 0%, #f8fbff 50%, #eefdf4 100%);
+        }
+
+        .login-bg-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background-image:
+                radial-gradient(circle at 16% 28%, rgba(255, 153, 51, 0.20) 0%, transparent 34%),
+                radial-gradient(circle at 82% 68%, rgba(19, 136, 8, 0.18) 0%, transparent 34%),
+                radial-gradient(circle at 52% 48%, rgba(0, 61, 165, 0.14) 0%, transparent 30%);
+            pointer-events: none;
         }
 
         /* Tricolor Top Border */
@@ -36,22 +55,6 @@
                 #FFFFFF 33%, #FFFFFF 66%, 
                 #138808 66%, #138808 100%);
             z-index: 1000;
-        }
-
-        /* Rangoli Pattern Background */
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                radial-gradient(circle at 20% 30%, rgba(255, 153, 51, 0.18) 0%, transparent 45%),
-                radial-gradient(circle at 80% 70%, rgba(19, 136, 8, 0.16) 0%, transparent 45%),
-                radial-gradient(circle at 50% 20%, rgba(0, 61, 165, 0.12) 0%, transparent 42%);
-            pointer-events: none;
-            z-index: 0;
         }
 
         .login-container {
@@ -274,6 +277,9 @@
     </style>
 </head>
 <body>
+    <div class="login-bg-base" aria-hidden="true"></div>
+    <div class="login-bg-overlay" aria-hidden="true"></div>
+
     <div class="login-container">
         <div class="login-card">
             <div class="login-header">
