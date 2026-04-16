@@ -32,3 +32,11 @@ def test_docs_login_does_not_permanently_disable_button_on_load():
 
     assert "setLoginButtonState({ loading: false, disabled: false });" in dom_loaded_block
     assert "document.getElementById('loginBtn').disabled = true;" not in dom_loaded_block
+
+
+def test_docs_login_disables_lockout_for_static_demo_mode():
+    content = DOCS_LOGIN.read_text(encoding="utf-8", errors="ignore")
+
+    assert "const ENABLE_DEMO_LOCKOUT = false;" in content
+    assert "if (!ENABLE_DEMO_LOCKOUT) {" in content
+    assert "resetFailedAttempts();" in content

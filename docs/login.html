@@ -293,6 +293,7 @@
 
     <script src="demo-system.js"></script>
     <script>
+        const ENABLE_DEMO_LOCKOUT = false;
         const MAX_ATTEMPTS = 3;
         const LOCKOUT_DURATION = 24 * 60 * 60 * 1000;
         
@@ -385,6 +386,10 @@
         }
 
         function checkLockout() {
+            if (!ENABLE_DEMO_LOCKOUT) {
+                return null;
+            }
+
             const attempts = getFailedAttempts();
             if (attempts.lockoutUntil) {
                 const now = new Date().getTime();
@@ -458,17 +463,21 @@
                         }, 1500);
                     } else {
                         console.log('Login failed: Invalid credentials');
-                        const attempts = getFailedAttempts();
-                        const newCount = attempts.count + 1;
+                        if (ENABLE_DEMO_LOCKOUT) {
+                            const attempts = getFailedAttempts();
+                            const newCount = attempts.count + 1;
 
-                        if (newCount >= MAX_ATTEMPTS) {
-                            const lockoutUntil = new Date().getTime() + LOCKOUT_DURATION;
-                            setFailedAttempts(newCount, lockoutUntil);
-                            showLockoutAlert('Too many failed attempts. Login is temporarily locked.');
+                            if (newCount >= MAX_ATTEMPTS) {
+                                const lockoutUntil = new Date().getTime() + LOCKOUT_DURATION;
+                                setFailedAttempts(newCount, lockoutUntil);
+                                showLockoutAlert('Too many failed attempts. Login is temporarily locked.');
+                            } else {
+                                setFailedAttempts(newCount);
+                                const remainingAttempts = MAX_ATTEMPTS - newCount;
+                                showAlert(`❌ Invalid email or password! ${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''} remaining.`, 'error');
+                            }
                         } else {
-                            setFailedAttempts(newCount);
-                            const remainingAttempts = MAX_ATTEMPTS - newCount;
-                            showAlert(`❌ Invalid email or password! ${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''} remaining.`, 'error');
+                            showAlert('❌ Invalid email or password! Please check credentials and try again.', 'error');
                         }
                     }
                 } catch (error) {
@@ -486,6 +495,10 @@
             console.log('Login page loaded');
             console.log('grievanceSystem:', window.grievanceSystem ? 'Available' : 'Not available');
             setLoginButtonState({ loading: false, disabled: false });
+
+            if (!ENABLE_DEMO_LOCKOUT) {
+                resetFailedAttempts();
+            }
             
             const lockoutMessage = checkLockout();
             if (lockoutMessage) {
