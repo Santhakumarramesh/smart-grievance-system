@@ -943,6 +943,9 @@ function translate(key, lang = null) {
     if (translations[currentLang] && translations[currentLang][key]) return translations[currentLang][key];
     if (translations['en'] && translations['en'][key]) return translations['en'][key];
     
+    // Log missing translation for production debugging
+    console.warn(`[i18n missing] ${key} (Lang: ${currentLang})`);
+    
     // Auto-format missing translation keys to look natural (e.g., 'app_name' -> 'App Name')
     if (typeof key === 'string') {
         return key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');

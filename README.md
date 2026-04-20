@@ -135,15 +135,31 @@ Resolution → Citizen Notification
 
 ---
 
-## 🌍 Multilingual Support
-The platform features a custom-built translation architecture.
-- **Fully Populated**: English (EN), Hindi (HI), Tamil (TA).
-- **Extended Architecture**: Supports up to 12 Indian languages with dynamic wiring.
+## 🌍 Internationalization
+
+- **Full UI translation coverage** implemented for English, Hindi, and Tamil
+- **Fallback mechanism** ensures graceful degradation for missing keys, automatically formatting them for presentation
+- **Missing translations are logged** (e.g. `[i18n missing]`) for development and production debugging visibility
+- **Extended Architecture** smartly routes up to 12 Indian languages using dynamic wiring.
 
 ---
 
-## ⚠️ Known Limitations
-- **Content Coverage**: Full translation coverage is currently complete for English, Hindi, and Tamil; remaining languages use fallback keys.
+## 🚀 Deployment
+
+- **Frontend**: Hosted effortlessly on GitHub Pages (`docs/` directory acting as a mirror).
+- **Backend**: Hosted on Render (API Services).
+- **Architecture Note**: Full platform functionality requires both services to be running and correctly cross-wired using the CORS configurations defined in `runtime-config.js`.
+
+---
+
+## ⚠️ Known Limitations & Production Notes
+
+### Production Notes
+- Translation fallback is intentionally enabled for missing keys to preserve UI layout at runtime. For a full multilingual deployment, all language keys should be explicitly defined and logged warnings eliminated.
+- The `index.html` frontend relies on Render's cold-start behavior; first login attempts may require a brief wake-up period for the free-tier backend.
+
+### Limitations
+- **Content Coverage**: Full conceptual translation coverage is currently highest for English, Hindi, and Tamil; remaining edge-case dialects rely prominently on the translation fallbacks.
 - **ML Specialization**: The classifier is optimized for department routing assistance, not high-granularity sub-category classification.
 - **Session Strategy**: Token storage currently uses `localStorage` for simplicity; production environments should migrate to HttpOnly secure cookies.
 - **Detection Dependency**: AI image fraud detection depends on model confidence thresholds and may require manual verification.
@@ -173,7 +189,7 @@ The platform features a custom-built translation architecture.
 > **Demo Credentials**: `admin123` / `officer123` / `citizen123` are for local development only. Do not use in production.
 
 > [!NOTE]
-> **Live Demo**: The [GitHub Pages demo](https://santhakumarramesh.github.io/smart-grievance-system/) is a frontend-mirrored demo. Backend services must be deployed separately for full logic fulfillment.
+> **Live Demo**: The [GitHub Pages demo](https://santhakumarramesh.github.io/smart-grievance-system/) is a frontend-mirrored static site. Real interactivity requires the Render API infrastructure to successfully respond to client requests.
 
 ---
 
