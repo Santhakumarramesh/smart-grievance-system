@@ -283,10 +283,10 @@
         <div class="header-main">
             <div class="container">
                 <div class="header-content">
-                    <h1>🇮🇳 Smart Grievance System</h1>
+                    <h1 data-translate="app_name">🇮🇳 Smart Grievance System</h1>
                     <div class="header-actions">
                         <div class="user-info" id="userInfo"></div>
-                        <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                        <button id="logoutBtn" class="btn btn-secondary" data-translate="logout">Logout</button>
                     </div>
                 </div>
             </div>
@@ -317,61 +317,61 @@
 
         <!-- Personal Information -->
         <div class="info-section view-mode" id="personalSection">
-            <h2>📋 Personal Information</h2>
+            <h2 data-translate="personal_information">📋 Personal Information</h2>
             <div class="info-grid" id="personalInfo">
                 <div class="info-item">
-                    <div class="info-label">First Name</div>
+                    <div class="info-label" data-translate="first_name">First Name</div>
                     <div class="info-value display" id="firstNameDisplay"></div>
                     <div class="info-value edit">
-                        <input type="text" id="firstNameInput" placeholder="First name">
+                        <input type="text" id="firstNameInput" data-translate="enter_first_name" placeholder="First name">
                     </div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Last Name</div>
+                    <div class="info-label" data-translate="last_name">Last Name</div>
                     <div class="info-value display" id="lastNameDisplay"></div>
                     <div class="info-value edit">
-                        <input type="text" id="lastNameInput" placeholder="Last name">
+                        <input type="text" id="lastNameInput" data-translate="enter_last_name" placeholder="Last name">
                     </div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Email Address</div>
+                    <div class="info-label" data-translate="email_address">Email Address</div>
                     <div class="info-value display" id="emailDisplay"></div>
                     <div class="info-value edit">
                         <input type="email" id="emailInput" disabled style="background: #f3f4f6; cursor: not-allowed;" title="Email cannot be changed. Contact admin if needed.">
-                        <small style="color: #6b7280; display: block; margin-top: 5px;">Email cannot be changed</small>
+                        <small style="color: #6b7280; display: block; margin-top: 5px;" data-translate="email_no_change">Email cannot be changed</small>
                     </div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Phone Number</div>
+                    <div class="info-label" data-translate="phone_number">Phone Number</div>
                     <div class="info-value display" id="phoneDisplay"></div>
                     <div class="info-value edit">
                         <input type="tel" id="phoneInput" disabled style="background: #f3f4f6; cursor: not-allowed;" title="Phone cannot be changed. Contact admin if needed.">
-                        <small style="color: #6b7280; display: block; margin-top: 5px;">Phone cannot be changed. Contact admin if needed.</small>
+                        <small style="color: #6b7280; display: block; margin-top: 5px;" data-translate="phone_no_change">Phone cannot be changed. Contact admin if needed.</small>
                     </div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Date of Birth</div>
+                    <div class="info-label" data-translate="date_of_birth">Date of Birth</div>
                     <div class="info-value display" id="dobDisplay"></div>
                     <div class="info-value edit">
                         <input type="date" id="dobInput">
                     </div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Gender <span style="color: #ef4444;">*</span></div>
+                    <div class="info-label"><span data-translate="gender">Gender</span> <span style="color: #ef4444;">*</span></div>
                     <div class="info-value display" id="genderDisplay"></div>
                     <div class="info-value edit">
                         <select id="genderInput" class="form-input">
-                            <option value="">-- Select Gender --</option>
-                            <option value="Male">Male / पुरुष</option>
-                            <option value="Female">Female / महिला</option>
-                            <option value="Other">Other / अन्य</option>
-                            <option value="Prefer not to say">Prefer not to say / नहीं बताना चाहते</option>
+                            <option value="" data-translate="select_gender">-- Select Gender --</option>
+                            <option value="Male" data-translate="male">Male / पुरुष</option>
+                            <option value="Female" data-translate="female">Female / महिला</option>
+                            <option value="Other" data-translate="other_gender">Other / अन्य</option>
+                            <option value="Prefer not to say" data-translate="prefer_not_to_say">Prefer not to say / नहीं बताना चाहते</option>
                         </select>
-                        <small style="color: #6B7280; display: block; margin-top: 0.25rem;">Accepted values: Male, Female, Other, Prefer not to say</small>
+                        <small style="color: #6B7280; display: block; margin-top: 0.25rem;" data-translate="accepted_gender_values">Accepted values: Male, Female, Other, Prefer not to say</small>
                     </div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Aadhaar (Last 4 digits)</div>
+                    <div class="info-label" data-translate="aadhaar_optional">Aadhaar (Last 4 digits)</div>
                     <div class="info-value display" id="aadhaarDisplay"></div>
                     <div class="info-value edit">
                         <input type="text" id="aadhaarInput" disabled>
@@ -382,53 +382,28 @@
 
         <!-- Residential Address (Permanent Address as per Aadhaar) -->
         <div class="info-section view-mode" id="residentialAddressSection">
-            <h2>🏠 Residential Address (As per Aadhaar)</h2>
+            <h2 data-translate="residential_address_heading">🏠 Residential Address (As per Aadhaar)</h2>
             
             <!-- Important Notice Banner -->
-            <div style="background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%); border: 2px solid #EF4444; border-radius: 8px; padding: 14px; margin-bottom: 20px;">
-                <div style="display: flex; align-items: start; gap: 12px;">
-                    <div style="font-size: 24px; flex-shrink: 0;">🛡️</div>
-                    <div>
-                        <div style="font-weight: 700; color: #991B1B; margin-bottom: 6px; font-size: 15px;">
-                            MANDATORY: Residential Address Verification (Anti-Fraud Measure)
-                        </div>
-                        <div style="color: #7F1D1D; font-size: 13px; line-height: 1.6;">
-                            Your <strong>permanent residential address (as per Aadhaar)</strong> is <strong style="text-decoration: underline;">REQUIRED</strong> before you can submit any complaints. This strict verification helps us:
-                        </div>
-                        <ul style="margin: 8px 0 0 20px; padding: 0; color: #7F1D1D; font-size: 12px; line-height: 1.6;">
-                            <li><strong>Prevent fraudulent and scam complaints</strong></li>
-                            <li><strong>Verify your identity</strong> and location</li>
-                            <li><strong>Ensure only genuine complaints</strong> are processed</li>
-                            <li><strong>Speed up resolution</strong> for real issues</li>
-                        </ul>
-                        <div style="margin-top: 8px; padding: 8px; background: rgba(239, 68, 68, 0.15); border-radius: 4px; border-left: 3px solid #EF4444;">
-                            <strong style="color: #991B1B;">⚠️ Government Regulation:</strong>
-                            <span style="color: #7F1D1D; font-size: 12px;">
-                                Complete address verification is mandatory. This is where YOU live (not complaint location). Providing false information is a punishable offense.
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
             
             <div class="info-grid">
                 <div class="info-item" style="grid-column: 1 / -1;">
-                    <div class="info-label">Full Residential Address</div>
-                    <div class="info-value display" id="residentialAddressDisplay">Not provided</div>
+                    <div class="info-label" data-translate="full_address">Full Residential Address</div>
+                    <div class="info-value display" id="residentialAddressDisplay" data-translate="not_provided">Not provided</div>
                     <div class="info-value edit">
-                        <textarea id="residentialAddressInput" rows="2" placeholder="House/Flat No, Building Name, Street, Area, Landmark"></textarea>
+                        <textarea id="residentialAddressInput" rows="2" data-translate="enter_full_address" placeholder="House/Flat No, Building Name, Street, Area, Landmark"></textarea>
                     </div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">City</div>
-                    <div class="info-value display" id="residentialCityDisplay">Not provided</div>
+                    <div class="info-label" data-translate="city">City</div>
+                    <div class="info-value display" id="residentialCityDisplay" data-translate="not_provided">Not provided</div>
                     <div class="info-value edit">
-                        <input type="text" id="residentialCityInput" placeholder="Your city">
+                        <input type="text" id="residentialCityInput" data-translate="enter_city" placeholder="Your city">
                     </div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">State</div>
-                    <div class="info-value display" id="residentialStateDisplay">Not provided</div>
+                    <div class="info-label" data-translate="state">State</div>
+                    <div class="info-value display" id="residentialStateDisplay" data-translate="not_provided">Not provided</div>
                     <div class="info-value edit">
                         <select id="residentialStateInput">
                             <option value="">Select State</option>
@@ -472,10 +447,10 @@
                     </div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">PIN Code</div>
-                    <div class="info-value display" id="residentialPincodeDisplay">Not provided</div>
+                    <div class="info-label" data-translate="pincode">PIN Code</div>
+                    <div class="info-value display" id="residentialPincodeDisplay" data-translate="not_provided">Not provided</div>
                     <div class="info-value edit">
-                        <input type="text" id="residentialPincodeInput" maxlength="6" pattern="[0-9]{6}" placeholder="6-digit PIN">
+                        <input type="text" id="residentialPincodeInput" maxlength="6" pattern="[0-9]{6}" data-translate="enter_pincode" placeholder="6-digit PIN">
                     </div>
                 </div>
             </div>
@@ -483,7 +458,7 @@
 
         <!-- Account Details -->
         <div class="info-section">
-            <h2>🔐 Account Details</h2>
+            <h2 data-translate="account_details">🔐 Account Details</h2>
             <div class="info-grid" id="accountDetails">
                 <!-- Details will be loaded dynamically -->
             </div>
@@ -491,10 +466,10 @@
 
         <!-- Action Buttons -->
         <div class="action-buttons">
-            <button class="btn-edit" id="editBtn" onclick="toggleEditMode()">✏️ Edit Profile</button>
-            <button class="btn-save" id="saveBtn" onclick="saveProfile()" style="display: none;">💾 Save Changes</button>
-            <button class="btn-cancel" id="cancelBtn" onclick="cancelEdit()" style="display: none;">❌ Cancel</button>
-            <button class="btn-back" onclick="goBack()">← Back to Dashboard</button>
+            <button class="btn-edit" id="editBtn" onclick="toggleEditMode()" data-translate="edit_profile">✏️ Edit Profile</button>
+            <button class="btn-save" id="saveBtn" onclick="saveProfile()" style="display: none;" data-translate="save_changes">💾 Save Changes</button>
+            <button class="btn-cancel" id="cancelBtn" onclick="cancelEdit()" style="display: none;" data-translate="cancel">❌ Cancel</button>
+            <button class="btn-back" onclick="goBack()" data-translate="back_to_dashboard">← Back to Dashboard</button>
         </div>
     </div>
 
@@ -605,7 +580,7 @@
                 margin-top: 1rem;
                 cursor: pointer;
                 font-size: 0.9rem;
-            ">
+            " data-translate="cancel">
                 Cancel
             </button>
         </div>
@@ -716,12 +691,11 @@
                 warningBanner.innerHTML = `
                     <div style="font-size: 2rem;">⚠️</div>
                     <div style="flex: 1;">
-                        <h3 style="margin: 0 0 0.5rem 0; color: #92400E; font-size: 1.1rem; font-weight: 600;">
+                        <h3 style="margin: 0 0 0.5rem 0; color: #92400E; font-size: 1.1rem; font-weight: 600;" data-translate="complete_profile">
                             Complete Your Profile
                         </h3>
-                        <p style="margin: 0; color: #78350F; font-size: 0.95rem;">
-                            Please add your <strong>${missingFields.join(' and ')}</strong> to complete your profile. 
-                            This information is required for submitting grievances.
+                        <p style="margin: 0; color: #78350F; font-size: 0.95rem;" data-translate="complete_profile_desc">
+                            Please add your missing information to complete your profile. This is required for submitting grievances.
                         </p>
                     </div>
                     <button onclick="toggleEditMode()" style="
@@ -734,7 +708,7 @@
                         cursor: pointer;
                         white-space: nowrap;
                         transition: all 0.2s;
-                    " onmouseover="this.style.background='#D97706'" onmouseout="this.style.background='#F59E0B'">
+                    " onmouseover="this.style.background='#D97706'" onmouseout="this.style.background='#F59E0B'" data-translate="update_now">
                         Update Now
                     </button>
                 `;
@@ -742,6 +716,11 @@
                 // Insert at the top of profile container
                 const profileContainer = document.querySelector('.profile-container');
                 profileContainer.insertBefore(warningBanner, profileContainer.firstChild);
+
+                // Re-apply translations for the new banner
+                if (typeof applyTranslations === 'function') {
+                    applyTranslations();
+                }
             }
         }
 

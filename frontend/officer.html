@@ -12,18 +12,18 @@
 <body>
     <header class="header">
         <div class="header-content">
-            <h1>Officer Dashboard</h1>
+            <h1 data-translate="officer_dashboard">Officer Dashboard</h1>
             <div class="header-actions">
                 <div class="user-info"></div>
-                <a href="officer-profile.html" class="btn btn-primary" style="margin-right: 10px;">👤 Profile</a>
-                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                <a href="officer-profile.html" class="btn btn-primary" style="margin-right: 10px;" data-translate="profile_btn">👤 Profile</a>
+                <button id="logoutBtn" class="btn btn-secondary" data-translate="logout">Logout</button>
             </div>
         </div>
     </header>
 
     <div class="container">
         <div class="card">
-            <h2 class="card-title">Department Grievances - <span id="departmentName"></span></h2>
+            <h2 class="card-title"><span data-translate="dept_grievances">Department Grievances</span> - <span id="departmentName"></span></h2>
             <div id="grievancesList">
                 <div class="spinner"></div>
             </div>
@@ -33,45 +33,45 @@
     <!-- Update Modal -->
     <div id="updateModal" class="hidden" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; overflow-y: auto;">
         <div class="card" style="max-width: 700px; width: 90%; margin: 2rem auto; max-height: 90vh; overflow-y: auto;">
-            <h2 class="card-title">Update Grievance #<span id="modalGrievanceId"></span></h2>
+            <h2 class="card-title"><span data-translate="update_grievance">Update Grievance</span> #<span id="modalGrievanceId"></span></h2>
             
             <form id="updateForm">
                 <div class="form-group">
-                    <label class="form-label" for="status">Status</label>
+                    <label class="form-label" for="status" data-translate="status">Status</label>
                     <select id="status" class="form-select" required>
-                        <option value="">Select Status</option>
-                        <option value="Under Progress">Under Progress</option>
-                        <option value="Investigation">Investigation</option>
-                        <option value="Reviewed">Reviewed</option>
-                        <option value="Resolved">Resolved</option>
-                        <option value="Closed">Closed</option>
+                        <option value="" data-translate="select_status">Select Status</option>
+                        <option value="Under Progress" data-translate="under_progress">Under Progress</option>
+                        <option value="Investigation" data-translate="investigation">Investigation</option>
+                        <option value="Reviewed" data-translate="reviewed">Reviewed</option>
+                        <option value="Resolved" data-translate="resolved">Resolved</option>
+                        <option value="Closed" data-translate="closed">Closed</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="message">Update Message</label>
+                    <label class="form-label" for="message" data-translate="update_message">Update Message</label>
                     <textarea id="message" class="form-textarea" rows="4" 
-                        placeholder="Provide details about this update" required></textarea>
+                        data-translate="update_details_placeholder" placeholder="Provide details about this update" required></textarea>
                 </div>
 
                 <div class="flex gap-2">
-                    <button type="submit" class="btn btn-success">Submit Update</button>
-                    <button type="button" id="closeModalBtn" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-success" data-translate="submit_update">Submit Update</button>
+                    <button type="button" id="closeModalBtn" class="btn btn-secondary" data-translate="cancel">Cancel</button>
                 </div>
             </form>
 
             <!-- Comments Section in Modal -->
             <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
             
-            <h3 style="margin-bottom: 1rem;">Comments & Feedback</h3>
+            <h3 style="margin-bottom: 1rem;" data-translate="comments_and_feedback">Comments & Feedback</h3>
             
             <!-- Add Comment -->
             <div class="form-group">
-                <label class="form-label" for="modalCommentText">Add Comment</label>
+                <label class="form-label" for="modalCommentText" data-translate="add_comment">Add Comment</label>
                 <textarea id="modalCommentText" class="form-textarea" rows="3" 
-                    placeholder="Type your response or feedback..."></textarea>
+                    data-translate="type_comment_placeholder" placeholder="Type your response or feedback..."></textarea>
             </div>
-            <button id="modalAddCommentBtn" class="btn btn-primary" style="margin-bottom: 1.5rem;">Post Comment</button>
+            <button id="modalAddCommentBtn" class="btn btn-primary" style="margin-bottom: 1.5rem;" data-translate="post_comment">Post Comment</button>
 
             <!-- Comments List -->
             <div id="modalCommentsList">

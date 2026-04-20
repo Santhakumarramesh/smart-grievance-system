@@ -184,10 +184,10 @@
         <div class="header-main">
             <div class="container">
                 <div class="header-content">
-                    <h1>🇮🇳 Smart Grievance System</h1>
+                    <h1 data-translate="app_name">🇮🇳 Smart Grievance System</h1>
                     <div class="header-actions">
                         <div class="user-info" id="userInfo"></div>
-                        <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                        <button id="logoutBtn" class="btn btn-secondary" data-translate="logout">Logout</button>
                     </div>
                 </div>
             </div>
@@ -201,7 +201,7 @@
                 <div class="profile-avatar" id="avatar"></div>
                 <div class="profile-info">
                     <h1 id="userName">Loading...</h1>
-                    <div class="profile-badge">🏛️ OFFICER</div>
+                    <div class="profile-badge" data-translate="officer_role">🏛️ OFFICER</div>
                     <div style="opacity: 0.9;" id="userEmail"></div>
                 </div>
             </div>
@@ -210,56 +210,56 @@
         <!-- Statistics -->
         <div class="profile-stats" id="statsContainer">
             <div class="stat-card">
-                <div class="stat-label">Total Cases</div>
+                <div class="stat-label" data-translate="total_cases">Total Cases</div>
                 <div class="stat-value" id="totalCases">0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Resolved</div>
+                <div class="stat-label" data-translate="resolved">Resolved</div>
                 <div class="stat-value" id="resolvedCases">0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">In Progress</div>
+                <div class="stat-label" data-translate="in_progress">In Progress</div>
                 <div class="stat-value" id="pendingCases">0</div>
             </div>
         </div>
 
         <!-- Department Information -->
         <div class="info-section">
-            <h2>🏛️ Department Information</h2>
+            <h2 data-translate="dept_info">🏛️ Department Information</h2>
             <div class="info-grid">
                 <div class="info-item">
-                    <div class="info-label">Department</div>
+                    <div class="info-label" data-translate="department">Department</div>
                     <div class="info-value" id="department"></div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Designation</div>
+                    <div class="info-label" data-translate="designation">Designation</div>
                     <div class="info-value" id="designation"></div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Office Building</div>
+                    <div class="info-label" data-translate="office_building">Office Building</div>
                     <div class="info-value" id="officeBuilding"></div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Responsibilities</div>
-                    <div class="info-value">Handle & resolve department complaints</div>
+                    <div class="info-label" data-translate="responsibilities">Responsibilities</div>
+                    <div class="info-value" data-translate="officer_responsibilities_desc">Handle & resolve department complaints</div>
                 </div>
             </div>
         </div>
 
         <!-- Office Contact Information -->
         <div class="info-section">
-            <h2>📞 Office Contact Information</h2>
+            <h2 data-translate="office_contact_info">📞 Office Contact Information</h2>
             <div class="info-grid">
                 <div class="info-item">
-                    <div class="info-label">Office Phone</div>
+                    <div class="info-label" data-translate="office_phone">Office Phone</div>
                     <div class="info-value" id="officeNumber"></div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Office Email</div>
+                    <div class="info-label" data-translate="office_email">Office Email</div>
                     <div class="info-value" id="officeEmail"></div>
                 </div>
                 <div class="info-item" style="grid-column: 1 / -1;">
-                    <div class="info-label">Office Location</div>
+                    <div class="info-label" data-translate="office_location">Office Location</div>
                     <div class="info-value" id="officeLocation"></div>
                 </div>
             </div>
@@ -267,22 +267,22 @@
 
         <!-- Personal Information -->
         <div class="info-section">
-            <h2>📋 Personal Information</h2>
+            <h2 data-translate="personal_information">📋 Personal Information</h2>
             <div class="info-grid">
                 <div class="info-item">
-                    <div class="info-label">Full Name</div>
+                    <div class="info-label" data-translate="full_name">Full Name</div>
                     <div class="info-value" id="nameDisplay"></div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Email Address</div>
+                    <div class="info-label" data-translate="email_address">Email Address</div>
                     <div class="info-value" id="emailDisplay"></div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Phone Number</div>
+                    <div class="info-label" data-translate="phone_number">Phone Number</div>
                     <div class="info-value" id="phoneDisplay"></div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Member Since</div>
+                    <div class="info-label" data-translate="member_since">Member Since</div>
                     <div class="info-value" id="memberSince"></div>
                 </div>
             </div>
@@ -290,34 +290,34 @@
 
         <!-- Account Details -->
         <div class="info-section">
-            <h2>🔐 Account Details</h2>
+            <h2 data-translate="account_details">🔐 Account Details</h2>
             <div class="info-grid">
                 <div class="info-item">
-                    <div class="info-label">Account Type</div>
-                    <div class="info-value">OFFICER</div>
+                    <div class="info-label" data-translate="account_type">Account Type</div>
+                    <div class="info-value" data-translate="officer_role">OFFICER</div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Email Status</div>
+                    <div class="info-label" data-translate="email_status">Email Status</div>
                     <div class="info-value">
-                        <span class="badge verified">✓ Verified</span>
+                        <span class="badge verified" data-translate="verified">✓ Verified</span>
                     </div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Phone Status</div>
+                    <div class="info-label" data-translate="phone_status">Phone Status</div>
                     <div class="info-value">
-                        <span class="badge verified">✓ Verified</span>
+                        <span class="badge verified" data-translate="verified">✓ Verified</span>
                     </div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Access Level</div>
-                    <div class="info-value">Department Level</div>
+                    <div class="info-label" data-translate="access_level">Access Level</div>
+                    <div class="info-value" data-translate="dept_level_access">Department Level</div>
                 </div>
             </div>
         </div>
 
         <!-- Action Buttons -->
         <div class="action-buttons">
-            <button class="btn-back" onclick="goBack()">← Back to Dashboard</button>
+            <button class="btn-back" onclick="goBack()" data-translate="back_to_dashboard">← Back to Dashboard</button>
         </div>
     </div>
 

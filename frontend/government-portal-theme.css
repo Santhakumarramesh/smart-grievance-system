@@ -5,13 +5,11 @@
 
 /* Clean, professional background */
 body {
-    background: #f5f7fa;
-    background-image: 
-        radial-gradient(circle at 8% 12%, rgba(255, 153, 51, 0.10) 0%, transparent 38%),
-        radial-gradient(circle at 92% 88%, rgba(19, 136, 8, 0.10) 0%, transparent 36%),
-        linear-gradient(to bottom, #ffffff 0%, #f5f7fa 100%);
+    background: #f4f6fa;
     position: relative;
     min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #111827; /* Stronger base text color */
 }
 
 /* Government portal header strip */
@@ -49,24 +47,32 @@ body {
 
 /* Professional card styling */
 .card {
-    background: white !important;
-    border: 1px solid #e0e0e0 !important;
-    border-radius: 8px !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
-    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06) !important;
+    margin-bottom: 24px;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
 }
 
 .card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
-    transition: box-shadow 0.3s ease;
+    transform: translateY(-6px) !important;
+    box-shadow: 0 12px 40px rgba(0, 61, 165, 0.12) !important;
+    border-color: rgba(255, 153, 51, 0.3) !important;
 }
 
 /* Header styling - Government portal style */
 .header {
-    background: linear-gradient(135deg, #003DA5 0%, #0052CC 100%) !important;
-    border-bottom: 3px solid #FF9933 !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
-    position: relative;
+    background: rgba(0, 61, 165, 0.9) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-bottom: 4px solid #FF9933 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+    position: sticky !important;
+    top: 4px;
+    z-index: 1000;
 }
 
 .header::after {
@@ -145,14 +151,15 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #003DA5 0%, #0052CC 100%) !important;
+    background: linear-gradient(135deg, #FF9933 0%, #138808 100%) !important;
     border: none !important;
+    box-shadow: 0 4px 15px rgba(255, 153, 51, 0.3) !important;
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #002D7A 0%, #003DA5 100%) !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 61, 165, 0.3) !important;
+    background: linear-gradient(135deg, #FF8C00 0%, #107006 100%) !important;
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(255, 153, 51, 0.4) !important;
 }
 
 .btn-secondary {
@@ -181,8 +188,18 @@ body {
 .form-textarea:focus,
 .form-select:focus {
     border-color: #003DA5 !important;
-    box-shadow: 0 0 0 3px rgba(0, 61, 165, 0.1) !important;
+    box-shadow: 0 0 0 3px rgba(0, 61, 165, 0.15) !important;
     outline: none !important;
+    background: white !important;
+}
+
+.form-label {
+    color: #111827 !important;
+    font-weight: 700 !important;
+}
+
+table td, table th {
+    color: #111827 !important;
 }
 
 /* Badge styling */

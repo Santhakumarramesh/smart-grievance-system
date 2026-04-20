@@ -39,7 +39,7 @@ function showTranslationModal(text, currentLang, targetElementId) {
                         <strong>Original Text:</strong>
                     </div>
                     <div class="translation-original">
-                        ${text}
+                        ${typeof escapeHtml === 'function' ? escapeHtml(text) : text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
                     </div>
                 </div>
                 

@@ -21,18 +21,15 @@ Set these variables in your hosting environment.
 | `APP_BASE_URL` | Yes | `https://your-domain.com` |
 | `DATABASE_URL` | Yes | `postgresql://user:pass@host:5432/db` |
 | `DEMO_EMAIL_MODE` | Yes | `false` in production |
-| `DEMO_SMS_MODE` | Yes | `false` in production |
 | `AUTO_CREATE_TABLES` | Yes | `false` |
+| `ENABLE_SCHEDULER` | Yes | `true` |
+| `SCHEDULER_AUTOSTART` | Yes | `false` (on web workers) |
+| `FORMSPREE_ENDPOINT` | No | `https://formspree.io/f/...` |
 
 If `DEMO_EMAIL_MODE=false`, configure at least one provider:
 
-- `MAIL_SERVER`
-- `MAIL_PORT`
-- `MAIL_USE_TLS`
-- `MAIL_USERNAME`
-- `MAIL_PASSWORD`
-- `MAIL_DEFAULT_SENDER`
-- or `FORMSPREE_ENDPOINT`
+- **SMTP**: `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USE_TLS`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_DEFAULT_SENDER`
+- **Fallback**: `FORMSPREE_ENDPOINT`
 
 ## 2. Render Deployment (Blueprint Recommended)
 

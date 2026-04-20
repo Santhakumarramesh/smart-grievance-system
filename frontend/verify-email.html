@@ -267,16 +267,16 @@
     <div class="verify-container">
         <div class="verify-card">
             <div class="verify-header">
-                <h1>Verify Your Email</h1>
-                <p>Enter the code we sent you</p>
+                <h1 data-translate="verify_email_heading">Verify Your Email</h1>
+                <p data-translate="enter_code_sent">Enter the code we sent you</p>
             </div>
 
             <div class="verify-body">
                 <div id="alertContainer"></div>
 
                 <div class="email-sent-to">
-                    <p>We've sent a 6-digit code to:</p>
-                    <strong id="emailDisplay">Loading...</strong>
+                    <p data-translate="code_sent_to">We've sent a 6-digit code to:</p>
+                    <strong id="emailDisplay" data-translate="loading">Loading...</strong>
                 </div>
 
                 <form id="verifyForm">
@@ -291,17 +291,17 @@
 
                     <div class="timer-container">
                         <div class="timer" id="timer">05:00</div>
-                        <small style="color: #6B7280;">Code expires in</small>
+                        <small style="color: #6B7280;" data-translate="code_expires_in">Code expires in</small>
                     </div>
 
-                    <button type="submit" class="btn-verify" id="verifyBtn">
+                    <button type="submit" class="btn-verify" id="verifyBtn" data-translate="verify_email_btn">
                         Verify Email
                     </button>
                 </form>
 
                 <div class="resend-container">
-                    <p class="resend-text">Didn't receive the code?</p>
-                    <button class="btn-resend" id="resendBtn">
+                    <p class="resend-text" data-translate="didnt_receive_code">Didn't receive the code?</p>
+                    <button class="btn-resend" id="resendBtn" data-translate="resend_otp">
                         Resend OTP
                     </button>
                 </div>

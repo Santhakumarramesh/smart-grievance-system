@@ -199,8 +199,8 @@
     <div class="register-container">
         <div class="register-card">
             <div class="register-header">
-                <h1>Create Account</h1>
-                <p>Join Smart Grievance System</p>
+                <h1 data-translate="create_account">Create Account</h1>
+                <p data-translate="join_system">Join Smart Grievance System</p>
             </div>
 
             <div class="register-body">
@@ -209,72 +209,72 @@
                 <form id="registerForm">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div class="form-group">
-                            <label class="form-label" for="firstName">First Name <span style="color: #ef4444;">*</span></label>
-                            <input type="text" id="firstName" class="form-input" placeholder="First name" required>
+                            <label class="form-label" for="firstName"><span data-translate="first_name">First Name</span> <span style="color: #ef4444;">*</span></label>
+                            <input type="text" id="firstName" class="form-input" data-translate="enter_first_name" placeholder="First name" required>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label" for="lastName">Last Name <span style="color: #ef4444;">*</span></label>
-                            <input type="text" id="lastName" class="form-input" placeholder="Last name" required>
+                            <label class="form-label" for="lastName"><span data-translate="last_name">Last Name</span> <span style="color: #ef4444;">*</span></label>
+                            <input type="text" id="lastName" class="form-input" data-translate="enter_last_name" placeholder="Last name" required>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="email">Email Address <span style="color: #ef4444;">*</span></label>
-                        <input type="email" id="email" class="form-input" placeholder="your.email@example.com" required>
+                        <label class="form-label" for="email"><span data-translate="email_address">Email Address</span> <span style="color: #ef4444;">*</span></label>
+                        <input type="email" id="email" class="form-input" data-translate="enter_email" placeholder="your.email@example.com" required>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="phone">Phone Number <span style="color: #ef4444;">*</span></label>
-                        <input type="tel" id="phone" class="form-input" placeholder="10-digit mobile number" required pattern="[0-9]{10}">
-                        <small style="color: var(--text-secondary);">Will be verified via OTP</small>
+                        <label class="form-label" for="phone"><span data-translate="phone_number">Phone Number</span> <span style="color: #ef4444;">*</span></label>
+                        <input type="tel" id="phone" class="form-input" data-translate="enter_phone" placeholder="10-digit mobile number" required pattern="[0-9]{10}">
+                        <small style="color: var(--text-secondary);" data-translate="verified_via_otp">Will be verified via OTP</small>
                     </div>
 
                     <!-- Personal Information -->
                     <div class="form-group">
-                        <label class="form-label" for="dateOfBirth">Date of Birth <span style="color: #ef4444;">*</span></label>
+                        <label class="form-label" for="dateOfBirth"><span data-translate="date_of_birth">Date of Birth</span> <span style="color: #ef4444;">*</span></label>
                         <input type="date" id="dateOfBirth" class="form-input" required>
-                        <small style="color: var(--text-secondary);">You must be 18 or above to register</small>
+                        <small style="color: var(--text-secondary);" data-translate="must_be_18">You must be 18 or above to register</small>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="gender">Gender <span style="color: #ef4444;">*</span></label>
+                        <label class="form-label" for="gender"><span data-translate="gender">Gender</span> <span style="color: #ef4444;">*</span></label>
                         <select id="gender" class="form-input" required>
-                            <option value="">-- Select Gender --</option>
-                            <option value="Male">Male / पुरुष</option>
-                            <option value="Female">Female / महिला</option>
-                            <option value="Other">Other / अन्य</option>
-                            <option value="Prefer not to say">Prefer not to say / नहीं बताना चाहते</option>
+                            <option value="" data-translate="select_gender">-- Select Gender --</option>
+                            <option value="Male" data-translate="male">Male / पुरुष</option>
+                            <option value="Female" data-translate="female">Female / महिला</option>
+                            <option value="Other" data-translate="other_gender">Other / अन्य</option>
+                            <option value="Prefer not to say" data-translate="prefer_not_to_say">Prefer not to say / नहीं बताना चाहते</option>
                         </select>
-                        <small style="color: var(--text-secondary);">Accepted values: Male, Female, Other, Prefer not to say</small>
+                        <small style="color: var(--text-secondary);" data-translate="accepted_gender_values">Accepted values: Male, Female, Other, Prefer not to say</small>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="password">Password <span style="color: #ef4444;">*</span></label>
-                        <input type="password" id="password" class="form-input" placeholder="Create a strong password" required minlength="8">
-                        <small style="color: var(--text-secondary);">Minimum 8 chars with uppercase, lowercase, and number</small>
+                        <label class="form-label" for="password"><span data-translate="password">Password</span> <span style="color: #ef4444;">*</span></label>
+                        <input type="password" id="password" class="form-input" data-translate="create_password" placeholder="Create a strong password" required minlength="8">
+                        <small style="color: var(--text-secondary);" data-translate="password_requirements">Minimum 8 chars with uppercase, lowercase, and number</small>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="confirmPassword">Confirm Password <span style="color: #ef4444;">*</span></label>
-                        <input type="password" id="confirmPassword" class="form-input" placeholder="Re-enter password" required>
+                        <label class="form-label" for="confirmPassword"><span data-translate="confirm_password">Confirm Password</span> <span style="color: #ef4444;">*</span></label>
+                        <input type="password" id="confirmPassword" class="form-input" data-translate="reenter_password" placeholder="Re-enter password" required>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="aadhaar">Aadhaar Last 4 Digits (Optional)</label>
-                        <input type="text" id="aadhaar" class="form-input" placeholder="Last 4 digits" maxlength="4" pattern="[0-9]{4}">
+                        <label class="form-label" for="aadhaar" data-translate="aadhaar_optional">Aadhaar Last 4 Digits (Optional)</label>
+                        <input type="text" id="aadhaar" class="form-input" data-translate="last_4_digits" placeholder="Last 4 digits" maxlength="4" pattern="[0-9]{4}">
                     </div>
 
                     <div class="checkbox-group">
                         <input type="checkbox" id="consent" required>
-                        <label for="consent">I consent to the processing of my data</label>
+                        <label for="consent" data-translate="data_consent">I consent to the processing of my data</label>
                     </div>
 
-                    <button type="submit" class="btn-register">Register</button>
+                    <button type="submit" class="btn-register" data-translate="register">Register</button>
                 </form>
 
                 <div class="auth-link">
-                    Already have an account? <a href="login.html">Login here</a>
+                    <span data-translate="already_have_account">Already have an account?</span> <a href="login.html" data-translate="login_here">Login here</a>
                 </div>
             </div>
         </div>

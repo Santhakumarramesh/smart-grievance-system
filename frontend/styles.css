@@ -38,15 +38,13 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1.6;
     color: var(--text-dark);
-    background: linear-gradient(135deg, 
-        rgba(255, 153, 51, 0.05) 0%,
-        rgba(255, 255, 255, 1) 50%,
-        rgba(19, 136, 8, 0.05) 100%);
+    background: #f4f6fa;
     min-height: 100vh;
     position: relative;
+    overflow-x: hidden;
 }
 
 /* Decorative Background Patterns */
@@ -226,15 +224,17 @@ body::after {
 
 /* Cards with Sector-Specific Themes */
 .card {
-    background: white;
-    border-radius: 16px;
-    padding: 1.5rem;
-    margin: 1.5rem 0;
-    box-shadow: var(--shadow-md);
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-left: 6px solid var(--saffron);
     position: relative;
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
 .card::before {

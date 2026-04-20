@@ -120,7 +120,8 @@
             const cases = payload.cases || [];
 
             if (!cases.length) {
-                grid.innerHTML = '<p class="empty-state">No resolved cases available yet.</p>';
+                grid.innerHTML = `<p class="empty-state" data-translate="no_resolved_cases">No resolved cases available yet.</p>`;
+                if (typeof applyTranslations === 'function') applyTranslations(getCurrentLanguage());
                 return;
             }
 
@@ -128,7 +129,7 @@
                 <article class="case-card">
                     <img src="${buildCasePlaceholderImage(item.department)}" alt="Resolved grievance for ${escapeHtml(item.department || 'General')}" class="case-image">
                     <div class="case-content">
-                        <span class="case-badge">Resolved</span>
+                        <span class="case-badge" data-translate="status_resolved">Resolved</span>
                         <h3 class="case-title">${escapeHtml(item.title || 'Resolved grievance')}</h3>
                         <p class="case-description">${escapeHtml(item.description || 'Resolved grievance')}</p>
                         <div class="case-meta">
@@ -138,9 +139,15 @@
                     </div>
                 </article>
             `).join('');
+
+            // Trigger translation for dynamic content
+            if (typeof applyTranslations === 'function') {
+                applyTranslations(getCurrentLanguage());
+            }
         } catch (error) {
             console.error('Failed to load resolved cases:', error);
-            grid.innerHTML = '<p class="empty-state error-state">Unable to load resolved cases right now.</p>';
+            grid.innerHTML = `<p class="empty-state error-state" data-translate="load_error">Unable to load resolved cases right now.</p>`;
+            if (typeof applyTranslations === 'function') applyTranslations(getCurrentLanguage());
         }
     }
 
@@ -155,19 +162,23 @@
             const grievances = data.grievances || [];
 
             if (!grievances.length) {
-                list.innerHTML = '<p class="empty-state">No grievances submitted yet.</p>';
+                list.innerHTML = `<p class="empty-state" data-translate="no_grievances">No grievances submitted yet.</p>`;
+                if (typeof applyTranslations === 'function') applyTranslations(getCurrentLanguage());
                 return;
             }
 
             list.innerHTML = grievances.map((grievance) => {
                 const statusBadge = (typeof renderStatusBadge === 'function')
                     ? renderStatusBadge(grievance.status || 'Received')
-                    : `<span class="badge ${getStatusBadgeClass(grievance.status)}">${escapeHtml(grievance.status || 'Received')}</span>`;
+                    : `<span class="badge ${getStatusBadgeClass(grievance.status)}" data-translate="status_received">${escapeHtml(grievance.status || 'Received')}</span>`;
+
+                const commentLabel = grievance.comment_count === 1 ? 'Comment' : 'Comments';
+                const commentKey = grievance.comment_count === 1 ? 'comment' : 'comments_plural';
 
                 return `
                     <article class="grievance-card">
                         <div class="grievance-header">
-                            <div class="grievance-id">Grievance #${grievance.id}</div>
+                            <div class="grievance-id">${escapeHtml(grievance.id)}</div>
                             ${statusBadge}
                         </div>
                         <div class="grievance-content">
@@ -177,22 +188,28 @@
                         </div>
                         <div class="grievance-footer">
                             <div style="display: flex; align-items: center; gap: 1rem;">
-                                <span>Submitted: ${new Date(grievance.created_at).toLocaleDateString('en-IN')}</span>
+                                <span><span data-translate="submitted">Submitted</span>: ${new Date(grievance.created_at).toLocaleDateString('en-IN')}</span>
                                 ${grievance.comment_count > 0 ? `
                                     <span class="comment-count-pill">
                                         <span aria-hidden="true">💬</span>
-                                        <span>${grievance.comment_count} ${grievance.comment_count === 1 ? 'Comment' : 'Comments'}</span>
+                                        <span>${grievance.comment_count} <span data-translate="${commentKey}">${commentLabel}</span></span>
                                     </span>
                                 ` : ''}
                             </div>
-                            <a href="track.html?id=${grievance.id}" class="btn btn-primary btn-small">Track Status</a>
+                            <a href="track.html?id=${grievance.id}" class="btn btn-primary btn-small" data-translate="track_status">Track Status</a>
                         </div>
                     </article>
                 `;
             }).join('');
+
+            // Trigger translation for dynamic content
+            if (typeof applyTranslations === 'function') {
+                applyTranslations(getCurrentLanguage());
+            }
         } catch (error) {
             console.error('Failed to load grievances:', error);
-            list.innerHTML = '<p class="empty-state error-state">Failed to load grievances.</p>';
+            list.innerHTML = `<p class="empty-state error-state" data-translate="load_error">Failed to load grievances.</p>`;
+            if (typeof applyTranslations === 'function') applyTranslations(getCurrentLanguage());
         }
     }
 

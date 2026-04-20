@@ -183,14 +183,14 @@ function formatDate(dateString) {
 }
 
 const WORKFLOW_STATUS_META = {
-    received: { badgeClass: 'badge-received', label: 'Received' },
-    assigned: { badgeClass: 'badge-assigned', label: 'Assigned to Department' },
-    manual_review: { badgeClass: 'badge-investigation', label: 'Manual Review Required' },
-    progress: { badgeClass: 'badge-progress', label: 'Under Progress' },
-    investigation: { badgeClass: 'badge-investigation', label: 'Investigation' },
-    reviewed: { badgeClass: 'badge-reviewed', label: 'Reviewed' },
-    resolved: { badgeClass: 'badge-resolved', label: 'Resolved' },
-    closed: { badgeClass: 'badge-closed', label: 'Closed' },
+    received: { badgeClass: 'badge-received', label: 'Received', translateKey: 'status_received' },
+    assigned: { badgeClass: 'badge-assigned', label: 'Assigned to Department', translateKey: 'status_assigned' },
+    manual_review: { badgeClass: 'badge-investigation', label: 'Manual Review Required', translateKey: 'status_manual_review' },
+    progress: { badgeClass: 'badge-progress', label: 'Under Progress', translateKey: 'status_under_progress' },
+    investigation: { badgeClass: 'badge-investigation', label: 'Investigation', translateKey: 'status_investigation' },
+    reviewed: { badgeClass: 'badge-reviewed', label: 'Reviewed', translateKey: 'status_reviewed' },
+    resolved: { badgeClass: 'badge-resolved', label: 'Resolved', translateKey: 'status_resolved' },
+    closed: { badgeClass: 'badge-closed', label: 'Closed', translateKey: 'status_closed' },
 };
 
 function normalizeWorkflowStatus(status) {
@@ -226,8 +226,16 @@ function getStatusDisplayLabel(status) {
 }
 
 function renderStatusBadge(status) {
+    const key = normalizeWorkflowStatus(status);
+    const meta = WORKFLOW_STATUS_META[key];
     const safeLabel = escapeHtml(getStatusDisplayLabel(status));
-    return `<span class="badge ${getStatusBadgeClass(status)}">${safeLabel}</span>`;
+    
+    // If it's a fraud status or something dynamic, we might not have a key
+    if (typeof status === 'string' && status.toLowerCase().includes('fraud')) {
+        return `<span class="badge badge-investigation">${safeLabel}</span>`;
+    }
+
+    return `<span class="badge ${meta.badgeClass}" data-translate="${meta.translateKey}">${safeLabel}</span>`;
 }
 
 // Get home URL based on user role
@@ -246,9 +254,13 @@ function updateHeader() {
 
     const userInfoDiv = document.querySelector('.user-info');
     if (userInfoDiv) {
+        let roleKey = 'role_citizen';
+        if (user.role === 'ADMIN') roleKey = 'role_admin';
+        if (user.role === 'OFFICER') roleKey = 'role_officer';
+
         userInfoDiv.innerHTML = `
             <span>${user.name}</span>
-            <span class="badge ${user.role === 'ADMIN' ? 'badge-resolved' : user.role === 'OFFICER' ? 'badge-progress' : 'badge-received'}">${user.role}</span>
+            <span class="badge ${user.role === 'ADMIN' ? 'badge-resolved' : user.role === 'OFFICER' ? 'badge-progress' : 'badge-received'}" data-translate="${roleKey}">${user.role}</span>
         `;
     }
 }

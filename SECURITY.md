@@ -40,11 +40,13 @@ This document clarifies the security posture for auditors and reviewers.
 - IP-based limits on login (10/5 min), registration (5/10 min), grievance submission (20/hour)
 - IP blocking after repeated suspicious activity
 
-### ML & Fraud Detection
+### ML, Moderation & Trust Layer
 
-- **Classification:** scikit-learn TF-IDF + Logistic Regression (~74% accuracy), runs server-side
-- **Content moderation:** Server-side keyword/heuristic checks before persistence
-- **No "95%+" claim** in current README
+- **Department Classification**: scikit-learn TF-IDF + Logistic Regression (~74% accuracy), runs server-side with confidence-aware manual triage fallback.
+- **Keyword Moderation**: Server-side keyword/heuristic checks (threats, abuse, hate speech) using `ContentModerator`.
+- **Submission Blocking**: Immediate rejection of extremely high-risk content (score >= 30) before persistence.
+- **AI Image Detection**: Automated scanning of uploaded evidence for AI-generation signatures to prevent fraudulent claims.
+- **SLA & Escalation**: Automated monitoring of response times with multi-level escalation for accountability.
 
 ### CSRF
 

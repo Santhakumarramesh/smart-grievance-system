@@ -283,8 +283,8 @@
     <div class="login-container">
         <div class="login-card">
             <div class="login-header">
-                <h1>Smart Grievance System</h1>
-                <p>Secure Login Portal</p>
+                <h1 data-translate="app_name">Smart Grievance System</h1>
+                <p data-translate="secure_login_portal">Secure Login Portal</p>
             </div>
 
             <div class="login-body">
@@ -292,43 +292,45 @@
 
                 <form id="loginForm">
                     <div class="form-group">
-                        <label class="form-label" for="email">Email Address</label>
+                        <label class="form-label" for="email" data-translate="email_address">Email Address</label>
                         <input 
                             type="email" 
                             id="email" 
                             class="form-input" 
+                            data-translate="enter_email"
                             placeholder="Enter your email"
                             required
                             autocomplete="email">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="password">Password</label>
+                        <label class="form-label" for="password" data-translate="password">Password</label>
                         <input 
                             type="password" 
                             id="password" 
                             class="form-input" 
+                            data-translate="enter_password"
                             placeholder="Enter your password"
                             required
                             autocomplete="current-password">
                     </div>
 
-                    <button type="submit" class="btn-login" id="loginBtn">
+                    <button type="submit" class="btn-login" id="loginBtn" data-translate="login">
                         Login
                     </button>
                 </form>
 
                 <div style="text-align: center; margin: 1rem 0;">
-                    <a href="forgot-password.html" style="color: #003DA5; text-decoration: none; font-size: 14px;">
+                    <a href="forgot-password.html" style="color: #003DA5; text-decoration: none; font-size: 14px;" data-translate="forgot_password">
                         🔒 Forgot Password?
                     </a>
                 </div>
 
                 <div class="auth-link">
-                    Don't have an account? <a href="register.html">Register here</a>
+                    <span data-translate="dont_have_account">Don't have an account?</span> <a href="register.html" data-translate="register_here">Register here</a>
                 </div>
                 <div style="text-align: center; margin-top: 0.5rem;">
-                    <a href="public-dashboard.html" style="color: #64748b; font-size: 13px;">📊 View Public Statistics</a>
+                    <a href="public-dashboard.html" style="color: #64748b; font-size: 13px;" data-translate="view_public_statistics">📊 View Public Statistics</a>
                 </div>
 
             </div>

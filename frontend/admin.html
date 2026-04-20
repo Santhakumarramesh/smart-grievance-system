@@ -12,10 +12,10 @@
 <body>
     <header class="header">
         <div class="header-content">
-            <h1>Admin Dashboard</h1>
+            <h1 data-translate="admin_dashboard">Admin Dashboard</h1>
             <div class="header-actions">
                 <div class="user-info"></div>
-                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                <button id="logoutBtn" class="btn btn-secondary" data-translate="logout">Logout</button>
             </div>
         </div>
     </header>
@@ -24,10 +24,10 @@
         <!-- Analytics -->
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2 class="card-title" style="margin: 0;">System Analytics</h2>
+                <h2 class="card-title" style="margin: 0;" data-translate="system_analytics">System Analytics</h2>
                 <div style="display: flex; gap: 0.5rem;">
-                    <button onclick="downloadExport('grievances')" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.875rem;">📥 Export Excel</button>
-                    <button onclick="downloadExport('audit')" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.875rem;">📋 Audit Log</button>
+                    <button onclick="downloadExport('grievances')" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.875rem;" data-translate="export_excel">📥 Export Excel</button>
+                    <button onclick="downloadExport('audit')" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.875rem;" data-translate="audit_log">📋 Audit Log</button>
                 </div>
             </div>
             <div id="analytics">
@@ -37,79 +37,79 @@
 
         <!-- Create Officer -->
         <div class="card">
-            <h2 class="card-title">Create New Officer</h2>
+            <h2 class="card-title" data-translate="create_new_officer">Create New Officer</h2>
             
             <form id="createOfficerForm">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
                     <div class="form-group">
-                        <label class="form-label" for="name">Full Name</label>
+                        <label class="form-label" for="name" data-translate="full_name">Full Name</label>
                         <input type="text" id="name" class="form-input" required>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="email">Email</label>
+                        <label class="form-label" for="email" data-translate="email">Email</label>
                         <input type="email" id="email" class="form-input" required>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="phone">Phone</label>
+                        <label class="form-label" for="phone" data-translate="phone">Phone</label>
                         <input type="tel" id="phone" class="form-input" pattern="[0-9]{10}" required>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="department">Department</label>
+                        <label class="form-label" for="department" data-translate="department">Department</label>
                         <select id="department" class="form-select" required>
-                            <option value="">Select Department</option>
-                            <optgroup label="Municipal & Utilities">
-                                <option value="Water Supply">Water Supply</option>
-                                <option value="Electricity">Electricity</option>
-                                <option value="Sanitation & Solid Waste">Sanitation & Solid Waste</option>
-                                <option value="Sewerage & Drainage">Sewerage & Drainage</option>
-                                <option value="Roads & Potholes">Roads & Potholes</option>
-                                <option value="Streetlights">Streetlights</option>
+                            <option value="" data-translate="select_department">Select Department</option>
+                            <optgroup label="Municipal & Utilities" data-translate="municipal_utilities">
+                                <option value="Water Supply" data-translate="water_supply">Water Supply</option>
+                                <option value="Electricity" data-translate="electricity">Electricity</option>
+                                <option value="Sanitation & Solid Waste" data-translate="sanitation_waste">Sanitation & Solid Waste</option>
+                                <option value="Sewerage & Drainage" data-translate="sewerage_drainage">Sewerage & Drainage</option>
+                                <option value="Roads & Potholes" data-translate="roads_potholes">Roads & Potholes</option>
+                                <option value="Streetlights" data-translate="streetlights">Streetlights</option>
                             </optgroup>
-                            <optgroup label="Police & Public Safety">
-                                <option value="Police">Police</option>
-                                <option value="Traffic">Traffic</option>
-                                <option value="Cyber Crime">Cyber Crime</option>
+                            <optgroup label="Police & Public Safety" data-translate="police_safety">
+                                <option value="Police" data-translate="police">Police</option>
+                                <option value="Traffic" data-translate="traffic">Traffic</option>
+                                <option value="Cyber Crime" data-translate="cyber_crime">Cyber Crime</option>
                             </optgroup>
-                            <optgroup label="Health & Social Welfare">
-                                <option value="Public Health">Public Health</option>
-                                <option value="Food Safety">Food Safety</option>
+                            <optgroup label="Health & Social Welfare" data-translate="health_welfare">
+                                <option value="Public Health" data-translate="public_health">Public Health</option>
+                                <option value="Food Safety" data-translate="food_safety">Food Safety</option>
                             </optgroup>
-                            <optgroup label="Education">
-                                <option value="Education">Education</option>
+                            <optgroup label="Education" data-translate="education_group">
+                                <option value="Education" data-translate="education">Education</option>
                             </optgroup>
-                            <optgroup label="Revenue & Documents">
-                                <option value="Land & Revenue">Land & Revenue</option>
-                                <option value="Ration Card / PDS">Ration Card / PDS</option>
+                            <optgroup label="Revenue & Documents" data-translate="revenue_documents">
+                                <option value="Land & Revenue" data-translate="land_revenue">Land & Revenue</option>
+                                <option value="Ration Card / PDS" data-translate="ration_card_pds">Ration Card / PDS</option>
                             </optgroup>
-                            <optgroup label="Transport">
-                                <option value="RTO / Transport">RTO / Transport</option>
+                            <optgroup label="Transport" data-translate="transport_group">
+                                <option value="RTO / Transport" data-translate="rto_transport">RTO / Transport</option>
                             </optgroup>
-                            <optgroup label="Consumer Services">
-                                <option value="Telecom / Network">Telecom / Network</option>
+                            <optgroup label="Consumer Services" data-translate="consumer_services">
+                                <option value="Telecom / Network" data-translate="telecom_network">Telecom / Network</option>
                             </optgroup>
-                            <optgroup label="Environment">
-                                <option value="Environment">Environment</option>
+                            <optgroup label="Environment" data-translate="environment_group">
+                                <option value="Environment" data-translate="environment">Environment</option>
                             </optgroup>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="password">Password</label>
+                        <label class="form-label" for="password" data-translate="password">Password</label>
                         <input type="password" id="password" class="form-input" minlength="8" required>
-                        <small style="color: var(--text-secondary);">Minimum 8 chars with uppercase, lowercase, and number</small>
+                        <small style="color: var(--text-secondary);" data-translate="password_hint">Minimum 8 chars with uppercase, lowercase, and number</small>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-success">Create Officer</button>
+                <button type="submit" class="btn btn-success" data-translate="create_officer">Create Officer</button>
             </form>
         </div>
 
         <!-- User Information -->
         <div class="card">
-            <h2 class="card-title">👥 All Users (Citizens)</h2>
+            <h2 class="card-title" data-translate="all_users_citizens">👥 All Users (Citizens)</h2>
             <div id="usersList">
                 <div class="spinner"></div>
             </div>
@@ -117,7 +117,7 @@
 
         <!-- Officers List -->
         <div class="card">
-            <h2 class="card-title">👮 All Officers</h2>
+            <h2 class="card-title" data-translate="all_officers">👮 All Officers</h2>
             <div id="officersList">
                 <div class="spinner"></div>
             </div>
@@ -125,25 +125,25 @@
 
         <!-- All Grievances -->
         <div class="card">
-            <h2 class="card-title">All Grievances</h2>
+            <h2 class="card-title" data-translate="all_grievances">All Grievances</h2>
             
             <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
                 <select id="filterStatus" class="form-select" style="max-width: 200px;">
-                    <option value="">All Statuses</option>
-                    <option value="Received">Received</option>
-                    <option value="Assigned to Department">Assigned to Department</option>
-                    <option value="Under Progress">Under Progress</option>
-                    <option value="Investigation">Investigation</option>
-                    <option value="Reviewed">Reviewed</option>
-                    <option value="Resolved">Resolved</option>
-                    <option value="Closed">Closed</option>
+                    <option value="" data-translate="all_statuses">All Statuses</option>
+                    <option value="Received" data-translate="status_received">Received</option>
+                    <option value="Assigned to Department" data-translate="status_assigned">Assigned to Department</option>
+                    <option value="Under Progress" data-translate="status_under_progress">Under Progress</option>
+                    <option value="Investigation" data-translate="status_investigation">Investigation</option>
+                    <option value="Reviewed" data-translate="status_reviewed">Reviewed</option>
+                    <option value="Resolved" data-translate="status_resolved">Resolved</option>
+                    <option value="Closed" data-translate="status_closed">Closed</option>
                 </select>
 
                 <select id="filterDepartment" class="form-select" style="max-width: 200px;">
-                    <option value="">All Departments</option>
+                    <option value="" data-translate="all_departments">All Departments</option>
                 </select>
 
-                <button id="applyFiltersBtn" class="btn btn-primary">Apply Filters</button>
+                <button id="applyFiltersBtn" class="btn btn-primary" data-translate="apply_filters">Apply Filters</button>
             </div>
 
             <div id="grievancesList">

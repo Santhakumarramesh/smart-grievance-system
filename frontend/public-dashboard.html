@@ -13,43 +13,43 @@
 <body>
     <header class="gov-header" style="padding: 15px 20px;">
         <div class="gov-header-content">
-            <h1>🇮🇳 Smart Grievance System - Public Dashboard</h1>
-            <a href="index.html" class="btn btn-primary">File a Complaint</a>
+            <h1 data-translate="public_dashboard_title">🇮🇳 Smart Grievance System - Public Dashboard</h1>
+            <a href="index.html" class="btn btn-primary" data-translate="file_complaint">File a Complaint</a>
         </div>
     </header>
 
     <div class="container" style="max-width: 1200px; margin: 2rem auto; padding: 0 20px;">
         <div class="card" style="text-align: center; margin-bottom: 2rem;">
-            <h2>Transparent Grievance Statistics</h2>
-            <p style="color: var(--text-secondary);">Real-time aggregated data. No login required.</p>
+            <h2 data-translate="transparent_stats">Transparent Grievance Statistics</h2>
+            <p style="color: var(--text-secondary);" data-translate="realtime_data_desc">Real-time aggregated data. No login required.</p>
         </div>
 
         <div class="stats-grid" id="statsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
             <div class="stat-card">
-                <div class="stat-label">Total Complaints</div>
+                <div class="stat-label" data-translate="total_complaints">Total Complaints</div>
                 <div class="stat-value" id="totalGrievances">-</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Resolved</div>
+                <div class="stat-label" data-translate="resolved">Resolved</div>
                 <div class="stat-value" id="resolvedCount">-</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Pending</div>
+                <div class="stat-label" data-translate="pending">Pending</div>
                 <div class="stat-value" id="pendingCount">-</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Resolution Rate</div>
+                <div class="stat-label" data-translate="resolution_rate">Resolution Rate</div>
                 <div class="stat-value" id="resolutionRate">-</div>
             </div>
         </div>
 
         <div class="card" style="margin-bottom: 2rem;">
-            <h3>By Department</h3>
+            <h3 data-translate="by_department">By Department</h3>
             <canvas id="deptChart" height="80"></canvas>
         </div>
 
         <div class="card">
-            <h3>Department-wise Breakdown</h3>
+            <h3 data-translate="dept_breakdown">Department-wise Breakdown</h3>
             <div id="deptList"></div>
         </div>
     </div>

@@ -1,152 +1,188 @@
-# Smart Grievance Redressal System
+# 🚀 Public Service Operations Platform
+### AI-Powered Case Management & Smart Grievance Redressal
+
 [![CI](https://github.com/Santhakumarramesh/smart-grievance-system/actions/workflows/ci.yml/badge.svg)](https://github.com/Santhakumarramesh/smart-grievance-system/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A role-based grievance management platform for citizens, officers, and admins with ML-assisted department routing, fraud review workflows, and escalation-aware communication.
+> **"Built a production-oriented public service operations platform with ML-assisted routing, SLA enforcement, fraud lifecycle management, and multilingual UI, supporting role-based workflows for citizens, officers, and administrators."**
 
-## What This Repo Contains
+A **production-oriented**, full-stack case management platform designed to automate public service operations. This system handles the entire lifecycle of a citizen's grievance—from AI-assisted routing to SLA-tracked resolution and fraud prevention.
 
-| Mode | Path | Purpose |
-|---|---|---|
-| Full application | `backend/` + `frontend/` | Real Flask API, database, JWT auth, ML routing, notifications |
-| GitHub Pages mirror | `docs/` | Mirror of `frontend/` with runtime API base resolution for hosted static access |
+---
 
-`docs/` now uses the same UI code as `frontend/`, but API behavior still depends on reachable backend configuration.
+## 📖 The Project Story
 
-## Architecture
+### The Problem
+Public service departments often struggle with "triage bottlenecks." Complaints are manually sorted, status updates are opaque to citizens, and accountability for response times (SLAs) is difficult to enforce at scale. This leads to slow resolution and a lack of trust in public services.
 
-High-level runtime flow:
+### The Approach
+I built this platform to transition from a "complaint website" to a **comprehensive operations engine**. By integrating a scikit-learn ML pipeline for automated department routing and a background scheduler for SLA monitoring, the system reduces manual labor and ensures that no case is lost in the bureaucracy.
+
+### The Outcome
+A hardened, role-based platform that provides:
+- **For Citizens**: High transparency through status timelines and dual-language translation support.
+- **For Officers**: Streamlined workflows for investigations, evidence reviews, and fraud reporting.
+- **For Admins**: Observability via system analytics, model monitoring, and account suspension workflows.
+
+---
+
+## 🏗️ Architecture & Tech Stack
 
 ```mermaid
-graph LR
-    U[Citizen / Officer / Admin] --> F[Frontend (Vanilla JS pages)]
-    F -->|JWT + JSON API| A[Flask Application]
-    A --> R[Auth + Role Guards + Validation]
-    A --> G[Grievance Workflows]
-    A --> N[Email + In-app Notifications]
-    A --> M[ML Classifier + Metadata]
-    A --> D[(SQLite / PostgreSQL)]
-    S[Background Scheduler] --> G
-    S --> M
+graph TD
+    subgraph Frontend
+        C[Citizen UI] --> FS[Shared API Services]
+        O[Officer UI] --> FS
+        A[Admin UI] --> FS
+    end
+
+    subgraph Backend [Flask REST API]
+        FS -->|JWT Auth| AG[Auth & Role Guard]
+        AG --> GW[Grievance Workflow Engine]
+        GW --> ML[ML Classifier Service]
+        GW --> MS[Content Moderation Service]
+        GW --> AS[AI Image Fraud Detector]
+        GW --> NS[Notifications & Mailer]
+    end
+
+    subgraph Persistence [Data Layer]
+        MS --> DB[(PostgreSQL / SQLite)]
+        ML --> |Artifacts| FS_ML[scikit-learn Models]
+    end
+
+    subgraph "Ops & Background"
+        BS[Scheduler] -->|Escalations| GW
+        BS -->|Model Retrain| ML
+    end
 ```
 
-Component summary:
-
-- **Backend:** Flask app factory (`backend/app.py`) with route blueprints for auth, grievances, admin, and public/add-on APIs.
-- **Frontend:** Vanilla JS role pages in `frontend/`, with shared API/session helpers in `frontend/app.js` and page modules in `frontend/js/pages/`.
-- **ML pipeline:** scikit-learn model + vectorizer artifacts under `ml/artifacts/`, with confidence-aware routing and retrain support.
-- **Auth:** JWT-based access/refresh/password-reset token flow with token types and server-side role guards.
-- **Notifications:** Centralized email helper service plus persisted in-app notifications for workflow events.
-- **Database:** SQLAlchemy models with Flask-Migrate/Alembic revisions; SQLite (dev) and PostgreSQL (prod).
-
-Detailed architecture sections: [ARCHITECTURE.md](ARCHITECTURE.md)
-
-## Core Workflows
-
-1. Citizen submits complaint with location and optional/required image evidence (department-dependent).
-2. Backend predicts department with ML confidence scoring.
-3. High-confidence complaints auto-route; low-confidence complaints go to manual triage queue.
-4. Admin assigns officer and manages triage/fraud actions.
-5. Officer updates status, comments, and can report suspected fraud.
-6. Notifications and escalation logic track overdue citizen comments.
-
-## Current Scope (Implemented)
-
-- Citizen grievance submission, tracking, and timeline updates.
-- Officer dashboard flows: assigned grievances, updates, comments, fraud report submission.
-- Admin flows: officer management, assignment, analytics, model status/retrain, fraud actions.
-- JWT token architecture with explicit token types (`access`, `refresh`, `password_reset`).
-- Password reset with OTP verification + reset token flow.
-- ML-assisted department prediction with confidence-aware manual triage fallback.
-- Real public stats and anonymized resolved-cases feed from backend.
-- In-app + email notification helpers for core lifecycle events.
-- Background scheduler for escalation checks and optional scheduled retraining.
-
-## Current Scope (Known Limits)
-
-- Frontend session tokens are stored in `localStorage` (documented tradeoff in `SECURITY.md`).
-- UI language support is partially complete: selector is real, but translation coverage is not exhaustive across every page element.
-- `content_moderator.py` exists, but full end-to-end moderation enforcement is not yet integrated into grievance submission logic.
-
-## Setup Guide
-
-Use the dedicated setup document:
-- [SETUP.md](SETUP.md)
-
-Quick local start:
-
-```bash
-git clone https://github.com/Santhakumarramesh/smart-grievance-system.git
-cd smart-grievance-system
-
-pip install -r requirements.txt -r requirements-dev.txt
-python -m flask --app backend.app:create_app db upgrade
-python manage.py seed
-python run.py
+### 🔁 System Flow
+```text
+Citizen → Submit Grievance
+        ↓
+ML Classifier → Department Prediction
+        ↓
+Admin (if low confidence fallback)
+        ↓
+Officer Assignment
+        ↓
+Workflow Updates + SLA Tracking
+        ↓
+Fraud Review (optional)
+        ↓
+Resolution → Citizen Notification
 ```
 
-Open [http://localhost:8000](http://localhost:8000)
+### 🛠️ Tech Stack (Specific)
+- **Backend**: Flask, SQLAlchemy, JWT, Pytz (Timezone handling), Bleach (XSS Sanitization).
+- **ML/AI**: scikit-learn (TF-IDF + Logistic Regression), manual triage fallback.
+- **Frontend**: Vanilla JS (Modular ESM), CSS (Rich/Premium Aesthetics).
+- **Infra/CI**: Render Dashboard, GitHub Actions CI, PostgreSQL.
+- **Security**: IP-based rate limiting, input validation, SQL injection prevention.
 
-Demo accounts created by seed:
+---
 
-| Role | Email | Password |
-|---|---|---|
-| Admin | `admin@grievance.gov` | `admin123` |
-| Officer | `electricity@grievance.gov` | `officer123` |
-| Citizen | `citizen@example.com` | `citizen123` |
+## 🚀 Quick Demo Flow
 
-## API Summary
+1. **Citizen Submission**: Register and submit a grievance. The system automatically predicts the department and applies moderation.
+2. **Automated Triage**: High-confidence cases auto-route to the department; low-confidence cases go to the Admin Triage queue.
+3. **Officer Action**: Assigned officer reviews evidence (including AI fraud scan), updates status, and investigations.
+4. **Accountability**: SLA tracking ensures the case remains on schedule; background tasks escalate breached cases.
+5. **Transparency**: Citizen receives email notifications and tracks real-time progress on their personal timeline.
 
-- Full endpoint map: [API_SUMMARY.md](API_SUMMARY.md)
-- Health endpoint: `GET /health` (app, DB, model, scheduler diagnostics)
+![Dashboard](docs/screenshots/admin.dashboard.png)
+*Professional Dashboard: Real-time analytics and grievance management.*
 
-## Database and Migrations
+![Tracking Timeline](docs/screenshots/citizen.dashboard.png)
+*Citizen Transparency: Detailed lifecycle tracking with automated status updates.*
 
-- Local default: `DATABASE_URL=sqlite:///grievance.db`
-- Production target: PostgreSQL (`DATABASE_URL=postgresql://...`)
-- Migration command:
+---
 
-```bash
-python -m flask --app backend.app:create_app db migrate -m "describe change"
-python -m flask --app backend.app:create_app db upgrade
-```
+## 🧩 System Strengths (Engineering Thinking)
 
-## Quality Gates
+- **Confidence-Aware ML Routing**: Implements a human-in-the-loop fallback for low-confidence classifications, preventing routing errors.
+- **SLA-Driven Enforcement**: Automated breach detection via background scheduler ensures operational accountability.
+- **Full Fraud Lifecycle**: Officers can flag suspicion; Admins verify via evidence and execute audit-backed suspensions.
+- **Role-Based Security**: Strict backend enforcement of role permissions across all protected API routes.
+- **Isolated Side-Effect Testing**: Deterministic test suite using mocks for Email/Notification services to ensure CI reliability.
+- **Multilingual UI Architecture**: Scalable localization engine supporting dynamic translation across complex workflows.
 
-CI (`.github/workflows/ci.yml`) runs:
+---
 
-- `ruff check backend tests`
-- `python -m pytest --cov=backend --cov-report=term-missing --cov-report=xml`
-- `bandit -q -r backend -x backend/seed.py` (non-blocking informational scan)
-- optional smoke harness (manual trigger): `python scripts/smoke_test.py`
+## 🛠️ Feature Matrix
 
-Local checks:
+| Feature | Citizen | Officer | Admin |
+|---|:---:|:---:|:---:|
+| **Submit Grievance** (ML Routed) | ✅ | | |
+| **Evidence Upload** (AI Fraud Scan) | ✅ | | |
+| **Real-time Status Timeline** | ✅ | ✅ | ✅ |
+| **Multilingual UI** (EN, HI, TA) | ✅ | ✅ | ✅ |
+| **Advanced Search & Filtering** | | ✅ | ✅ |
+| **Fraud Reporting & Suspicion** | | ✅ | |
+| **Fraud Review & Account Suspension** | | | ✅ |
+| **SLA Monitoring & Escalation** | ✅ | ✅ | ✅ |
+| **Department & User Management** | | | ✅ |
+| **ML Model Status & Retrain** | | | ✅ |
 
-```bash
-ruff check backend tests
-python -m pytest --cov=backend --cov-report=term-missing
-python scripts/smoke_test.py
-```
+---
 
-To run smoke in GitHub Actions, trigger `CI` via `workflow_dispatch` with `run_smoke=true`.
+## 🔌 API Overview
 
-## Deployment
+- `/api/auth/*` → Authentication, Profile Management, Password Reset (OTP).
+- `/api/grievances/*` → Submission, Workflow Updates, Comments, Fraud Reports.
+- `/api/admin/*` → Assignment, Analytics, Moderation Review, Model Control.
+- `/api/notifications/*` → In-app and Email event triggers.
 
-- Production deployment guide: [DEPLOY.md](DEPLOY.md)
-- Render blueprint config: `render.yaml`
-- Required production envs include: `FLASK_ENV`, `SECRET_KEY`, `APP_BASE_URL`, `DATABASE_URL`.
+---
 
-## Future Enhancements
+## 🌍 Multilingual Support
+The platform features a custom-built translation architecture.
+- **Fully Populated**: English (EN), Hindi (HI), Tamil (TA).
+- **Extended Architecture**: Supports up to 12 Indian languages with dynamic wiring.
 
-- Complete end-to-end translation coverage for all role pages.
-- Move from `localStorage` tokens to HttpOnly cookie sessions.
-- Fully wire content moderation scoring into submission acceptance/rejection pipeline.
-- Improve SQLAlchemy 2.x modernization (`Query.get` replacements) and timezone-aware datetime handling.
-- Expand automated test coverage beyond current critical backend flows.
+---
 
-## Security Notes
+## ⚠️ Known Limitations
+- **Content Coverage**: Full translation coverage is currently complete for English, Hindi, and Tamil; remaining languages use fallback keys.
+- **ML Specialization**: The classifier is optimized for department routing assistance, not high-granularity sub-category classification.
+- **Session Strategy**: Token storage currently uses `localStorage` for simplicity; production environments should migrate to HttpOnly secure cookies.
+- **Detection Dependency**: AI image fraud detection depends on model confidence thresholds and may require manual verification.
 
-- See [SECURITY.md](SECURITY.md) for threat model assumptions and operational recommendations.
+---
 
-## License
+## 🚀 Quick Start (Local Development)
 
-MIT
+1. **Clone & Setup**:
+   ```bash
+   git clone https://github.com/Santhakumarramesh/smart-grievance-system.git
+   cd smart-grievance-system
+   pip install -r requirements.txt
+   ```
+2. **Bootstrap Database**:
+   ```bash
+   python -m flask --app backend.app:create_app db upgrade
+   python manage.py seed
+   ```
+3. **Run Application**:
+   ```bash
+   python run.py
+   ```
+   *Access at: [http://localhost:8000](http://localhost:8000)*
+
+> [!WARNING]
+> **Demo Credentials**: `admin123` / `officer123` / `citizen123` are for local development only. Do not use in production.
+
+> [!NOTE]
+> **Live Demo**: The [GitHub Pages demo](https://santhakumarramesh.github.io/smart-grievance-system/) is a frontend-mirrored demo. Backend services must be deployed separately for full logic fulfillment.
+
+---
+
+## 💼 Interview Toolkit
+
+### The "60-Second" Project Summary
+*"I built a Smart Grievance Operations Platform that automates complaint routing using an ML classifier, enforces SLA-based accountability, and includes a full fraud review lifecycle. The system supports three roles—citizens, officers, and admins—with backend-enforced workflows, notifications, and escalation tracking. I also implemented deterministic testing for workflow and side effects, and added multilingual UI support to make it scalable for public use."*
+
+---
+
+## 🤝 License
+MIT License. Created by [Santhakumar Ramesh](https://github.com/Santhakumarramesh).

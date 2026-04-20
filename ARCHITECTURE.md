@@ -12,8 +12,8 @@ Key backend modules:
 - `backend/routes/grievances.py` - grievance lifecycle, comments, fraud flows
 - `backend/routes/admin.py` - officer/admin operations, assignment, analytics, model controls
 - `backend/routes/addons.py` - public stats, resolved feed, exports, QR, ratings
-- `backend/services/*` - email, classifier, retraining, scheduler, escalation
-- `backend/security/*` - firewall, headers, request validation helpers
+- `backend/services/*` - email, classifier, retraining, scheduler, escalation, moderation
+- `backend/security/*` - firewall, headers, audit service, request validation helpers
 
 ## 2. Frontend (Vanilla JS + HTML)
 
@@ -50,6 +50,26 @@ Submission path:
    - confidence < threshold / model unavailable -> manual triage queue
 4. Admin assigns officer (with department checks, except triage queue correction path).
 5. Officer/admin update statuses and comments.
+6. **SLA & Escalation Engine**:
+   - Every grievance is assigned an `sla_deadline` based on department config (default 48h).
+   - The `Background Scheduler` runs an escalation scan.
+   - Overdue/breached cases trigger notifications and are marked as `sla_breached`.
+
+## 5. Content Moderation & Trust Layer
+
+All citizen inputs (complaint text, comments) pass through a server-side trust layer:
+- **Keyword Moderation**: Detects threats, abuse, or personal attacks using `ContentModerator`.
+- **Severity Scoring**: High-severity violations (score >= 30) block submission; medium-severity flags for officer review.
+- **AI Image Detection**: Evidence photos are scanned for AI-generation signatures (Anti-fraud measure).
+
+## 6. Fraud Lifecycle Management
+
+1. **Detection**: Officers can flag suspicious grievances as "Suspected Fraud."
+2. **Review**: Admins review the fraud report and evidence.
+3. **Resolution**:
+   - **Verified**: Grievance is closed as "Fraud," and the user account is suspended.
+   - **Dismissed**: Fraud report is cleared and grievance status is restored.
+4. **Resilience**: Admins can later "Unsuspend" accounts with a documented audit trail.
 
 Comment escalation:
 - Citizen comments create officer notification + response deadline.
@@ -117,3 +137,8 @@ Reports:
 Status behavior:
 - `200` when DB is reachable
 - `503` when DB check fails
+## 10. Audit & Transparency
+
+- **Security Audit Logs**: Track sensitive operations (suspensions, resets, role changes).
+- **Public Dashboard**: Anonymized metrics and resolved case feeds for public accountability.
+- **Citizen Timeline**: Full transparency for citizens to track every update and comment on their case.

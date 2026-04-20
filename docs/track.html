@@ -12,11 +12,11 @@
 <body>
     <header class="header">
         <div class="header-content">
-            <h1>Smart Grievance System</h1>
+            <h1 data-translate="app_name">Smart Grievance System</h1>
             <div class="header-actions">
                 <div class="user-info"></div>
-                <button id="backToHomeBtn" class="btn btn-secondary">Back to Home</button>
-                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                <button id="backToHomeBtn" class="btn btn-secondary" data-translate="back_to_home">Back to Home</button>
+                <button id="logoutBtn" class="btn btn-secondary" data-translate="logout">Logout</button>
             </div>
         </div>
     </header>
@@ -30,7 +30,7 @@
 
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2 class="card-title" style="margin: 0;">Tracking Timeline</h2>
+                <h2 class="card-title" style="margin: 0;" data-translate="tracking_timeline">Tracking Timeline</h2>
                 <button onclick="scrollToComments()" style="
                     display: flex;
                     align-items: center;
@@ -47,7 +47,7 @@
                     transition: all 0.3s ease;
                 " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(59, 130, 246, 0.3)'">
                     <span style="font-size: 1.2rem;">💬</span>
-                    <span>View Comments</span>
+                    <span data-translate="view_comments">View Comments</span>
                     <span id="commentCount" style="
                         background: rgba(255, 255, 255, 0.3);
                         padding: 0.125rem 0.5rem;
@@ -62,22 +62,22 @@
         </div>
 
         <div class="card" id="commentsSection">
-            <h2 class="card-title">Comments & Feedback</h2>
+            <h2 class="card-title" data-translate="comments_and_feedback">Comments & Feedback</h2>
             
             <!-- Language Selector Notice -->
             <div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border: 2px solid #3B82F6; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
                 <div style="display: flex; align-items: start; gap: 0.75rem;">
                     <span style="font-size: 1.5rem;">🌐</span>
                     <div style="flex: 1;">
-                        <div style="font-weight: 700; color: #1E40AF; margin-bottom: 0.5rem;">
+                        <div style="font-weight: 700; color: #1E40AF; margin-bottom: 0.5rem;" data-translate="auto_translate_available">
                             Automatic Translation Available
                         </div>
-                        <p style="margin: 0 0 0.75rem 0; color: #1E40AF; font-size: 0.875rem; line-height: 1.6;">
+                        <p style="margin: 0 0 0.75rem 0; color: #1E40AF; font-size: 0.875rem; line-height: 1.6;" data-translate="auto_translate_desc">
                             Officer comments are automatically translated to your preferred language. 
                             Select a language below to view translations instantly.
                         </p>
                         <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                            <label style="font-size: 0.875rem; color: #1E40AF; font-weight: 600;">Your Language:</label>
+                            <label style="font-size: 0.875rem; color: #1E40AF; font-weight: 600;" data-translate="your_language">Your Language:</label>
                             <select id="commentLanguageSelect" style="
                                 padding: 0.5rem 0.75rem;
                                 border: 2px solid #3B82F6;
@@ -106,17 +106,17 @@
                 </div>
             </div>
             
-            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;" data-translate="comment_desc">
                 Have questions or additional information? Use the comment section below to communicate with the department officers.
             </p>
             
             <!-- Comment Form -->
             <div class="form-group">
-                <label class="form-label" for="commentText">Add Comment</label>
+                <label class="form-label" for="commentText" data-translate="add_comment">Add Comment</label>
                 <textarea id="commentText" class="form-textarea" rows="3" 
-                    placeholder="Type your comment or feedback here..."></textarea>
+                    data-translate="type_comment_placeholder" placeholder="Type your comment or feedback here..."></textarea>
             </div>
-            <button id="addCommentBtn" class="btn btn-primary">Post Comment</button>
+            <button id="addCommentBtn" class="btn btn-primary" data-translate="post_comment">Post Comment</button>
 
             <!-- Comments List -->
             <div id="commentsList" style="margin-top: 2rem;">
@@ -125,8 +125,8 @@
 
             <!-- Rating Section (shown when Resolved/Closed) -->
             <div id="ratingSection" style="display: none; margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 12px; border: 2px solid #22c55e;">
-                <h3 style="margin-bottom: 1rem;">⭐ Rate Your Experience</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 1rem;">How was the resolution of your complaint?</p>
+                <h3 style="margin-bottom: 1rem;" data-translate="rate_experience">⭐ Rate Your Experience</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;" data-translate="how_was_resolution">How was the resolution of your complaint?</p>
                 <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; font-size: 2rem;" id="starRating">
                     <span data-rating="1" style="cursor: pointer;">☆</span>
                     <span data-rating="2" style="cursor: pointer;">☆</span>
@@ -134,9 +134,9 @@
                     <span data-rating="4" style="cursor: pointer;">☆</span>
                     <span data-rating="5" style="cursor: pointer;">☆</span>
                 </div>
-                <textarea id="ratingFeedback" placeholder="Optional feedback..." rows="2" style="width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; border-radius: 6px;"></textarea>
-                <button id="submitRatingBtn" class="btn btn-success">Submit Rating</button>
-                <p id="ratingThanks" style="display: none; color: #22c55e; font-weight: 600;">Thank you for your feedback!</p>
+                <textarea id="ratingFeedback" data-translate="optional_feedback" placeholder="Optional feedback..." rows="2" style="width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; border-radius: 6px;"></textarea>
+                <button id="submitRatingBtn" class="btn btn-success" data-translate="submit_rating">Submit Rating</button>
+                <p id="ratingThanks" style="display: none; color: #22c55e; font-weight: 600;" data-translate="thanks_feedback">Thank you for your feedback!</p>
             </div>
 
             <!-- QR Code & Share -->
@@ -301,7 +301,7 @@
                         return `
                             <div class="timeline-item ${isCompleted ? 'completed' : ''}" data-timeline-index="${index}">
                                 <div class="timeline-content">
-                                    <div class="timeline-status">${update.status}</div>
+                                    <div class="timeline-status" data-translate="status_${normalizeWorkflowStatus(update.status)}">${update.status}</div>
                                     
                                     ${showTranslation ? `
                                         <!-- Translated Message -->
@@ -313,11 +313,11 @@
                                         <div class="timeline-message timeline-translated-${index}" style="font-weight: 600; font-size: 1.05em; line-height: 1.8;">
                                             <div style="color: #6B7280; font-size: 0.875rem;">
                                                 <div class="spinner" style="width: 16px; height: 16px; border-width: 2px; display: inline-block; vertical-align: middle;"></div>
-                                                Translating...
+                                                <span data-translate="loading">Translating...</span>
                                             </div>
                                         </div>
                                         <details style="margin-top: 0.5rem;">
-                                            <summary style="cursor: pointer; font-size: 0.75rem; color: #6B7280; font-weight: 600;">
+                                            <summary style="cursor: pointer; font-size: 0.75rem; color: #6B7280; font-weight: 600;" data-translate="original_message">
                                                 📄 Original Message
                                             </summary>
                                             <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #E5E7EB; font-size: 0.9em; color: #4B5563;">
@@ -330,7 +330,7 @@
                                     `}
                                     
                                     <div class="timeline-meta">
-                                        <span>Updated by: ${update.updated_by_name} (${update.updated_by_role})</span>
+                                        <span><span data-translate="updated_by_label">Updated by</span>: ${update.updated_by_name} (${update.updated_by_role})</span>
                                         <span>${formatDate(update.timestamp)}</span>
                                     </div>
                                 </div>
@@ -344,18 +344,16 @@
                         </div>
                     `;
                     
-                    // Auto-translate timeline messages
-                    if (selectedLang !== 'en') {
-                        grievance.updates.forEach((update, index) => {
-                            const isOfficerUpdate = update.updated_by_role === 'OFFICER' || update.updated_by_role === 'ADMIN';
-                            if (isOfficerUpdate) {
-                                autoTranslateTimeline(index, update.message, selectedLang);
-                            }
-                        });
+                    }
+
+                    // Trigger translation for dynamic parts
+                    if (typeof applyTranslations === 'function') {
+                        applyTranslations();
                     }
                 } else {
                     document.getElementById('timeline').innerHTML = 
-                        '<p style="color: var(--text-secondary);">No updates yet.</p>';
+                        `<p style="color: var(--text-secondary);" data-translate="no_updates">No updates yet.</p>`;
+                    if (typeof applyTranslations === 'function') applyTranslations();
                 }
 
                 // Show rating section if resolved, load QR
@@ -378,7 +376,8 @@
                 const commentsList = document.getElementById('commentsList');
 
                 if (data.comments.length === 0) {
-                    commentsList.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No comments yet. Be the first to comment!</p>';
+                    commentsList.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;" data-translate="no_comments">No comments yet. Be the first to comment!</p>';
+                    if (typeof applyTranslations === 'function') applyTranslations();
                     return;
                 }
 
@@ -469,7 +468,7 @@
                                     </div>
                                 </details>
                                 
-                                <small style="color: #6B7280; font-style: italic; display: block; margin-top: 0.5rem;">
+                                <small style="color: #6B7280; font-style: italic; display: block; margin-top: 0.5rem;" data-translate="auto_translate_hint">
                                     ⚠️ Automatic translation for your convenience. Original text available above.
                                 </small>
                             ` : `
@@ -489,7 +488,7 @@
                                             cursor: pointer;
                                             color: #1E40AF;
                                         ">
-                                            <option value="">🌐 Translate this comment...</option>
+                                            <option value="" data-translate="translate_comment">🌐 Translate this comment...</option>
                                             <option value="hi">हिंदी (Hindi)</option>
                                             <option value="ta">தமிழ் (Tamil)</option>
                                             <option value="te">తెలుగు (Telugu)</option>
@@ -504,6 +503,7 @@
                                         </select>
                                     </div>
                                 ` : ''}
+                            `}
                             `}
                         </div>
                     `;

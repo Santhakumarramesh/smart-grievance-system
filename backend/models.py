@@ -61,7 +61,7 @@ class User(db.Model):
     grievances = db.relationship('Grievance', backref='user', lazy=True, foreign_keys='Grievance.user_id')
     
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
     
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -122,7 +122,7 @@ class OTPRequest(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     def set_otp(self, otp):
-        self.otp_hash = generate_password_hash(str(otp))
+        self.otp_hash = generate_password_hash(str(otp), method='pbkdf2:sha256')
     
     def check_otp(self, otp):
         return check_password_hash(self.otp_hash, str(otp))

@@ -35,20 +35,18 @@
         const dropZone = getImageDropZone();
 
         if (requirementLabel) {
+            requirementLabel.setAttribute('data-translate', required ? 'mandatory' : 'optional');
             requirementLabel.textContent = required ? '* MANDATORY' : '* OPTIONAL';
             requirementLabel.style.color = required ? '#ef4444' : '#16a34a';
         }
 
         if (requirementHint) {
-            if (required) {
-                const targetDept = department || 'this';
-                requirementHint.textContent = `At least 1 image is mandatory for ${targetDept} complaints.`;
-                requirementHint.style.color = '#ef4444';
-            } else {
-                const targetDept = department || 'this';
-                requirementHint.textContent = `Images are optional for ${targetDept} complaints, but helpful for faster verification.`;
-                requirementHint.style.color = '#047857';
-            }
+            const key = required ? 'mandatory_image_hint' : 'optional_image_hint';
+            requirementHint.setAttribute('data-translate', key);
+            requirementHint.textContent = required 
+                ? `At least 1 image is mandatory for ${department || 'this'} complaints.`
+                : `Images are optional for ${department || 'this'} complaints, but helpful for faster verification.`;
+            requirementHint.style.color = required ? '#ef4444' : '#047857';
         }
 
         if (departmentHint) {
@@ -59,11 +57,16 @@
                         : ''
                 );
                 const routingText = requiresManualReview ? ' - manual review likely' : '';
-                departmentHint.textContent = `Predicted department: ${department}${confidenceText}${routingText}`;
+                departmentHint.innerHTML = `<span data-translate="predicted_dept">Predicted department</span>: <span data-translate="${department.toLowerCase().replace(/ & /g, '_').replace(/ \/ /g, '_').replace(/ /g, '_')}">${department}</span>${confidenceText}${routingText}`;
                 departmentHint.style.display = 'block';
             } else {
                 departmentHint.style.display = 'none';
             }
+        }
+        
+        // Trigger translation
+        if (typeof applyTranslations === 'function') {
+            applyTranslations();
         }
 
         if (dropZone) {
