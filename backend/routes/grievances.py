@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from datetime import datetime, timedelta
 import json
 from backend.models import Grievance, GrievanceUpdate, GrievanceComment, User, FraudReport, RoleHierarchy
+from backend.models_addons import AuditLog, GrievanceRating, DepartmentCorrectionLog
 from backend.extensions import db
 from backend.config import Config
 from backend.routes.auth import get_current_user_from_token
@@ -118,7 +119,7 @@ def submit_grievance():
         moderation_result = ContentModerator.moderate_content(complaint_text)
         if ContentModerator.should_block_submission(moderation_result):
             return jsonify({
-                'error': 'Content Violation',
+                'error': 'Inappropriate Content Violation',
                 'message': ContentModerator.get_user_warning_message(moderation_result),
                 'moderation': {
                     'severity': moderation_result['severity'],
@@ -215,14 +216,17 @@ def submit_grievance():
             )
         
         # Determine moderation flags to store
-        is_flagged = not moderation_result['is_safe']
+        # Flag if not safe OR if severity is not none (e.g. medium/low still flagged for review)
+        is_flagged = (not moderation_result['is_safe']) or (moderation_result['severity'].lower() not in ['safe', 'none'])
         moderation_score = moderation_result['score']
         moderation_severity = moderation_result['severity']
         moderation_flags_json = json.dumps(moderation_result['flags']) if moderation_result['flags'] else None
 
         # Compute SLA deadline
         now = datetime.utcnow()
-        dept_config = RoleHierarchy.query.filter(RoleHierarchy.department == assigned_department).first()
+        from sqlalchemy import func
+        # Case-insensitive lookup for department config
+        dept_config = RoleHierarchy.query.filter(func.lower(RoleHierarchy.department) == func.lower(assigned_department)).first()
         sla_hours = dept_config.sla_hours if dept_config and dept_config.sla_hours else 48
         sla_deadline = now + timedelta(hours=sla_hours)
 
@@ -505,6 +509,28 @@ def update_grievance(grievance_id):
         # Assign officer if status is "Assigned to Department" and not already assigned
         if new_status == 'Assigned to Department' and not grievance.assigned_officer_id:
             grievance.assigned_officer_id = user.id
+            
+        # ── ML Correction Logging ──
+        if 'assigned_department' in data and data['assigned_department'] != grievance.predicted_department:
+            # Check if this correction was already logged to avoid duplicates
+            existing_correction = DepartmentCorrectionLog.query.filter_by(
+                grievance_id=grievance.id,
+                corrected_department=data['assigned_department']
+            ).first()
+            
+            if not existing_correction:
+                correction = DepartmentCorrectionLog(
+                    grievance_id=grievance.id,
+                    predicted_department=grievance.predicted_department or "Unknown",
+                    corrected_department=data['assigned_department'],
+                    prediction_confidence=0.0, # Placeholder or fetch if stored
+                    corrected_by_user_id=user.id,
+                    reason=message or "Manual department correction"
+                )
+                db.session.add(correction)
+
+        if 'assigned_department' in data:
+            grievance.assigned_department = data['assigned_department']
         
         db.session.commit()
         

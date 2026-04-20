@@ -940,7 +940,14 @@ const translations = {
 // Translation helper function
 function translate(key, lang = null) {
     const currentLang = lang || localStorage.getItem('selectedLanguage') || localStorage.getItem('preferredLanguage') || 'en';
-    return translations[currentLang]?.[key] || translations['en'][key] || key;
+    if (translations[currentLang] && translations[currentLang][key]) return translations[currentLang][key];
+    if (translations['en'] && translations['en'][key]) return translations['en'][key];
+    
+    // Auto-format missing translation keys to look natural (e.g., 'app_name' -> 'App Name')
+    if (typeof key === 'string') {
+        return key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
+    return key;
 }
 
 // Apply translations to page

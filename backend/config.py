@@ -6,7 +6,8 @@ class Config:
 
     @classmethod
     def _env_bool(cls, key, default):
-        return os.environ.get(key, str(default)).lower() == 'true'
+        val = os.environ.get(key, str(default)).lower()
+        return val in ('true', '1', 't', 'y', 'yes')
 
     @classmethod
     def reload_from_env(cls):

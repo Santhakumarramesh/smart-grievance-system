@@ -134,7 +134,14 @@ function setLanguage(langCode) {
 // Translate text
 function t(key) {
     const lang = getCurrentLanguage();
-    return translations[lang]?.[key] || translations['en'][key] || key;
+    if (translations[lang] && translations[lang][key]) return translations[lang][key];
+    if (translations['en'] && translations['en'][key]) return translations['en'][key];
+    
+    // Auto-format missing translation keys to look natural (e.g., 'app_name' -> 'App Name')
+    if (typeof key === 'string') {
+        return key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
+    return key;
 }
 
 // Initialize language selector

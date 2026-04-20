@@ -372,7 +372,11 @@ def assign_officer():
         old_status = grievance.status
         
         previous_assigned_department = grievance.assigned_department
-        department_corrected = officer.department != grievance.assigned_department
+        # Special logic for manual triage: correction is defined as difference between ML PREDICTION and FINAL ASSIGNMENT
+        if previous_assigned_department == Config.ML_MANUAL_REVIEW_DEPARTMENT:
+            department_corrected = (officer.department != grievance.predicted_department)
+        else:
+            department_corrected = (officer.department != previous_assigned_department)
 
         # Assign officer
         grievance.assigned_officer_id = officer_id
@@ -655,8 +659,8 @@ def unsuspend_user(user_id):
 
         data = request.get_json() or {}
         admin_notes = data.get('admin_notes', '')
-        if not admin_notes or len(admin_notes.strip()) < 5:
-            return jsonify({'error': 'admin_notes is required (min 5 characters) for audit trail'}), 400
+        if not admin_notes or len(admin_notes.strip()) < 10:
+            return jsonify({'error': 'Detailed admin_notes is required (min 10 characters) for audit trail'}), 400
 
         target_user = User.query.get(user_id)
         if not target_user:
@@ -706,6 +710,72 @@ def unsuspend_user(user_id):
             'message': f'User {target_user.name} has been unsuspended',
             'fraud_warnings': target_user.fraud_warnings,
             'account_suspended': target_user.account_suspended,
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/fraud-reports/<int:report_id>/review', methods=['POST'])
+def review_fraud_report(report_id):
+    """
+    Review a fraud report (Admin only)
+    Actions: verify, dismiss
+    """
+    try:
+        admin_user, auth_response = get_current_user_from_token(return_error=True, required_roles=['ADMIN'])
+        if auth_response:
+            return auth_response
+
+        data = request.get_json() or {}
+        action = data.get('action')
+        admin_notes = data.get('admin_notes', '')
+
+        if action not in ['verify', 'dismiss']:
+            return jsonify({'error': 'Invalid action. Must be verify or dismiss'}), 400
+
+        report = FraudReport.query.get(report_id)
+        if not report:
+            return jsonify({'error': 'Fraud report not found'}), 404
+
+        grievance = Grievance.query.get(report.grievance_id)
+        if not grievance:
+            return jsonify({'error': 'Associated grievance not found'}), 404
+
+        report.status = 'Verified' if action == 'verify' else 'Dismissed'
+        report.admin_notes = admin_notes
+        report.reviewed_at = datetime.utcnow()
+
+        if action == 'verify':
+            grievance.status = 'Closed'
+            message = f"Fraud verified by Admin. Grievance closed. Notes: {admin_notes}"
+            
+            # Optionally suspend user
+            if data.get('suspend_user'):
+                target_user = User.query.get(grievance.user_id)
+                if target_user:
+                    target_user.account_suspended = True
+                    target_user.suspension_reason = f"Verified Fraud on Grievance #{grievance.id}: {admin_notes}"
+        else:
+            # Dismissed - restore to Assigned or previous
+            grievance.status = 'Assigned to Department'
+            message = f"Fraud report dismissed by Admin. Resuming investigations. Notes: {admin_notes}"
+
+        # Create update entry
+        update = GrievanceUpdate(
+            grievance_id=grievance.id,
+            status=grievance.status,
+            message=message,
+            updated_by_role='ADMIN',
+            updated_by_name=admin_user.name
+        )
+        db.session.add(update)
+        db.session.commit()
+
+        return jsonify({
+            'message': f'Fraud report {action}ed successfully',
+            'report_status': report.status,
+            'grievance_status': grievance.status
         }), 200
 
     except Exception as e:

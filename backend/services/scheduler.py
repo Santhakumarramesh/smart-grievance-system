@@ -16,11 +16,17 @@ from backend.services.model_retrain import retrain_model
 RETRAIN_INTERVAL_HOURS = int(os.environ.get('RETRAIN_INTERVAL_HOURS', '168'))
 
 
-def scan_sla_breaches():
+def scan_sla_breaches(app=None):
     """
     Scan for grievances that have passed their SLA deadline
     and mark them as breached. Returns count of newly breached grievances.
     """
+    if app:
+        with app.app_context():
+            return _execute_sla_scan()
+    return _execute_sla_scan()
+
+def _execute_sla_scan():
     from backend.extensions import db
     from backend.models import Grievance, User
     from backend.services.notification_service import NotificationService
