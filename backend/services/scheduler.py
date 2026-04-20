@@ -1,6 +1,7 @@
 """
 Background Scheduler for periodic tasks
 - Comment escalation checks: every hour
+- SLA breach scan: every hour
 - ML model retraining: every 7 days (configurable)
 """
 import os
@@ -13,6 +14,74 @@ from backend.services.model_retrain import retrain_model
 
 # Retrain every N hours (168 = 7 days). Set RETRAIN_INTERVAL_HOURS=24 for daily.
 RETRAIN_INTERVAL_HOURS = int(os.environ.get('RETRAIN_INTERVAL_HOURS', '168'))
+
+
+def scan_sla_breaches():
+    """
+    Scan for grievances that have passed their SLA deadline
+    and mark them as breached. Returns count of newly breached grievances.
+    """
+    from backend.extensions import db
+    from backend.models import Grievance, User
+    from backend.services.notification_service import NotificationService
+    from backend.utils.roles import ADMIN_ROLE_VALUES
+
+    now = datetime.utcnow()
+    terminal_statuses = ('Resolved', 'Closed')
+
+    overdue = Grievance.query.filter(
+        Grievance.sla_deadline.isnot(None),
+        Grievance.sla_deadline < now,
+        Grievance.sla_breached.is_(False),
+        ~Grievance.status.in_(terminal_statuses),
+    ).all()
+
+    if not overdue:
+        return 0
+
+    breached_count = 0
+    for grievance in overdue:
+        grievance.sla_breached = True
+        grievance.sla_breached_at = now
+        breached_count += 1
+
+        # Notify assigned officer
+        if grievance.assigned_officer_id:
+            NotificationService.queue_notification(
+                user_id=grievance.assigned_officer_id,
+                title=f'⏰ SLA Breached - Grievance #{grievance.id}',
+                message=(
+                    f'SLA deadline of {grievance.sla_hours}h has been exceeded. '
+                    f'Please take immediate action.'
+                ),
+                notification_type='sla_breach',
+                related_grievance_id=grievance.id,
+                is_read=False,
+            )
+
+        # Notify admins
+        admins = User.query.filter(User.role.in_(ADMIN_ROLE_VALUES)).all()
+        for admin in admins:
+            NotificationService.queue_notification(
+                user_id=admin.id,
+                title=f'⏰ SLA Breached - Grievance #{grievance.id}',
+                message=(
+                    f'Grievance #{grievance.id} has exceeded its {grievance.sla_hours}h SLA. '
+                    f'Department: {grievance.assigned_department}'
+                ),
+                notification_type='sla_breach',
+                related_grievance_id=grievance.id,
+                is_read=False,
+            )
+
+    try:
+        db.session.commit()
+    except Exception as db_error:
+        db.session.rollback()
+        print(f"❌ Failed to persist SLA breach updates: {db_error}")
+        return 0
+
+    return breached_count
 
 
 class BackgroundScheduler:
@@ -39,7 +108,7 @@ class BackgroundScheduler:
         retrain_status = "enabled" if Config.ENABLE_SCHEDULED_RETRAIN else "disabled"
         print(
             "✓ Background scheduler started - "
-            "comment escalations every hour, "
+            "comment escalations + SLA scan every hour, "
             f"scheduled retrain {retrain_status} (interval={RETRAIN_INTERVAL_HOURS}h)"
         )
     
@@ -70,6 +139,14 @@ class BackgroundScheduler:
                         print(f"✓ Escalated {escalated_count} overdue comments")
                     else:
                         print("✓ No comments need escalation")
+
+                    # SLA breach scan (every hour)
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Running SLA breach scan...")
+                    breached_count = scan_sla_breaches()
+                    if breached_count > 0:
+                        print(f"✓ Marked {breached_count} grievances as SLA-breached")
+                    else:
+                        print("✓ No new SLA breaches")
                     
                     # Model retraining (every RETRAIN_INTERVAL_HOURS)
                     self._hours_since_retrain += 1
@@ -100,3 +177,4 @@ class BackgroundScheduler:
 
 # Global scheduler instance
 scheduler = BackgroundScheduler()
+

@@ -437,7 +437,7 @@
                                             ` : '<span style="color: #9CA3AF;">Unknown</span>'}
                                         </td>
                                         <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                            ${g.complaint_text}
+                                            ${escapeHtml(g.complaint_text)}
                                         </td>
                                         <td><span class="badge badge-progress">${g.assigned_department}</span></td>
                                         <td>
@@ -635,7 +635,7 @@
                         <div style="margin-bottom: 1rem;">
                             <div style="font-size: 0.75rem; color: #6B7280; font-weight: 600; margin-bottom: 0.5rem;">Complaint Text</div>
                             <div style="color: #374151; line-height: 1.6; padding: 1rem; background: #F9FAFB; border-radius: 6px;">
-                                ${grievance.complaint_text}
+                                ${escapeHtml(grievance.complaint_text)}
                             </div>
                         </div>
                         <div>

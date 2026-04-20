@@ -18,7 +18,7 @@ class User(db.Model):
     # Jurisdiction fields
     ward = db.Column(db.String(50), nullable=True)  # Ward/Area
     district = db.Column(db.String(100), nullable=True)  # District
-    state = db.Column(db.String(100), nullable=True)  # State
+    # Note: 'state' column is defined once below under legacy/residential fields
     jurisdiction_type = db.Column(db.String(20), nullable=True)  # 'ward', 'district', 'state'
     email_verified = db.Column(db.Boolean, default=False)
     phone_verified = db.Column(db.Boolean, default=False)
@@ -41,10 +41,10 @@ class User(db.Model):
     residential_state = db.Column(db.String(100), nullable=True)
     residential_pincode = db.Column(db.String(10), nullable=True)
     
-    # Legacy fields (kept for backward compatibility, map to residential)
+    # Address fields (used for profile + jurisdiction state)
     address = db.Column(db.String(500), nullable=True)
     city = db.Column(db.String(100), nullable=True)
-    state = db.Column(db.String(100), nullable=True)
+    state = db.Column(db.String(100), nullable=True)  # Serves both jurisdiction and residential legacy
     pincode = db.Column(db.String(10), nullable=True)
     
     date_of_birth = db.Column(db.String(20), nullable=True)
@@ -154,6 +154,7 @@ class Grievance(db.Model):
     sla_hours = db.Column(db.Integer, default=48)  # Default 48 hours
     sla_deadline = db.Column(db.DateTime, nullable=True)
     sla_breached = db.Column(db.Boolean, default=False)
+    sla_breached_at = db.Column(db.DateTime, nullable=True)  # When SLA was first breached
     last_action_at = db.Column(db.DateTime, default=datetime.utcnow)  # Last update time
     location = db.Column(db.Text, nullable=True)  # Changed to Text for longer addresses
     images = db.Column(db.Text, nullable=True)  # JSON array of base64 images

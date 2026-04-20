@@ -86,9 +86,47 @@ def _release_retrain_lock():
         pass
 
 
+def _export_correction_data(project_root):
+    """
+    Export DepartmentCorrectionLog entries as supplementary training rows.
+    Returns the path to a temp CSV or None if no corrections exist.
+    """
+    try:
+        from backend.extensions import db
+        from backend.models import Grievance
+        from backend.models_addons import DepartmentCorrectionLog
+        import csv
+
+        corrections = DepartmentCorrectionLog.query.all()
+        if not corrections:
+            return None, 0
+
+        supplement_path = os.path.join(project_root, 'data', 'correction_supplement.csv')
+        rows_added = 0
+
+        with open(supplement_path, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['complaint', 'department'])
+            for correction in corrections:
+                grievance = db.session.get(Grievance, correction.grievance_id)
+                if grievance and grievance.complaint_text:
+                    writer.writerow([grievance.complaint_text, correction.corrected_department])
+                    rows_added += 1
+
+        if rows_added == 0:
+            os.remove(supplement_path)
+            return None, 0
+
+        return supplement_path, rows_added
+    except Exception as e:
+        print(f"⚠ Could not export correction data: {e}")
+        return None, 0
+
+
 def retrain_model(trigger='manual'):
     """
     Run model retraining. Returns (success: bool, message: str).
+    Incorporates DepartmentCorrectionLog entries as supplementary training data.
     """
     if not _acquire_retrain_lock():
         return False, "Retraining already in progress"
@@ -99,14 +137,29 @@ def retrain_model(trigger='manual'):
     if not os.path.exists(train_script):
         _release_retrain_lock()
         return False, "Training script not found"
+
+    # Export correction data for training augmentation
+    correction_path = None
+    correction_count = 0
+    try:
+        correction_path, correction_count = _export_correction_data(project_root)
+        if correction_count > 0:
+            print(f"✓ Exported {correction_count} correction entries for training augmentation")
+    except Exception:
+        pass  # Non-fatal: train without corrections
     
     try:
+        env = os.environ.copy()
+        if correction_path:
+            env['CORRECTION_SUPPLEMENT_PATH'] = correction_path
+
         result = subprocess.run(
             [sys.executable, train_script],
             cwd=project_root,
             capture_output=True,
             text=True,
-            timeout=300  # 5 min max
+            timeout=300,  # 5 min max
+            env=env,
         )
         
         if result.returncode == 0:
@@ -115,6 +168,7 @@ def retrain_model(trigger='manual'):
             if training_payload:
                 training_payload['last_reload_at_utc'] = datetime.utcnow().isoformat()
                 training_payload['last_retrain_trigger'] = trigger
+                training_payload['correction_samples_added'] = correction_count
                 with open(Config.MODEL_METADATA_PATH, 'w', encoding='utf-8') as metadata_file:
                     json.dump(training_payload, metadata_file, indent=2)
             acc = float(training_payload.get('metrics', {}).get('accuracy', 0.0)) * 100
@@ -128,3 +182,10 @@ def retrain_model(trigger='manual'):
         return False, str(e)
     finally:
         _release_retrain_lock()
+        # Clean up temp supplement file
+        if correction_path and os.path.exists(correction_path):
+            try:
+                os.remove(correction_path)
+            except OSError:
+                pass
+

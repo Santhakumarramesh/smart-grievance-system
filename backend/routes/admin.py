@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime, timedelta
 from sqlalchemy import func
-from backend.models import User, Grievance, GrievanceUpdate, Notification
+from backend.models import User, Grievance, GrievanceUpdate, Notification, FraudReport
 from backend.models_addons import DepartmentCorrectionLog
 from backend.extensions import db
 from backend.config import Config
@@ -191,13 +191,42 @@ def get_analytics():
         total_users = User.query.filter_by(role='CITIZEN').count()
         total_officers = User.query.filter(User.role.in_(OFFICER_ROLE_VALUES)).count()
         
+        # Fraud analytics
+        pending_fraud_reports = FraudReport.query.filter_by(status='Pending').count()
+        total_fraud_reports = FraudReport.query.count()
+        verified_fraud_reports = FraudReport.query.filter_by(status='Verified').count()
+        total_suspended_users = User.query.filter_by(account_suspended=True).count()
+
+        # SLA analytics
+        sla_breached_count = Grievance.query.filter_by(sla_breached=True).count()
+        sla_breached_active = Grievance.query.filter(
+            Grievance.sla_breached.is_(True),
+            ~Grievance.status.in_(['Resolved', 'Closed'])
+        ).count()
+
+        # Moderation analytics
+        flagged_grievances = Grievance.query.filter_by(is_flagged=True).count()
+
         return jsonify({
             'counts_by_status': counts_by_status,
             'counts_by_department': counts_by_department,
             'avg_resolution_time_days': avg_resolution_time_days,
             'total_grievances': total_grievances,
             'total_users': total_users,
-            'total_officers': total_officers
+            'total_officers': total_officers,
+            'fraud': {
+                'pending_reports': pending_fraud_reports,
+                'total_reports': total_fraud_reports,
+                'verified_reports': verified_fraud_reports,
+                'suspended_users': total_suspended_users,
+            },
+            'sla': {
+                'total_breached': sla_breached_count,
+                'active_breached': sla_breached_active,
+            },
+            'moderation': {
+                'flagged_grievances': flagged_grievances,
+            },
         }), 200
         
     except Exception as e:
@@ -608,6 +637,77 @@ def mark_all_notifications_read():
         
         return jsonify({'message': 'All notifications marked as read'}), 200
         
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@admin_bp.route('/unsuspend-user/<int:user_id>', methods=['POST'])
+def unsuspend_user(user_id):
+    """
+    Unsuspend a user account (Admin only)
+    Required: admin_notes (for audit trail)
+    """
+    try:
+        admin_user, auth_response = get_current_user_from_token(return_error=True, required_roles=['ADMIN'])
+        if auth_response:
+            return auth_response
+
+        data = request.get_json() or {}
+        admin_notes = data.get('admin_notes', '')
+        if not admin_notes or len(admin_notes.strip()) < 5:
+            return jsonify({'error': 'admin_notes is required (min 5 characters) for audit trail'}), 400
+
+        target_user = User.query.get(user_id)
+        if not target_user:
+            return jsonify({'error': 'User not found'}), 404
+
+        if not target_user.account_suspended:
+            return jsonify({'error': 'User is not suspended'}), 400
+
+        # Unsuspend
+        target_user.account_suspended = False
+        previous_reason = target_user.suspension_reason
+        target_user.suspension_reason = None
+
+        # Optionally reset fraud warnings
+        reset_warnings = data.get('reset_warnings', False)
+        old_warnings = target_user.fraud_warnings
+        if reset_warnings:
+            target_user.fraud_warnings = 0
+
+        db.session.commit()
+
+        # Notify citizen
+        NotificationService.queue_notification(
+            user_id=target_user.id,
+            title='Account Reinstated',
+            message=f'Your account has been reinstated by admin. You can now submit grievances again.',
+            notification_type='account_reinstated',
+            is_read=False,
+        )
+
+        from backend.services.audit_service import log_audit
+        import json
+        log_audit(
+            admin_user.id,
+            'unsuspend_user',
+            'user',
+            user_id,
+            json.dumps({
+                'admin_notes': admin_notes,
+                'previous_reason': previous_reason,
+                'warnings_reset': reset_warnings,
+                'old_warnings': old_warnings,
+            })
+        )
+
+        return jsonify({
+            'message': f'User {target_user.name} has been unsuspended',
+            'fraud_warnings': target_user.fraud_warnings,
+            'account_suspended': target_user.account_suspended,
+        }), 200
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500

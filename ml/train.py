@@ -113,6 +113,20 @@ def train_classifier():
     
     df = df.dropna(subset=['complaint', 'department'])
     print(f"✓ Loaded dataset with {len(df)} samples")
+
+    # Incorporate correction supplement (from admin manual triage feedback loop)
+    supplement_path = os.environ.get('CORRECTION_SUPPLEMENT_PATH')
+    if supplement_path and os.path.exists(supplement_path):
+        try:
+            supplement_df = pd.read_csv(supplement_path)
+            supplement_df = supplement_df.dropna(subset=['complaint', 'department'])
+            if len(supplement_df) > 0:
+                df = pd.concat([df, supplement_df], ignore_index=True)
+                print(f"✓ Added {len(supplement_df)} correction samples from admin triage feedback")
+        except Exception as supplement_error:
+            print(f"⚠ Could not load supplement data: {supplement_error}")
+
+    print(f"✓ Total training samples: {len(df)}")
     print(f"✓ Departments: {df['department'].nunique()}")
     print("\nDepartment distribution:")
     print(df['department'].value_counts())

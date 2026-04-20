@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime, timedelta
 import json
-from backend.models import Grievance, GrievanceUpdate, GrievanceComment, User, FraudReport
+from backend.models import Grievance, GrievanceUpdate, GrievanceComment, User, FraudReport, RoleHierarchy
 from backend.extensions import db
 from backend.config import Config
 from backend.routes.auth import get_current_user_from_token
@@ -10,6 +10,7 @@ from backend.services.email_service import EmailService
 from backend.services.notification_service import NotificationService
 from backend.services.ai_image_detector import AIImageDetector
 from backend.services.comment_escalation import check_and_escalate_comments, escalate_comment_manually
+from backend.services.content_moderator import ContentModerator
 from backend.services.audit_service import log_audit
 from backend.security import require_firewall, SecurityFirewall, SecurityLogger
 from backend.utils.roles import ADMIN_ROLE_VALUES, OFFICER_ROLE_VALUES, canonical_role, is_role
@@ -113,6 +114,18 @@ def submit_grievance():
         except ValidationError as validation_error:
             return jsonify({'error': str(validation_error)}), 400
         
+        # ── Content Moderation ──
+        moderation_result = ContentModerator.moderate_content(complaint_text)
+        if ContentModerator.should_block_submission(moderation_result):
+            return jsonify({
+                'error': 'Content Violation',
+                'message': ContentModerator.get_user_warning_message(moderation_result),
+                'moderation': {
+                    'severity': moderation_result['severity'],
+                    'score': moderation_result['score'],
+                },
+            }), 400
+
         # Predict department using ML with confidence.
         prediction = classifier.predict_with_confidence(complaint_text)
         predicted_department = prediction['department']
@@ -201,6 +214,18 @@ def submit_grievance():
                 f'predicted department "{predicted_department}"'
             )
         
+        # Determine moderation flags to store
+        is_flagged = not moderation_result['is_safe']
+        moderation_score = moderation_result['score']
+        moderation_severity = moderation_result['severity']
+        moderation_flags_json = json.dumps(moderation_result['flags']) if moderation_result['flags'] else None
+
+        # Compute SLA deadline
+        now = datetime.utcnow()
+        dept_config = RoleHierarchy.query.filter(RoleHierarchy.department == assigned_department).first()
+        sla_hours = dept_config.sla_hours if dept_config and dept_config.sla_hours else 48
+        sla_deadline = now + timedelta(hours=sla_hours)
+
         # Create grievance
         grievance = Grievance(
             user_id=user.id,
@@ -218,7 +243,15 @@ def submit_grievance():
             complainant_gender=complainant_gender,
             ai_image_detected=ai_image_detected,
             ai_detection_confidence=ai_detection_confidence,
-            ai_detection_details=ai_detection_details
+            ai_detection_details=ai_detection_details,
+            # Content moderation
+            is_flagged=is_flagged,
+            moderation_score=moderation_score,
+            moderation_severity=moderation_severity,
+            moderation_flags=moderation_flags_json,
+            # SLA tracking
+            sla_hours=sla_hours,
+            sla_deadline=sla_deadline,
         )
         
         db.session.add(grievance)
@@ -262,6 +295,22 @@ def submit_grievance():
                     related_grievance_id=grievance.id,
                     is_read=False,
                 )
+
+        # Notify admins if content was flagged by moderation
+        if is_flagged and ContentModerator.should_notify_admin(moderation_result):
+            admins_for_moderation = User.query.filter(User.role.in_(ADMIN_ROLE_VALUES)).all()
+            for admin in admins_for_moderation:
+                NotificationService.queue_notification(
+                    user_id=admin.id,
+                    title=f'⚠️ Flagged Content - Grievance #{grievance.id}',
+                    message=(
+                        f'Content moderation flagged this complaint (severity: {moderation_severity}, '
+                        f'score: {moderation_score}). Citizen: {user.name}'
+                    ),
+                    notification_type='content_moderation',
+                    related_grievance_id=grievance.id,
+                    is_read=False,
+                )
         
         db.session.commit()
         
@@ -284,10 +333,13 @@ def submit_grievance():
                 'prediction_confidence': prediction_confidence,
                 'routing_status': routing_status,
                 'requires_manual_triage': requires_manual_triage,
+                'moderation_score': moderation_score,
+                'moderation_severity': moderation_severity,
+                'is_flagged': is_flagged,
             })
         )
         
-        return jsonify({
+        response_data = {
             'message': 'Grievance submitted successfully',
             'grievance_id': grievance.id,
             'department': predicted_department,
@@ -295,7 +347,12 @@ def submit_grievance():
             'routing_decision': 'manual_review' if requires_manual_triage else 'auto_assign',
             'prediction_confidence': prediction_confidence,
             'auto_assign_threshold': Config.ML_AUTO_ASSIGN_CONFIDENCE_THRESHOLD,
-        }), 201
+            'sla_deadline': sla_deadline.isoformat(),
+        }
+        if is_flagged:
+            response_data['content_warning'] = moderation_result['message']
+
+        return jsonify(response_data), 201
         
     except Exception as e:
         db.session.rollback()
@@ -435,6 +492,11 @@ def update_grievance(grievance_id):
         # Update grievance status
         grievance.status = new_status
         grievance.updated_at = datetime.utcnow()
+        grievance.last_action_at = datetime.utcnow()
+
+        # Clear SLA breach on terminal statuses (resolved/closed)
+        if new_status in ('Resolved', 'Closed'):
+            grievance.sla_breached = False
 
         # First officer action on an unassigned grievance claims ownership.
         if is_role(user, 'OFFICER') and not grievance.assigned_officer_id:
@@ -862,6 +924,11 @@ def take_fraud_action(report_id):
             report.status = 'Verified'
             report.action_taken = 'Warning Issued'
             complainant.fraud_warnings += 1
+
+            # Close the fraudulent grievance
+            fraud_grievance = Grievance.query.get(report.grievance_id)
+            if fraud_grievance:
+                fraud_grievance.status = 'Closed'
             
             # Notify complainant
             NotificationService.queue_notification(
@@ -890,6 +957,11 @@ def take_fraud_action(report_id):
             complainant.fraud_warnings += 1
             complainant.account_suspended = True
             complainant.suspension_reason = f'Multiple fraudulent complaints. Latest: Grievance #{report.grievance_id}'
+
+            # Close the fraudulent grievance
+            fraud_grievance = Grievance.query.get(report.grievance_id)
+            if fraud_grievance:
+                fraud_grievance.status = 'Closed'
             
             # Notify complainant
             NotificationService.queue_notification(
@@ -914,6 +986,12 @@ def take_fraud_action(report_id):
             # Fraud report dismissed - complaint was genuine
             report.status = 'Dismissed'
             report.action_taken = 'Report Dismissed - Complaint Genuine'
+
+            # Restore grievance to active workflow
+            fraud_grievance = Grievance.query.get(report.grievance_id)
+            if fraud_grievance and 'Fraud' in (fraud_grievance.status or ''):
+                fraud_grievance.status = 'Assigned to Department'
+
             NotificationService.queue_notification(
                 user_id=complainant.id,
                 title='Fraud Review Closed - Complaint Validated',

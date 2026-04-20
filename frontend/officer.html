@@ -131,7 +131,7 @@
                                         <td>#${g.id}</td>
                                         <td style="max-width: 300px;">
                                             <div style="margin-bottom: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                                ${g.complaint_text}
+                                                ${escapeHtml(g.complaint_text)}
                                             </div>
                                             <button onclick="showTranslationModal('${g.complaint_text.replace(/'/g, "\\'")}', getCurrentLanguage())" 
                                                     class="translate-btn" 
@@ -180,12 +180,12 @@
                         <div style="background: ${bgColor}; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid ${borderColor}; margin-bottom: 1rem;">
                             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
                                 <div>
-                                    <strong style="color: var(--text-primary);">${comment.user_name}</strong>
+                                    <strong style="color: var(--text-primary);">${escapeHtml(comment.user_name)}</strong>
                                     <span class="badge" style="margin-left: 0.5rem; background: ${roleColor}; color: white; font-size: 0.75rem;">${comment.user_role}</span>
                                 </div>
                                 <span style="font-size: 0.875rem; color: var(--text-secondary);">${formatDate(comment.created_at)}</span>
                             </div>
-                            <p style="margin: 0; color: var(--text-primary); line-height: 1.6;">${comment.comment_text}</p>
+                            <p style="margin: 0; color: var(--text-primary); line-height: 1.6;">${escapeHtml(comment.comment_text)}</p>
                         </div>
                     `;
                 }).join('');

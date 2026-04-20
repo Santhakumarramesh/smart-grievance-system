@@ -73,15 +73,28 @@ class SecurityHeaders:
 
 def configure_cors_security(app):
     """
-    Configure CORS with security in mind
+    Configure CORS with security in mind.
+    In production, restrict to APP_BASE_URL origin.
+    In development, allow all origins for convenience.
     """
     from flask_cors import CORS
-    
-    # In production, replace '*' with your actual frontend domain
+    import os
+
+    is_production = os.getenv('FLASK_ENV') == 'production'
+    app_base_url = os.getenv('APP_BASE_URL', '').rstrip('/')
+
+    if is_production and app_base_url:
+        allowed_origins = [app_base_url]
+        # Also allow the API domain itself
+        if '://' in app_base_url:
+            allowed_origins.append(app_base_url)
+    else:
+        allowed_origins = "*"
+
     CORS(app, 
          resources={
              r"/*": {
-                 "origins": "*",  # Change to specific domain in production
+                 "origins": allowed_origins,
                  "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
                  "allow_headers": ["Content-Type", "Authorization"],
                  "expose_headers": ["X-RateLimit-Remaining", "X-RateLimit-Limit"],
